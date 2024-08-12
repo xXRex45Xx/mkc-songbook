@@ -1,4 +1,4 @@
-import { Schema, model } from "mongoose";
+import { Schema, model, Types } from "mongoose";
 
 const songSchema = new Schema({
     _id: { type: Number, required: true },
@@ -11,6 +11,7 @@ const songSchema = new Schema({
     },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
+    mediaFiles: [{ type: Types.ObjectId, required: true, ref: "MediaFile" }],
 });
 
 const SongModel = model("Song", songSchema);
