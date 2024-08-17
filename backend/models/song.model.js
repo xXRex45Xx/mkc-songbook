@@ -5,7 +5,7 @@ const songSchema = new Schema({
     title: { type: String, required: true, index: true, unique: true },
     lyrics: { type: String, required: true },
     musicElements: {
-        chords: { type: String },
+        chord: { type: String },
         tempo: { type: Number },
         rythm: { type: String },
     },
