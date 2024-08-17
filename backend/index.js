@@ -7,6 +7,7 @@ if (config().error) throw config().error;
 
 const app = express();
 
+app.use(express.json());
 app.use("/api", apiRouter);
 
 connect(process.env.DB_URI).then(() => {
