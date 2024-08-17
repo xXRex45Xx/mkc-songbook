@@ -1,9 +1,10 @@
 import SongModel from "../models/song.model.js";
+import { regexBuilder } from "../utils/amharic-map.util.js";
 
 export const getAllOrSearchSongs = async (req, res, next) => {
     const { q, page } = req.query;
 
-    const regex = new RegExp(q, "i");
+    const regex = new RegExp(regexBuilder(q), "i");
     let songs;
     if (!q)
         songs = await SongModel.find()
@@ -15,7 +16,7 @@ export const getAllOrSearchSongs = async (req, res, next) => {
                 { title: regex },
                 { _id: true, title: true }
             ),
-            lyricsMatsh: await SongModel.find(
+            lyricsMatch: await SongModel.find(
                 { title: regex },
                 { _id: true, title: true }
             ),
