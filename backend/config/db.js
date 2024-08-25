@@ -1,4 +1,6 @@
 import mongoose from "mongoose";
+import MediaFileModel from "../models/media-file.model.js";
+import SongModel from "../models/song.model.js";
 
 export const connect = async (uri) => {
     try {

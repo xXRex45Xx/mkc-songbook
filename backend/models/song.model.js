@@ -11,7 +11,7 @@ const songSchema = new Schema({
     },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
-    mediaFiles: [{ type: Types.ObjectId, required: true, ref: "MediaFile" }],
+    mediaFiles: [{ type: Types.ObjectId, ref: "MediaFile" }],
 });
 
 const SongModel = model("Song", songSchema);

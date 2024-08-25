@@ -32,7 +32,7 @@ export const getAllOrSearchSongs = async (req, res) => {
 export const addSong = async (req, res) => {
     const song = req.body;
 
-    const dbRes = await SongModel.create({
+    const insertedSong = await SongModel.create({
         _id: song.id,
         title: song.title,
         lyrics: song.lyrics,
@@ -43,5 +43,13 @@ export const addSong = async (req, res) => {
         },
     });
 
-    res.status(201).json({ insertedId: dbRes._id });
+    res.status(201).json({ insertedId: insertedSong._id });
+};
+
+export const getSong = async (req, res) => {
+    const { id } = req.params;
+
+    const song = await SongModel.findById(id).populate("mediaFiles");
+
+    res.status(200).json(song);
 };
