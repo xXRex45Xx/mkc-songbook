@@ -1,3 +1,4 @@
+import MediaFileModel from "../models/media-file.model.js";
 import SongModel from "../models/song.model.js";
 import { regexBuilder } from "../utils/amharic-map.util.js";
 
@@ -52,4 +53,31 @@ export const getSong = async (req, res) => {
     const song = await SongModel.findById(id).populate("mediaFiles");
 
     res.status(200).json(song);
+};
+
+export const updateSong = async (req, res) => {
+    const { id } = req.params;
+    const song = req.body;
+
+    await SongModel.findByIdAndUpdate(id, {
+        _id: song.id,
+        title: song.title,
+        lyrics: song.lyrics,
+        musicElements: {
+            chord: song.chord,
+            tempo: song.tempo,
+            rythm: song.rythm,
+        },
+    });
+
+    res.status(200).json({ updated: true });
+};
+
+export const deleteSong = async (req, res) => {
+    const { id } = req.params;
+
+    await MediaFileModel.deleteMany({ songId: id });
+    await SongModel.findByIdAndDelete(id);
+
+    res.status(200).json({ deleted: true });
 };
