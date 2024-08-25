@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
     addSong,
+    deleteSong,
     getAllOrSearchSongs,
     getSong,
     updateSong,
@@ -9,6 +10,6 @@ import {
 const songRouter = Router();
 
 songRouter.route("/").get(getAllOrSearchSongs).post(addSong);
-songRouter.route("/:id").get(getSong).patch(updateSong).delete();
+songRouter.route("/:id").get(getSong).patch(updateSong).delete(deleteSong);
 
 export default songRouter;
