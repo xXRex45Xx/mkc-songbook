@@ -1,76 +1,94 @@
 import { Avatar, Dropdown, Navbar } from "flowbite-react";
 import { navbarTheme } from "../config/theme.config";
-import inactiveBell from "../assets/inactive-bell.svg";
+import { useLocation } from "react-router-dom";
 
-const Header = () => (
-    <>
-        <Navbar fluid theme={navbarTheme} border>
-            <Navbar.Brand>
-                <img
-                    src="/logo.svg"
-                    className="mr-3 h-8 rounded-md"
-                    alt="Flowbite React Logo"
-                />
-                <span className="self-center font-semibold whitespace-nowrap text-2xl text-baseblack">
-                    MKC Choir
-                </span>
-            </Navbar.Brand>
-            <div className="pb-6 flex gap-5">
-                <Dropdown
-                    arrowIcon={false}
-                    inline
-                    label={<img alt="Notifications" src={inactiveBell} />}
-                >
-                    <Dropdown.Header>
-                        <span className="block text-sm">Bonnie Green</span>
-                        <span className="block truncate text-sm font-medium">
-                            name@flowbite.com
-                        </span>
-                    </Dropdown.Header>
-                    <Dropdown.Item>Dashboard</Dropdown.Item>
-                    <Dropdown.Item>Settings</Dropdown.Item>
-                    <Dropdown.Item>Earnings</Dropdown.Item>
-                    <Dropdown.Divider />
-                    <Dropdown.Item>Sign out</Dropdown.Item>
-                </Dropdown>
-                <Dropdown
-                    arrowIcon={false}
-                    inline
-                    label={
-                        <Avatar
-                            alt="User settings"
-                            img="https://flowbite.com/docs/images/people/profile-picture-5.jpg"
-                            rounded
-                        />
-                    }
-                >
-                    <Dropdown.Header>
-                        <span className="block text-sm">Bonnie Green</span>
-                        <span className="block truncate text-sm font-medium">
-                            name@flowbite.com
-                        </span>
-                    </Dropdown.Header>
-                    <Dropdown.Item>Dashboard</Dropdown.Item>
-                    <Dropdown.Item>Settings</Dropdown.Item>
-                    <Dropdown.Item>Earnings</Dropdown.Item>
-                    <Dropdown.Divider />
-                    <Dropdown.Item>Sign out</Dropdown.Item>
-                </Dropdown>
-                <Navbar.Toggle />
-            </div>
-        </Navbar>
-        <Navbar fluid border theme={navbarTheme}>
-            <Navbar.Collapse>
-                <Navbar.Link href="#" active>
-                    Home
-                </Navbar.Link>
-                <Navbar.Link href="#">Tracks</Navbar.Link>
-                <Navbar.Link href="#">Albums</Navbar.Link>
-                <Navbar.Link href="#">Playlists</Navbar.Link>
-                <Navbar.Link href="#">Schedule</Navbar.Link>
-            </Navbar.Collapse>
-        </Navbar>
-    </>
-);
+import inactiveBell from "../assets/inactive-bell.svg";
+import heart from "../assets/heart.svg";
+
+const Header = () => {
+    const { pathname } = useLocation();
+
+    return (
+        <>
+            <Navbar fluid theme={navbarTheme} border>
+                <Navbar.Brand>
+                    <img
+                        src="/logo.svg"
+                        className="mr-3 h-8 rounded-md shadow-xl"
+                        alt="Flowbite React Logo"
+                    />
+                    <span className="self-center font-semibold whitespace-nowrap text-2xl text-baseblack">
+                        MKC Choir
+                    </span>
+                </Navbar.Brand>
+                <div className="pb-6 flex gap-5">
+                    <Dropdown
+                        arrowIcon={false}
+                        inline
+                        label={<img alt="Notifications" src={inactiveBell} />}
+                    >
+                        <Dropdown.Header>
+                            <span className="block text-sm">Notifications</span>
+                        </Dropdown.Header>
+                    </Dropdown>
+                    <Dropdown
+                        arrowIcon={false}
+                        inline
+                        label={
+                            <Avatar
+                                alt="User settings"
+                                img="https://flowbite.com/docs/images/people/profile-picture-5.jpg"
+                                rounded
+                            />
+                        }
+                    >
+                        <Dropdown.Header>
+                            <span className="block text-sm">
+                                Eteye Askalech
+                            </span>
+                            <span className="block truncate text-sm font-medium">
+                                askalech@my.email.com
+                            </span>
+                        </Dropdown.Header>
+                        <Dropdown.Item>My Profile</Dropdown.Item>
+                        <Dropdown.Item>Account Settings</Dropdown.Item>
+                        <Dropdown.Item>
+                            <img src={heart} alt="" />
+                            My Favorites
+                        </Dropdown.Item>
+                        <Dropdown.Divider />
+                        <Dropdown.Item>Log Out</Dropdown.Item>
+                    </Dropdown>
+                    <Navbar.Toggle />
+                </div>
+            </Navbar>
+            <Navbar fluid border theme={navbarTheme}>
+                <Navbar.Collapse>
+                    <Navbar.Link href="/" active={pathname === "/"}>
+                        Home
+                    </Navbar.Link>
+                    <Navbar.Link href="tracks" active={pathname === "/tracks"}>
+                        Tracks
+                    </Navbar.Link>
+                    <Navbar.Link href="albums" active={pathname === "/albums"}>
+                        Albums
+                    </Navbar.Link>
+                    <Navbar.Link
+                        href="playlists"
+                        active={pathname === "/playlists"}
+                    >
+                        Playlists
+                    </Navbar.Link>
+                    <Navbar.Link
+                        href="schedule"
+                        active={pathname === "/schedule"}
+                    >
+                        Schedule
+                    </Navbar.Link>
+                </Navbar.Collapse>
+            </Navbar>
+        </>
+    );
+};
 
 export default Header;
