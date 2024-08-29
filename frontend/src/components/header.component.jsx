@@ -1,5 +1,5 @@
 import { Avatar, Dropdown, Navbar } from "flowbite-react";
-import { navbarTheme } from "../config/theme.config";
+import { navbarTheme } from "../config/navbar-theme.config";
 import { useLocation } from "react-router-dom";
 
 import inactiveBell from "../assets/inactive-bell.svg";
@@ -67,8 +67,8 @@ const Header = () => {
                     <Navbar.Link href="/" active={pathname === "/"}>
                         Home
                     </Navbar.Link>
-                    <Navbar.Link href="tracks" active={pathname === "/tracks"}>
-                        Tracks
+                    <Navbar.Link href="songs" active={pathname === "/songs"}>
+                        Songs
                     </Navbar.Link>
                     <Navbar.Link href="albums" active={pathname === "/albums"}>
                         Albums

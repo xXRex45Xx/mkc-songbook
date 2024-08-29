@@ -3,6 +3,8 @@ import { createRoot } from "react-dom/client";
 import App from "./App.jsx";
 import "./index.css";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import MainBodyContainer from "./components/main-body-container.component.jsx";
+import SongsPage from "./pages/songs.page.jsx";
 
 const router = createBrowserRouter([
     {
@@ -11,23 +13,33 @@ const router = createBrowserRouter([
         children: [
             {
                 index: true,
-                element: <h1 className="text-black">HOME</h1>,
+                element: (
+                    <MainBodyContainer
+                        title={"Recent Media"}
+                    ></MainBodyContainer>
+                ),
             },
             {
-                path: "tracks",
-                element: <h1 className="text-black">TRACKS</h1>,
+                path: "songs",
+                element: <SongsPage />,
             },
             {
                 path: "albums",
-                element: <h1 className="text-black">ALBUMS</h1>,
+                element: (
+                    <MainBodyContainer title={"Albums"}></MainBodyContainer>
+                ),
             },
             {
                 path: "playlists",
-                element: <h1 className="text-black">PLAYLISTS</h1>,
+                element: (
+                    <MainBodyContainer title={"Playlists"}></MainBodyContainer>
+                ),
             },
             {
                 path: "schedule",
-                element: <h1 className="text-black">SCHEDULE</h1>,
+                element: (
+                    <MainBodyContainer title={"Schedule"}></MainBodyContainer>
+                ),
             },
         ],
     },
