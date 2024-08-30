@@ -6,7 +6,9 @@ const CustomTable = ({ headers, children }) => (
         <Table theme={tableTheme} hoverable>
             <Table.Head>
                 {headers.map((header) => (
-                    <Table.HeadCell key={header}>{header}</Table.HeadCell>
+                    <Table.HeadCell key={header} align={header.align}>
+                        {header.name}
+                    </Table.HeadCell>
                 ))}
             </Table.Head>
             <Table.Body className="divide-y">{children}</Table.Body>
