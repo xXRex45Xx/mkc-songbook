@@ -1,14 +1,14 @@
 import { Outlet } from "react-router-dom";
 import "./App.css";
 import Header from "./components/header.component";
-import PlayerContainer from "./components/player-container.component";
+import AudioPlayer from "./components/audio-player.component";
 
 function App() {
     return (
         <>
             <Header />
             <Outlet />
-            <PlayerContainer />
+            <AudioPlayer />
         </>
     );
 }
