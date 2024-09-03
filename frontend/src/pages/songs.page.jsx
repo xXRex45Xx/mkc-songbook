@@ -1,15 +1,19 @@
 import MainBodyContainer from "../components/main-body-container.component";
-import { TextInput, Select, Table } from "flowbite-react";
-import { searchInputTheme, selectTheme } from "../config/forms-theme.config";
+import { Table } from "flowbite-react";
+
 import CustomTable from "../components/custom-table.component";
 import { useMemo } from "react";
 
-import searchIcon from "../assets/search.svg";
 import HeartSvg from "../assets/heart.svg?react";
 import DownloadSvg from "../assets/download.svg?react";
 import OptionsSvg from "../assets/options.svg?react";
+import { useLocation, useNavigate } from "react-router-dom";
+import SearchBar from "../components/search-bar.component";
 
 const SongsPage = () => {
+    const navigate = useNavigate();
+    const location = useLocation();
+    console.log(location);
     const songs = useMemo(() => {
         const temp = [];
         for (let i = 0; i < 20; i++) {
@@ -19,28 +23,7 @@ const SongsPage = () => {
     }, []);
     return (
         <MainBodyContainer title={"Songs"}>
-            <form>
-                <div className="flex items-stretch">
-                    <Select theme={selectTheme} id="categories" required>
-                        <option selected>All Categories</option>
-                        <option>Id</option>
-                        <option>Title</option>
-                        <option>Lyrics</option>
-                    </Select>
-                    <div className="w-full flex flex-nowrap">
-                        <TextInput
-                            theme={searchInputTheme}
-                            placeholder="Search..."
-                        />
-                        <button
-                            type="submit"
-                            className="flex items-center justify-center p-2 w-10 h-full bg-secondary rounded-e-lg border border-secondary hover:bg-secondary-600 hover:border-secondary-600 focus:outline-none"
-                        >
-                            <img src={searchIcon} alt="Search"></img>
-                        </button>
-                    </div>
-                </div>
-            </form>
+            <SearchBar />
             <CustomTable
                 headers={[
                     { align: "left", name: "SONG NUMBER" },
@@ -50,7 +33,13 @@ const SongsPage = () => {
                 ]}
             >
                 {songs.map((song) => (
-                    <Table.Row>
+                    <Table.Row
+                        onClick={() =>
+                            navigate(song.id.toString(), {
+                                state: { prevLocation: location.pathname },
+                            })
+                        }
+                    >
                         <Table.Cell>{song.id}</Table.Cell>
                         <Table.Cell>{song.title}</Table.Cell>
                         <Table.Cell>{song.album}</Table.Cell>

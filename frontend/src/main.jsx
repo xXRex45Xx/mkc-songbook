@@ -5,6 +5,7 @@ import "./index.css";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import MainBodyContainer from "./components/main-body-container.component.jsx";
 import SongsPage from "./pages/songs.page.jsx";
+import LyricsPage from "./pages/lyrics.page.jsx";
 
 const router = createBrowserRouter([
     {
@@ -22,6 +23,10 @@ const router = createBrowserRouter([
             {
                 path: "songs",
                 element: <SongsPage />,
+            },
+            {
+                path: "songs/:songId",
+                element: <LyricsPage />,
             },
             {
                 path: "albums",

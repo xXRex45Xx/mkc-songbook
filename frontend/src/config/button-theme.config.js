@@ -1,7 +1,7 @@
 export const buttonTheme = {
     base: "group flex items-center justify-center focus:outline-none",
     size: {
-        xxs: "p-0 focus:ring-0",
+        xxs: "p-0",
     },
 };
 

@@ -1,7 +1,7 @@
 export const selectTheme = {
     field: {
         select: {
-            base: "border-none",
+            base: "border-none focus:ring-0",
             colors: {
                 gray: "text-baseblack bg-neutrals-100 focus:outline-none",
             },
@@ -21,7 +21,7 @@ export const searchInputTheme = {
         input: {
             base: "block border-x-0 min-h-full",
             colors: {
-                gray: "border-y-neutrals-200",
+                gray: "border-y-neutrals-200 text-baseblack",
             },
             withAddon: {
                 off: "rounded-none",

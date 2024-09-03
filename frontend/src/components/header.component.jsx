@@ -68,21 +68,27 @@ const Header = () => {
                     <Navbar.Link href="/" active={pathname === "/"}>
                         Home
                     </Navbar.Link>
-                    <Navbar.Link href="songs" active={pathname === "/songs"}>
+                    <Navbar.Link
+                        href="/songs"
+                        active={pathname.startsWith("/songs")}
+                    >
                         Songs
                     </Navbar.Link>
-                    <Navbar.Link href="albums" active={pathname === "/albums"}>
+                    <Navbar.Link
+                        href="/albums"
+                        active={pathname.startsWith("/albums")}
+                    >
                         Albums
                     </Navbar.Link>
                     <Navbar.Link
-                        href="playlists"
-                        active={pathname === "/playlists"}
+                        href="/playlists"
+                        active={pathname.startsWith("/playlists")}
                     >
                         Playlists
                     </Navbar.Link>
                     <Navbar.Link
-                        href="schedule"
-                        active={pathname === "/schedule"}
+                        href="/schedule"
+                        active={pathname.startsWith("/schedule")}
                     >
                         Schedule
                     </Navbar.Link>
