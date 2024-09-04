@@ -7,6 +7,8 @@ import MainBodyContainer from "./components/main-body-container.component.jsx";
 import SongsPage from "./pages/songs.page.jsx";
 import LyricsPage from "./pages/lyrics.page.jsx";
 
+import { loader as songsLoader } from "./pages/songs.page.jsx";
+
 const router = createBrowserRouter([
     {
         path: "/",
@@ -23,6 +25,7 @@ const router = createBrowserRouter([
             {
                 path: "songs",
                 element: <SongsPage />,
+                loader: songsLoader,
             },
             {
                 path: "songs/:songId",

@@ -4,10 +4,10 @@ import { regexBuilder } from "../utils/amharic-map.util.js";
 
 export const getAllOrSearchSongs = async (req, res) => {
     const { q, page = 1 } = req.query;
-
     let songs;
     if (!q)
-        songs = await SongModel.find()
+        songs = await SongModel.find({}, "title")
+            .populate("albums", "name")
             .skip((page - 1) * 100)
             .limit(100);
     else {
