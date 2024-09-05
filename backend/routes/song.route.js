@@ -6,10 +6,18 @@ import {
     getSong,
     updateSong,
 } from "../controllers/song.controller.js";
+import { wrapAsync } from "../utils/error.util.js";
 
 const songRouter = Router();
 
-songRouter.route("/").get(getAllOrSearchSongs).post(addSong);
-songRouter.route("/:id").get(getSong).patch(updateSong).delete(deleteSong);
+songRouter
+    .route("/")
+    .get(wrapAsync(getAllOrSearchSongs))
+    .post(wrapAsync(addSong));
+songRouter
+    .route("/:id")
+    .get(wrapAsync(getSong))
+    .patch(wrapAsync(updateSong))
+    .delete(wrapAsync(deleteSong));
 
 export default songRouter;

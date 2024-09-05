@@ -8,6 +8,7 @@ import SongsPage from "./pages/songs.page.jsx";
 import LyricsPage from "./pages/lyrics.page.jsx";
 
 import { loader as songsLoader } from "./pages/songs.page.jsx";
+import { loader as songLoader } from "./pages/lyrics.page.jsx";
 
 const router = createBrowserRouter([
     {
@@ -30,6 +31,7 @@ const router = createBrowserRouter([
             {
                 path: "songs/:songId",
                 element: <LyricsPage />,
+                loader: songLoader,
             },
             {
                 path: "albums",

@@ -7,9 +7,16 @@ export const getAllOrSearchSongs = async (searchQuery = null, page = 1) => {
         }`
     );
     const data = await response.json();
-    if (!response.ok) {
-        throw { message: data.message, status: response.status };
-    }
+    if (!response.ok) throw { message: data.message, status: response.status };
+
+    return data;
+};
+
+export const getSong = async (id) => {
+    const response = await fetch(`${backendURL}/api/song/${id}`);
+    const data = await response.json();
+
+    if (!response.ok) throw { message: data.message, status: response.status };
 
     return data;
 };
