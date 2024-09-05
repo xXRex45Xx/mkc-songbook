@@ -7,20 +7,15 @@ import { useMemo } from "react";
 import HeartSvg from "../assets/heart.svg?react";
 import DownloadSvg from "../assets/download.svg?react";
 import OptionsSvg from "../assets/options.svg?react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLoaderData, useLocation, useNavigate } from "react-router-dom";
 import SearchBar from "../components/search-bar.component";
+import { getAllOrSearchSongs } from "../utils/api/songs-api.util";
 
 const SongsPage = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    console.log(location);
-    const songs = useMemo(() => {
-        const temp = [];
-        for (let i = 0; i < 20; i++) {
-            temp.push({ id: 5, title: "Song name", album: "album name" });
-        }
-        return temp;
-    }, []);
+    const songData = useLoaderData();
+
     return (
         <MainBodyContainer title={"Songs"}>
             <SearchBar />
@@ -28,21 +23,23 @@ const SongsPage = () => {
                 headers={[
                     { align: "left", name: "SONG NUMBER" },
                     { align: "left", name: "SONG NAME" },
-                    { align: "left", name: "ALBUM" },
+                    { align: "left", name: "ALBUMS" },
                     { align: "right", name: "DOWNLOAD" },
                 ]}
             >
-                {songs.map((song) => (
+                {songData.map((song) => (
                     <Table.Row
                         onClick={() =>
-                            navigate(song.id.toString(), {
+                            navigate(song._id.toString(), {
                                 state: { prevLocation: location.pathname },
                             })
                         }
                     >
-                        <Table.Cell>{song.id}</Table.Cell>
+                        <Table.Cell>{song._id}</Table.Cell>
                         <Table.Cell>{song.title}</Table.Cell>
-                        <Table.Cell>{song.album}</Table.Cell>
+                        <Table.Cell>
+                            {song.albums.map((song) => song.name).join(", ")}
+                        </Table.Cell>
                         <Table.Cell className="text-end">
                             <div className="flex gap-7 items-center justify-end">
                                 <div>
@@ -64,3 +61,10 @@ const SongsPage = () => {
 };
 
 export default SongsPage;
+
+export const loader = ({ request }) => {
+    const searchParams = new URL(request.url).searchParams;
+    const page = searchParams.get("page");
+    const searchQuery = { q: searchParams.get("q") };
+    return getAllOrSearchSongs(searchQuery, page ? page : 1);
+};

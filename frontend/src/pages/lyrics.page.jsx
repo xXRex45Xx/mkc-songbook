@@ -1,14 +1,21 @@
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import {
+    useLoaderData,
+    useLocation,
+    useNavigate,
+    useParams,
+} from "react-router-dom";
 import MainBodyContainer from "../components/main-body-container.component";
 import { Button, Card } from "flowbite-react";
 
 import BackSvg from "../assets/back.svg?react";
 import { buttonTheme } from "../config/button-theme.config";
 import MusicElement from "../components/music-element.component";
+import { getSong } from "../utils/api/songs-api.util";
 
-const LyricsPage = ({ onBack }) => {
+const LyricsPage = () => {
     const navigate = useNavigate();
     const location = useLocation();
+    const songData = useLoaderData();
 
     return (
         <MainBodyContainer>
@@ -30,32 +37,39 @@ const LyricsPage = ({ onBack }) => {
                         <BackSvg className="stroke-neutrals-700 hover:stroke-neutrals-500 active:stroke-neutrals-600" />
                     </Button>
                 )}
+                <h1 className="text-baseblack font-bold text-2xl ml-auto">
+                    {songData.title}
+                </h1>
                 <div className="ml-auto flex items-center gap-12">
-                    <MusicElement type="chord" detail="D" />
-                    <MusicElement type="tempo" detail="Slow" />
-                    <MusicElement type="rythm" detail="4/4 meter" />
+                    {songData.musicElements.chord && (
+                        <MusicElement
+                            type="chord"
+                            detail={songData.musicElements.chord}
+                        />
+                    )}
+                    {songData.musicElements.tempo && (
+                        <MusicElement
+                            type="tempo"
+                            detail={songData.musicElements.tempo}
+                        />
+                    )}
+                    {songData.musicElements.rythm && (
+                        <MusicElement
+                            type="rythm"
+                            detail={songData.musicElements.rythm}
+                        />
+                    )}
                 </div>
             </Card>
             <p className="flex justify-center self-stretch text-baseblack text-xl font-bold whitespace-pre">
-                {`Amazing grace how sweet the sound
-That saved a wretch like me
-I once was lost but now I'm found
-Was blind but now I see
-'Twas grace that taught my heart to fear
-And grace my fears relieved
-How precious did that grace appear
-The hour I first believed
-Through many dangers, toils and snares
-I have already come
-'Tis Grace that brought me safe thus far
-And grace will lead me home
-When we've been there ten thousand years
-Bright shining as the sun
-We've no less days to sing God's praise
-Than when we've first begun`}
+                {songData.lyrics}
             </p>
         </MainBodyContainer>
     );
 };
 
 export default LyricsPage;
+
+export const loader = ({ params }) => {
+    return getSong(params.songId);
+};

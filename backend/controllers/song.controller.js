@@ -1,13 +1,14 @@
 import MediaFileModel from "../models/media-file.model.js";
 import SongModel from "../models/song.model.js";
 import { regexBuilder } from "../utils/amharic-map.util.js";
+import { NotFoundError } from "../utils/error.util.js";
 
 export const getAllOrSearchSongs = async (req, res) => {
     const { q, page = 1 } = req.query;
-
     let songs;
     if (!q)
-        songs = await SongModel.find()
+        songs = await SongModel.find({}, "title")
+            .populate("albums", "name")
             .skip((page - 1) * 100)
             .limit(100);
     else {
@@ -51,6 +52,8 @@ export const getSong = async (req, res) => {
     const { id } = req.params;
 
     const song = await SongModel.findById(id).populate("mediaFiles");
+
+    if (!song) throw new NotFoundError("Song not found");
 
     res.status(200).json(song);
 };
