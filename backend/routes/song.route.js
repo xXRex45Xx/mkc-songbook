@@ -7,16 +7,20 @@ import {
     updateSong,
 } from "../controllers/song.controller.js";
 import { wrapAsync } from "../utils/error.util.js";
+import {
+    validateGetAllSongs,
+    validateGetSong,
+} from "../middlewares/song-validation.middleware.js";
 
 const songRouter = Router();
 
 songRouter
     .route("/")
-    .get(wrapAsync(getAllOrSearchSongs))
+    .get(wrapAsync(validateGetAllSongs), wrapAsync(getAllOrSearchSongs))
     .post(wrapAsync(addSong));
 songRouter
     .route("/:id")
-    .get(wrapAsync(getSong))
+    .get(wrapAsync(validateGetSong), wrapAsync(getSong))
     .patch(wrapAsync(updateSong))
     .delete(wrapAsync(deleteSong));
 

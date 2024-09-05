@@ -4,7 +4,7 @@ export const getAllOrSearchSongs = async (searchQuery = null, page = 1) => {
     const response = await fetch(
         `${backendURL}/api/song?page=${page}${
             searchQuery.q ? "&q=" + searchQuery.q : ""
-        }`
+        }${searchQuery.type ? "&type=" + searchQuery.type : ""}`
     );
     const data = await response.json();
     if (!response.ok) throw { message: data.message, status: response.status };

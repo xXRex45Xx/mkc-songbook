@@ -2,12 +2,17 @@ import MainBodyContainer from "../components/main-body-container.component";
 import { Table } from "flowbite-react";
 
 import CustomTable from "../components/custom-table.component";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 
 import HeartSvg from "../assets/heart.svg?react";
 import DownloadSvg from "../assets/download.svg?react";
 import OptionsSvg from "../assets/options.svg?react";
-import { useLoaderData, useLocation, useNavigate } from "react-router-dom";
+import {
+    useLoaderData,
+    useLocation,
+    useNavigate,
+    useSearchParams,
+} from "react-router-dom";
 import SearchBar from "../components/search-bar.component";
 import { getAllOrSearchSongs } from "../utils/api/songs-api.util";
 
@@ -15,47 +20,94 @@ const SongsPage = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const songData = useLoaderData();
+    const [searchParams, setSearchParams] = useSearchParams();
 
+    const songMapFn = useCallback(
+        (song) => (
+            <Table.Row
+                onClick={() =>
+                    navigate(song._id.toString(), {
+                        state: {
+                            prevLocation: location.pathname + location.search,
+                        },
+                    })
+                }
+                key={song._id}
+            >
+                <Table.Cell>{song._id}</Table.Cell>
+                <Table.Cell>{song.title}</Table.Cell>
+                <Table.Cell>
+                    {song.albums.map((song) => song.name).join(", ")}
+                </Table.Cell>
+                <Table.Cell className="text-end">
+                    <div className="flex gap-7 items-center justify-end">
+                        <div>
+                            <HeartSvg className="first:stroke-baseblack first:fill-basewhite hover:first:fill-primary-400 active:first:fill-primary-700 cursor-pointer" />
+                        </div>
+                        <div>
+                            <DownloadSvg className="hover:first:fill-success-200 active:first:fill-success-300 cursor-pointer" />
+                        </div>
+                        <div>
+                            <OptionsSvg className="text-basewhite hover:text-neutrals-400 active:text-baseblack cursor-pointer" />
+                        </div>
+                    </div>
+                </Table.Cell>
+            </Table.Row>
+        ),
+        [navigate, location]
+    );
     return (
         <MainBodyContainer title={"Songs"}>
-            <SearchBar />
-            <CustomTable
-                headers={[
-                    { align: "left", name: "SONG NUMBER" },
-                    { align: "left", name: "SONG NAME" },
-                    { align: "left", name: "ALBUMS" },
-                    { align: "right", name: "DOWNLOAD" },
-                ]}
-            >
-                {songData.map((song) => (
-                    <Table.Row
-                        onClick={() =>
-                            navigate(song._id.toString(), {
-                                state: { prevLocation: location.pathname },
-                            })
-                        }
+            <SearchBar
+                searchValue={searchParams.get("q")}
+                selectValue={searchParams.get("type")}
+                action="/songs"
+            />
+
+            {searchParams.get("type") !== "all" && (
+                <CustomTable
+                    headers={[
+                        { align: "left", name: "SONG NUMBER" },
+                        { align: "left", name: "SONG NAME" },
+                        { align: "left", name: "ALBUMS" },
+                        { align: "right", name: "DOWNLOAD" },
+                    ]}
+                    overflow_auto
+                >
+                    {songData.map(songMapFn)}
+                </CustomTable>
+            )}
+
+            {searchParams.get("type") === "all" && (
+                <>
+                    <h2 className="text-baseblack text-2xl font-bold leading-9">
+                        Title Search Results
+                    </h2>
+                    <CustomTable
+                        headers={[
+                            { align: "left", name: "SONG NUMBER" },
+                            { align: "left", name: "SONG NAME" },
+                            { align: "left", name: "ALBUMS" },
+                            { align: "right", name: "DOWNLOAD" },
+                        ]}
                     >
-                        <Table.Cell>{song._id}</Table.Cell>
-                        <Table.Cell>{song.title}</Table.Cell>
-                        <Table.Cell>
-                            {song.albums.map((song) => song.name).join(", ")}
-                        </Table.Cell>
-                        <Table.Cell className="text-end">
-                            <div className="flex gap-7 items-center justify-end">
-                                <div>
-                                    <HeartSvg className="first:stroke-baseblack first:fill-basewhite hover:first:fill-primary-400 active:first:fill-primary-700 cursor-pointer" />
-                                </div>
-                                <div>
-                                    <DownloadSvg className="hover:first:fill-success-200 active:first:fill-success-300 cursor-pointer" />
-                                </div>
-                                <div>
-                                    <OptionsSvg className="text-basewhite hover:text-neutrals-400 active:text-baseblack cursor-pointer" />
-                                </div>
-                            </div>
-                        </Table.Cell>
-                    </Table.Row>
-                ))}
-            </CustomTable>
+                        {songData.titleMatch.map(songMapFn)}
+                    </CustomTable>
+                    <h2 className="text-baseblack text-2xl font-bold leading-9">
+                        Lyrics Search Results
+                    </h2>
+                    <CustomTable
+                        headers={[
+                            { align: "left", name: "SONG NUMBER" },
+                            { align: "left", name: "SONG NAME" },
+                            { align: "left", name: "ALBUMS" },
+                            { align: "right", name: "DOWNLOAD" },
+                        ]}
+                    >
+                        {songData.lyricsMatch.map(songMapFn)}
+                    </CustomTable>
+                </>
+            )}
         </MainBodyContainer>
     );
 };
@@ -65,6 +117,9 @@ export default SongsPage;
 export const loader = ({ request }) => {
     const searchParams = new URL(request.url).searchParams;
     const page = searchParams.get("page");
-    const searchQuery = { q: searchParams.get("q") };
+    const searchQuery = {
+        q: searchParams.get("q"),
+        type: searchParams.get("type"),
+    };
     return getAllOrSearchSongs(searchQuery, page ? page : 1);
 };

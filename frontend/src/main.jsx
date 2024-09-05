@@ -10,7 +10,6 @@ import AlbumsPage from "./pages/albums.page.jsx";
 
 import { loader as songsLoader } from "./pages/songs.page.jsx";
 import { loader as songLoader } from "./pages/lyrics.page.jsx";
-
 const router = createBrowserRouter([
     {
         path: "/",
