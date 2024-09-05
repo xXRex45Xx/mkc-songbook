@@ -6,6 +6,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import MainBodyContainer from "./components/main-body-container.component.jsx";
 import SongsPage from "./pages/songs.page.jsx";
 import LyricsPage from "./pages/lyrics.page.jsx";
+import AlbumsPage from "./pages/albums.page.jsx";
 
 import { loader as songsLoader } from "./pages/songs.page.jsx";
 import { loader as songLoader } from "./pages/lyrics.page.jsx";
@@ -35,9 +36,7 @@ const router = createBrowserRouter([
             },
             {
                 path: "albums",
-                element: (
-                    <MainBodyContainer title={"Albums"}></MainBodyContainer>
-                ),
+                element: <AlbumsPage />,
             },
             {
                 path: "playlists",
