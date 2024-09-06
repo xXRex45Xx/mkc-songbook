@@ -22,39 +22,49 @@ const SongsPage = () => {
     const songData = useLoaderData();
     const [searchParams, setSearchParams] = useSearchParams();
 
-    const songMapFn = useCallback(
-        (song) => (
-            <Table.Row
-                onClick={() =>
-                    navigate(song._id.toString(), {
-                        state: {
-                            prevLocation: location.pathname + location.search,
-                        },
-                    })
-                }
-                key={song._id}
-            >
-                <Table.Cell>{song._id}</Table.Cell>
-                <Table.Cell>{song.title}</Table.Cell>
-                <Table.Cell>
-                    {song.albums.map((song) => song.name).join(", ")}
-                </Table.Cell>
-                <Table.Cell className="text-end">
-                    <div className="flex gap-7 items-center justify-end">
-                        <div>
-                            <HeartSvg className="first:stroke-baseblack first:fill-basewhite hover:first:fill-primary-400 active:first:fill-primary-700 cursor-pointer" />
+    const mapSongs = useCallback(
+        (songs, highlight) =>
+            songs.map((song) => (
+                <Table.Row
+                    onClick={() =>
+                        navigate(
+                            {
+                                pathname: song._id.toString(),
+                                search: highlight
+                                    ? `?q=${searchParams.get("q")}`
+                                    : null,
+                            },
+                            {
+                                state: {
+                                    prevLocation:
+                                        location.pathname + location.search,
+                                },
+                            }
+                        )
+                    }
+                    key={song._id}
+                >
+                    <Table.Cell>{song._id}</Table.Cell>
+                    <Table.Cell>{song.title}</Table.Cell>
+                    <Table.Cell>
+                        {song.albums.map((song) => song.name).join(", ")}
+                    </Table.Cell>
+                    <Table.Cell className="text-end">
+                        <div className="flex gap-7 items-center justify-end">
+                            <div>
+                                <HeartSvg className="first:stroke-baseblack first:fill-basewhite hover:first:fill-primary-400 active:first:fill-primary-700 cursor-pointer" />
+                            </div>
+                            <div>
+                                <DownloadSvg className="hover:first:fill-success-200 active:first:fill-success-300 cursor-pointer" />
+                            </div>
+                            <div>
+                                <OptionsSvg className="text-basewhite hover:text-neutrals-400 active:text-baseblack cursor-pointer" />
+                            </div>
                         </div>
-                        <div>
-                            <DownloadSvg className="hover:first:fill-success-200 active:first:fill-success-300 cursor-pointer" />
-                        </div>
-                        <div>
-                            <OptionsSvg className="text-basewhite hover:text-neutrals-400 active:text-baseblack cursor-pointer" />
-                        </div>
-                    </div>
-                </Table.Cell>
-            </Table.Row>
-        ),
-        [navigate, location]
+                    </Table.Cell>
+                </Table.Row>
+            )),
+        [navigate, location, searchParams]
     );
     return (
         <MainBodyContainer title={"Songs"}>
@@ -74,7 +84,7 @@ const SongsPage = () => {
                     ]}
                     overflow_auto
                 >
-                    {songData.map(songMapFn)}
+                    {mapSongs(songData, searchParams.get("type") === "lyrics")}
                 </CustomTable>
             )}
 
@@ -91,7 +101,7 @@ const SongsPage = () => {
                             { align: "right", name: "DOWNLOAD" },
                         ]}
                     >
-                        {songData.titleMatch.map(songMapFn)}
+                        {mapSongs(songData.titleMatch, false)}
                     </CustomTable>
                     <h2 className="text-baseblack text-2xl font-bold leading-9">
                         Lyrics Search Results
@@ -104,7 +114,7 @@ const SongsPage = () => {
                             { align: "right", name: "DOWNLOAD" },
                         ]}
                     >
-                        {songData.lyricsMatch.map(songMapFn)}
+                        {mapSongs(songData.lyricsMatch, true)}
                     </CustomTable>
                 </>
             )}

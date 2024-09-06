@@ -3,6 +3,7 @@ import {
     useLocation,
     useNavigate,
     useParams,
+    useSearchParams,
 } from "react-router-dom";
 import MainBodyContainer from "../components/main-body-container.component";
 import { Button, Card } from "flowbite-react";
@@ -11,11 +12,19 @@ import BackSvg from "../assets/back.svg?react";
 import { buttonTheme } from "../config/button-theme.config";
 import MusicElement from "../components/music-element.component";
 import { getSong } from "../utils/api/songs-api.util";
+import { regexBuilder } from "../../../backend/utils/amharic-map.util";
+import { useMemo } from "react";
 
 const LyricsPage = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const songData = useLoaderData();
+    const [searchParams, _setSearchParams] = useSearchParams();
+    const regex = useMemo(() => {
+        if (searchParams.get("q"))
+            return new RegExp(regexBuilder(`(${searchParams.get("q")})`), "gi");
+        else return null;
+    }, [searchParams]);
 
     return (
         <MainBodyContainer>
@@ -61,8 +70,21 @@ const LyricsPage = () => {
                     )}
                 </div>
             </Card>
-            <p className="flex justify-center self-stretch text-baseblack text-xl font-bold whitespace-pre">
-                {songData.lyrics}
+            <p className="justify-center self-center text-baseblack text-xl font-bold whitespace-pre">
+                {searchParams.get("q")
+                    ? songData.lyrics
+                          .split(regex)
+
+                          .map((part) =>
+                              regex.test(part) ? (
+                                  <span className="bg-primary rounded-md">
+                                      {part}
+                                  </span>
+                              ) : (
+                                  part
+                              )
+                          )
+                    : songData.lyrics}
             </p>
         </MainBodyContainer>
     );
