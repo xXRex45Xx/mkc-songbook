@@ -1,8 +1,6 @@
 import MainBodyContainer from "../components/main-body-container.component";
 import image3 from "../assets/image3.svg";
-import AlbumCardContainer from "../components/ablums.card.component";
 import { Card } from "flowbite-react";
-import CustomTable from "../components/custom-table.component";
 const AlbumsPage = () => {
 	return (
 		<MainBodyContainer title={"Recent Albums"}>
