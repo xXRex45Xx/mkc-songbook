@@ -4,12 +4,12 @@ import { regexBuilder } from "../utils/amharic-map.util.js";
 import { NotFoundError } from "../utils/error.util.js";
 
 export const getAllOrSearchSongs = async (req, res) => {
-    const { q, page = 1, all, type } = req.query;
+    const { q, page = 1, all, type, sortBy } = req.query;
     let songs;
     if (all) songs = await SongModel.find();
     else if (!q)
         songs = await SongModel.find({}, { title: true })
-            .sort("_id")
+            .sort(sortBy)
             .populate("albums", "name")
             .skip((page - 1) * 100)
             .limit(100);
@@ -17,16 +17,19 @@ export const getAllOrSearchSongs = async (req, res) => {
         const regex = new RegExp(regexBuilder(q), "i");
         if (type === "title")
             songs = await SongModel.find({ title: regex }, { title: true })
+                .sort(sortBy)
                 .populate("albums", "name")
                 .skip((page - 1) * 100)
                 .limit(100);
         else if (type === "lyrics")
             songs = await SongModel.find({ lyrics: regex }, { title: true })
+                .sort(sortBy)
                 .populate("albums", "name")
                 .skip((page - 1) * 100)
                 .limit(100);
         else if (type === "id")
             songs = await SongModel.find({ _id: parseInt(q) }, { title: true })
+                .sort(sortBy)
                 .populate("albums", "name")
                 .skip((page - 1) * 100)
                 .limit(100);
@@ -36,6 +39,7 @@ export const getAllOrSearchSongs = async (req, res) => {
                     { title: regex },
                     { title: true }
                 )
+                    .sort(sortBy)
                     .populate("albums", "name")
                     .skip((page - 1) * 100)
                     .limit(100),
@@ -43,6 +47,7 @@ export const getAllOrSearchSongs = async (req, res) => {
                     { lyrics: regex },
                     { title: true }
                 )
+                    .sort(sortBy)
                     .populate("albums", "name")
                     .skip((page - 1) * 100)
                     .limit(100),

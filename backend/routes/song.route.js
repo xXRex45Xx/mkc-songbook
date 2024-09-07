@@ -11,12 +11,17 @@ import {
     validateGetAllSongs,
     validateGetSong,
 } from "../middlewares/song-validation.middleware.js";
+import mapSongSortBy from "../middlewares/song-map-sortby.middleware.js";
 
 const songRouter = Router();
 
 songRouter
     .route("/")
-    .get(wrapAsync(validateGetAllSongs), wrapAsync(getAllOrSearchSongs))
+    .get(
+        wrapAsync(validateGetAllSongs),
+        wrapAsync(mapSongSortBy),
+        wrapAsync(getAllOrSearchSongs)
+    )
     .post(wrapAsync(addSong));
 songRouter
     .route("/:id")

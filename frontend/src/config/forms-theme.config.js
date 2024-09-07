@@ -1,7 +1,7 @@
 export const selectTheme = {
     field: {
         select: {
-            base: "border-none focus:ring-0",
+            base: "border-none focus:ring-0 bg-basewhite",
             colors: {
                 gray: "text-baseblack bg-neutrals-100 focus:outline-none",
             },

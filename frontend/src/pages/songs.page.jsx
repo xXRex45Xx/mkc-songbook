@@ -8,6 +8,7 @@ import HeartSvg from "../assets/heart.svg?react";
 import DownloadSvg from "../assets/download.svg?react";
 import OptionsSvg from "../assets/options.svg?react";
 import {
+    redirect,
     useLoaderData,
     useLocation,
     useNavigate,
@@ -15,6 +16,7 @@ import {
 } from "react-router-dom";
 import SearchBar from "../components/search-bar.component";
 import { getAllOrSearchSongs } from "../utils/api/songs-api.util";
+import SortDropdown from "../components/sort-dropdown.component";
 
 const SongsPage = () => {
     const navigate = useNavigate();
@@ -68,11 +70,14 @@ const SongsPage = () => {
     );
     return (
         <MainBodyContainer title={"Songs"}>
-            <SearchBar
-                searchValue={searchParams.get("q")}
-                selectValue={searchParams.get("type")}
-                action="/songs"
-            />
+            <div className="flex self-stretch justify-between ">
+                <SearchBar
+                    searchValue={searchParams.get("q")}
+                    selectValue={searchParams.get("type")}
+                    action="/songs"
+                />
+                <SortDropdown />
+            </div>
 
             {searchParams.get("type") !== "all" && (
                 <CustomTable
@@ -130,6 +135,7 @@ export const loader = ({ request }) => {
     const searchQuery = {
         q: searchParams.get("q"),
         type: searchParams.get("type"),
+        sortBy: searchParams.get("sortby"),
     };
     return getAllOrSearchSongs(searchQuery, page ? page : 1);
 };
