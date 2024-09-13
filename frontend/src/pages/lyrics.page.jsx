@@ -2,7 +2,6 @@ import {
     useLoaderData,
     useLocation,
     useNavigate,
-    useParams,
     useSearchParams,
 } from "react-router-dom";
 import MainBodyContainer from "../components/main-body-container.component";
@@ -14,18 +13,20 @@ import MusicElement from "../components/music-element.component";
 import { getSong } from "../utils/api/songs-api.util";
 import { regexBuilder } from "../../../backend/utils/amharic-map.util";
 import { useMemo } from "react";
+import { useSelector } from "react-redux";
 
 const LyricsPage = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const songData = useLoaderData();
     const [searchParams, _setSearchParams] = useSearchParams();
+    const lyricsFontSize = useSelector((state) => state.configs.lyricsFontSize);
+
     const regex = useMemo(() => {
         if (searchParams.get("q"))
             return new RegExp(regexBuilder(`(${searchParams.get("q")})`), "gi");
         else return null;
     }, [searchParams]);
-
     return (
         <MainBodyContainer>
             <Card
@@ -70,7 +71,10 @@ const LyricsPage = () => {
                     )}
                 </div>
             </Card>
-            <p className="justify-center self-center text-baseblack text-xl font-bold whitespace-pre">
+            <p
+                style={{ fontSize: `${lyricsFontSize}pt` }}
+                className={`justify-center self-center text-baseblack font-bold whitespace-pre`}
+            >
                 {searchParams.get("q")
                     ? songData.lyrics
                           .split(regex)

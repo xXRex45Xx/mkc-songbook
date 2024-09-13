@@ -8,7 +8,6 @@ import HeartSvg from "../assets/heart.svg?react";
 import DownloadSvg from "../assets/download.svg?react";
 import OptionsSvg from "../assets/options.svg?react";
 import {
-    redirect,
     useLoaderData,
     useLocation,
     useNavigate,

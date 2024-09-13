@@ -32,3 +32,15 @@ export const searchInputTheme = {
         },
     },
 };
+
+export const rangeSliderTheme = {
+    root: {
+        base: "flex",
+    },
+    field: {
+        base: "relative w-full",
+        input: {
+            base: "-translate-y-1/2 absolute z-10 [&::-moz-range-progress]:h-0 w-full cursor-pointer appearance-none rounded-lg bg-transparent",
+        },
+    },
+};

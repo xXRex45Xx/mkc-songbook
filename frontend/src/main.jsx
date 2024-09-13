@@ -10,6 +10,9 @@ import AlbumsPage from "./pages/albums.page.jsx";
 
 import { loader as songsLoader } from "./pages/songs.page.jsx";
 import { loader as songLoader } from "./pages/lyrics.page.jsx";
+import { Provider } from "react-redux";
+import store from "./store/store.js";
+
 const router = createBrowserRouter([
     {
         path: "/",
@@ -55,6 +58,8 @@ const router = createBrowserRouter([
 
 createRoot(document.getElementById("root")).render(
     <StrictMode>
-        <RouterProvider router={router} />
+        <Provider store={store}>
+            <RouterProvider router={router} />
+        </Provider>
     </StrictMode>
 );

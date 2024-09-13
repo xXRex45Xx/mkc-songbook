@@ -1,7 +1,7 @@
 import { Dropdown } from "flowbite-react";
 
 import arrowIcon from "../assets/dropdown-arrow.svg";
-import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { useMemo } from "react";
 
 const SortDropdown = () => {

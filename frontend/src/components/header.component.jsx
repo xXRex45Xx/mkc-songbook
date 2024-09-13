@@ -2,7 +2,6 @@ import { Avatar, Dropdown, Navbar } from "flowbite-react";
 import { navbarTheme } from "../config/navbar-theme.config";
 import { useLocation } from "react-router-dom";
 
-// import inactiveBell from "../assets/inactive-bell.svg";
 import Bell from "../assets/active-bell.svg?react";
 import heart from "../assets/heart.svg";
 
