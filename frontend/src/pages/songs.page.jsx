@@ -2,7 +2,7 @@ import MainBodyContainer from "../components/main-body-container.component";
 import { Table } from "flowbite-react";
 
 import CustomTable from "../components/custom-table.component";
-import { useCallback, useMemo } from "react";
+import { useCallback } from "react";
 
 import HeartSvg from "../assets/heart.svg?react";
 import DownloadSvg from "../assets/download.svg?react";
@@ -13,7 +13,6 @@ import {
     useNavigate,
     useSearchParams,
 } from "react-router-dom";
-import SearchBar from "../components/search-bar.component";
 import { getAllOrSearchSongs } from "../utils/api/songs-api.util";
 import SortDropdown from "../components/sort-dropdown.component";
 
@@ -21,7 +20,7 @@ const SongsPage = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const songData = useLoaderData();
-    const [searchParams, setSearchParams] = useSearchParams();
+    const [searchParams, _setSearchParams] = useSearchParams();
 
     const mapSongs = useCallback(
         (songs, highlight) =>
@@ -68,16 +67,7 @@ const SongsPage = () => {
         [navigate, location, searchParams]
     );
     return (
-        <MainBodyContainer title={"Songs"}>
-            <div className="flex self-stretch justify-between ">
-                <SearchBar
-                    searchValue={searchParams.get("q")}
-                    selectValue={searchParams.get("type")}
-                    action="/songs"
-                />
-                <SortDropdown />
-            </div>
-
+        <MainBodyContainer title={"Songs"} titleHelper={<SortDropdown />}>
             {searchParams.get("type") !== "all" && (
                 <CustomTable
                     headers={[

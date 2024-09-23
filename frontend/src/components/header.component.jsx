@@ -1,12 +1,22 @@
-import { Avatar, Dropdown, Navbar } from "flowbite-react";
+import { Avatar, Button, Dropdown, Navbar } from "flowbite-react";
 import { navbarTheme } from "../config/navbar-theme.config";
-import { useLocation } from "react-router-dom";
+import { useLocation, useSearchParams } from "react-router-dom";
 
 import Bell from "../assets/active-bell.svg?react";
 import heart from "../assets/heart.svg";
+import SearchBar from "./search-bar.component";
+import SearchToggleSvg from "../assets/search-toggle.svg?react";
+import { useState } from "react";
+import { buttonTheme } from "../config/button-theme.config";
 
 const Header = () => {
     const { pathname } = useLocation();
+    const [searchParams, _setSearchParams] = useSearchParams();
+    const [showSearch, setShowSearch] = useState(
+        searchParams.has("q") || searchParams.has("type")
+    );
+
+    const toggleSearch = () => setShowSearch((prev) => !prev);
 
     return (
         <>
@@ -22,6 +32,19 @@ const Header = () => {
                     </span>
                 </Navbar.Brand>
                 <div className="pb-6 flex gap-5">
+                    <Button
+                        onClick={toggleSearch}
+                        className="focus:ring-0 *:p-0"
+                        theme={buttonTheme}
+                    >
+                        <SearchToggleSvg
+                            className={
+                                showSearch
+                                    ? "*:stroke-secondary-600"
+                                    : "*:stroke-baseblack"
+                            }
+                        />
+                    </Button>
                     <Dropdown
                         arrowIcon={false}
                         inline
@@ -93,6 +116,19 @@ const Header = () => {
                     </Navbar.Link>
                 </Navbar.Collapse>
             </Navbar>
+            <div
+                className={` transition-all flex justify-center ${
+                    showSearch
+                        ? "max-h-40 pt-7"
+                        : "max-h-0 overflow-hidden pt-0"
+                } `}
+            >
+                <SearchBar
+                    action="/songs"
+                    searchValue={searchParams.get("q")}
+                    selectValue={searchParams.get("type")}
+                />
+            </div>
         </>
     );
 };

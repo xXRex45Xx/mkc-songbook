@@ -6,13 +6,14 @@ import { Form, useSearchParams, useSubmit } from "react-router-dom";
 
 const SearchBar = ({ action, searchValue = "", selectValue = "all" }) => {
     const submit = useSubmit();
-    const [searchParams] = useSearchParams();
+    const [searchParams, _setSearchParams] = useSearchParams();
 
     const handleSubmit = (e) => {
+        e.preventDefault();
         const formData = new FormData(e.target);
         if (searchParams.has("sortby"))
             formData.set("sortby", searchParams.get("sortby"));
-        submit(formData);
+        submit(formData, { action });
     };
 
     return (
@@ -20,7 +21,7 @@ const SearchBar = ({ action, searchValue = "", selectValue = "all" }) => {
             method="GET"
             onSubmit={handleSubmit}
             navigate={false}
-            action={action}
+            className="h-full"
         >
             <div className="flex items-stretch">
                 <Select
