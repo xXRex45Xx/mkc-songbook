@@ -5,6 +5,7 @@ import { forwardRef } from "react";
 const CustomTable = forwardRef(
     (
         {
+            title,
             headers,
             children,
             overflowAuto,
@@ -20,6 +21,9 @@ const CustomTable = forwardRef(
                 overflowAuto ? "overflow-auto" : ""
             }`}
         >
+            <h2 className="text-baseblack text-base md:text-2xl font-bold leading-9">
+                {title}
+            </h2>
             <Table ref={ref} theme={tableTheme} hoverable>
                 <Table.Head>
                     {headers.map((header) => (

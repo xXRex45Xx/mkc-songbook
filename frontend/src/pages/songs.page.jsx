@@ -10,7 +10,7 @@ import useWindowSize from "../hooks/useWindowSize.hook";
 import SongsTableRow from "../components/custom-row.component";
 
 const SongsPage = () => {
-    const songData = useLoaderData();
+    const { songs, totalPages } = useLoaderData();
     const [searchParams, setSearchParams] = useSearchParams();
     const windowWidth = useSelector((state) => state.configs.windowWidth);
     useWindowSize();
@@ -34,7 +34,7 @@ const SongsPage = () => {
                     headers={tableHeaders}
                     overflowAuto
                     pagination
-                    totalPages={songData.totalPages}
+                    totalPages={totalPages}
                     onPageChange={(p) => {
                         setSearchParams((prev) => {
                             prev.set("page", p);
@@ -51,8 +51,7 @@ const SongsPage = () => {
                     }
                     ref={neutralTableRef}
                 >
-                    {/* {mapSongs(songData, searchParams.get("type") === "lyrics")} */}
-                    {songData.songs.map((song) => (
+                    {songs.map((song) => (
                         <SongsTableRow
                             key={song._id + song.title}
                             song={song}
@@ -64,50 +63,51 @@ const SongsPage = () => {
 
             {searchParams.get("type") === "all" && (
                 <>
-                    <h2 className="text-baseblack text-2xl font-bold leading-9">
-                        Title Search Results
-                    </h2>
-                    <CustomTable headers={tableHeaders} ref={titleTableRef}>
-                        {/* {mapSongs(songData.titleMatch, false)} */}
-                        {songData.songs.titleMatch.map((song) => (
-                            <SongsTableRow
-                                key={song._id + song.title}
-                                song={song}
-                                highlight={false}
-                            />
-                        ))}
-                    </CustomTable>
-                    <h2 className="text-baseblack text-2xl font-bold leading-9">
-                        Lyrics Search Results
-                    </h2>
-                    <CustomTable
-                        headers={tableHeaders}
-                        pagination
-                        totalPages={songData.totalPages}
-                        onPageChange={(p) => {
-                            setSearchParams((prev) => {
-                                prev.set("page", p);
-                                return prev;
-                            });
-                            titleTableRef.current.scrollIntoView({
-                                behavior: "smooth",
-                            });
-                        }}
-                        currentPage={
-                            searchParams.get("page")
-                                ? parseInt(searchParams.get("page"))
-                                : 1
-                        }
-                    >
-                        {/* {mapSongs(songData.lyricsMatch, true)} */}
-                        {songData.songs.lyricsMatch.map((song) => (
-                            <SongsTableRow
-                                key={song._id + song.title}
-                                song={song}
-                                highlight={true}
-                            />
-                        ))}
-                    </CustomTable>
+                    {songs.titleMatch.length !== 0 && (
+                        <CustomTable
+                            title="Title Search Results"
+                            headers={tableHeaders}
+                            ref={titleTableRef}
+                        >
+                            {songs.titleMatch.map((song) => (
+                                <SongsTableRow
+                                    key={song._id + song.title}
+                                    song={song}
+                                    highlight={false}
+                                />
+                            ))}
+                        </CustomTable>
+                    )}
+                    {songs.lyricsMatch.length !== 0 && (
+                        <CustomTable
+                            title="Lyrics Search Results"
+                            headers={tableHeaders}
+                            pagination
+                            totalPages={totalPages}
+                            onPageChange={(p) => {
+                                setSearchParams((prev) => {
+                                    prev.set("page", p);
+                                    return prev;
+                                });
+                                titleTableRef.current.scrollIntoView({
+                                    behavior: "smooth",
+                                });
+                            }}
+                            currentPage={
+                                searchParams.get("page")
+                                    ? parseInt(searchParams.get("page"))
+                                    : 1
+                            }
+                        >
+                            {songs.lyricsMatch.map((song) => (
+                                <SongsTableRow
+                                    key={song._id + song.title}
+                                    song={song}
+                                    highlight={true}
+                                />
+                            ))}
+                        </CustomTable>
+                    )}
                 </>
             )}
         </MainBodyContainer>
