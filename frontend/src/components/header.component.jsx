@@ -49,6 +49,9 @@ const Header = () => {
                         arrowIcon={false}
                         inline
                         label={<Bell className="text-transparent" />}
+                        theme={{
+                            inlineWrapper: "hidden md:flex md:items-center",
+                        }}
                     >
                         <Dropdown.Header>
                             <span className="block text-sm">Notifications</span>
@@ -82,7 +85,6 @@ const Header = () => {
                         <Dropdown.Divider />
                         <Dropdown.Item>Log Out</Dropdown.Item>
                     </Dropdown>
-                    <Navbar.Toggle />
                 </div>
             </Navbar>
             <Navbar fluid border theme={navbarTheme}>

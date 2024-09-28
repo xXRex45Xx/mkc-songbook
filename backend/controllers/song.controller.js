@@ -5,35 +5,49 @@ import { NotFoundError } from "../utils/error.util.js";
 
 export const getAllOrSearchSongs = async (req, res) => {
     const { q, page = 1, all, type, sortBy } = req.query;
-    let songs;
+    let songs, totalPages;
     if (all) songs = await SongModel.find();
-    else if (!q)
+    else if (!q) {
         songs = await SongModel.find({}, { title: true })
             .sort(sortBy)
             .populate("albums", "name")
             .skip((page - 1) * 100)
             .limit(100);
-    else {
+        const totalDocuments = await SongModel.find({}).countDocuments();
+        totalPages = Math.floor(totalDocuments / 100) + 1;
+    } else {
         const regex = new RegExp(regexBuilder(q), "i");
-        if (type === "title")
+        if (type === "title") {
             songs = await SongModel.find({ title: regex }, { title: true })
                 .sort(sortBy)
                 .populate("albums", "name")
                 .skip((page - 1) * 100)
                 .limit(100);
-        else if (type === "lyrics")
+            const totalDocuments = await SongModel.find({
+                title: regex,
+            }).countDocuments();
+            totalPages = Math.floor(totalDocuments / 100) + 1;
+        } else if (type === "lyrics") {
             songs = await SongModel.find({ lyrics: regex }, { title: true })
                 .sort(sortBy)
                 .populate("albums", "name")
                 .skip((page - 1) * 100)
                 .limit(100);
-        else if (type === "id")
+            const totalDocuments = await SongModel.find({
+                lyrics: regex,
+            }).countDocuments();
+            totalPages = Math.floor(totalDocuments / 100) + 1;
+        } else if (type === "id") {
             songs = await SongModel.find({ _id: parseInt(q) }, { title: true })
                 .sort(sortBy)
                 .populate("albums", "name")
                 .skip((page - 1) * 100)
                 .limit(100);
-        else
+            const totalDocuments = await SongModel.find({
+                _id: parseInt(q),
+            }).countDocuments();
+            totalPages = Math.floor(totalDocuments / 100) + 1;
+        } else {
             songs = {
                 titleMatch: await SongModel.find(
                     { title: regex },
@@ -52,8 +66,22 @@ export const getAllOrSearchSongs = async (req, res) => {
                     .skip((page - 1) * 100)
                     .limit(100),
             };
+            const titleTotalDocuments = await SongModel.find({
+                title: regex,
+            }).countDocuments();
+            const lyricsTotalDocuments = await SongModel.find({
+                lyrics: regex,
+            }).countDocuments();
+
+            totalPages =
+                Math.floor(
+                    titleTotalDocuments > lyricsTotalDocuments
+                        ? titleTotalDocuments / 100
+                        : lyricsTotalDocuments / 100
+                ) + 1;
+        }
     }
-    res.status(200).json(songs);
+    res.status(200).json({ songs, totalPages });
 };
 
 export const addSong = async (req, res) => {
