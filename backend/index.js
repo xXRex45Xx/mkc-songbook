@@ -18,11 +18,14 @@ app.use(express.json());
 app.use("/api", apiRouter);
 
 app.use(async (err, _req, res, _next) => {
-    const { message, statusCode = 500 } = err;
-    res.status(statusCode).json({ message });
-    if (err instanceof ServerFaultError) {
-        console.error("Server error:", err.internalError);
+    let { message, statusCode = 500 } = err;
+
+    if (statusCode === 500) {
+        console.error("Server error: ", err);
+        console.error("Internal error: ", err.internalError);
+        message = "An unexpected error occurred.";
     }
+    res.status(statusCode).json({ message });
 });
 
 connect(process.env.DB_URI).then(() => {

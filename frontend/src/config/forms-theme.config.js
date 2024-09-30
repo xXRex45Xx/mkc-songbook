@@ -1,7 +1,7 @@
 export const selectTheme = {
     field: {
         select: {
-            base: "border-none focus:ring-0",
+            base: "border-none focus:ring-0 bg-basewhite",
             colors: {
                 gray: "text-baseblack bg-neutrals-100 focus:outline-none",
             },
@@ -29,6 +29,18 @@ export const searchInputTheme = {
             sizes: {
                 md: "py-2.5 text-sm w-64 min-w-28",
             },
+        },
+    },
+};
+
+export const rangeSliderTheme = {
+    root: {
+        base: "flex",
+    },
+    field: {
+        base: "relative w-full",
+        input: {
+            base: "-translate-y-1/2 absolute z-10 [&::-moz-range-progress]:h-0 w-full cursor-pointer appearance-none rounded-lg bg-transparent",
         },
     },
 };

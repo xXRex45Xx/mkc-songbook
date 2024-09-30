@@ -1,10 +1,10 @@
 import { Schema, model, Types } from "mongoose";
 
 const albumSchema = new Schema({
-    _id: { type: String, required: true },
-    name: { type: String, required: true },
-    volume: { type: String, required: true },
-    year: { type: String, required: true },
+    _id: { type: String, minLength: 1, required: true },
+    name: { type: String, minLength: 1, required: true },
+    volume: { type: String, minLength: 1, required: true },
+    year: { type: String, minLength: 4, required: true },
     photo: { data: Buffer, contentType: String },
     songs: [{ type: Number, ref: "Song" }],
 });
