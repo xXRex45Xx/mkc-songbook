@@ -17,21 +17,13 @@ passport.use(
         async (email, password, done) => {
             try {
                 const user = await UserModel.findOne({ email: email.trim() });
-                const message = "Incorrect Username or Password.";
 
-                if (!user) return done(null, false, { message });
+                if (!user) return done(null, false);
                 const matches = await bcrypt.compare(password, user.password);
 
-                if (!matches) return done(null, false, { message });
-                const token = jwt.sign(
-                    {
-                        id: user._id,
-                        email: user.email,
-                        role: user.role,
-                    },
-                    process.env.JWT_SECRET
-                );
-                return done(null, { user, token });
+                if (!matches) return done(null, false);
+
+                return done(null, user);
             } catch (error) {
                 return done(error);
             }

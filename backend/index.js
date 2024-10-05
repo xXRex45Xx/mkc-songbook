@@ -4,6 +4,7 @@ import express from "express";
 import apiRouter from "./routes/index.js";
 import cors from "cors";
 import "./config/nodemailer.config.js";
+import "./config/passport.config.js";
 
 if (config().error) throw config().error;
 
