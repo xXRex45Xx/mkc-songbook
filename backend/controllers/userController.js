@@ -7,7 +7,12 @@ import jwt from "jsonwebtoken";
 export const registerOTP = async (req, res) => {
     const { email } = req.body;
     let otp = generateOtp();
-    const savedOTP = await OTPModel.create({ otp, email });
+    const current = await OTPModel.findOne({ email });
+    if (current) {
+        current.otp = otp;
+        current.createdAt = Date.now();
+        current.save();
+    } else await OTPModel.create({ otp, email });
     res.status(200).json({ success: true });
 };
 
