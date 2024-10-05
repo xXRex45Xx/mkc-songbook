@@ -9,7 +9,7 @@ const songSchema = new Schema({
         required: true,
         index: true,
     },
-    lyrics: { type: String, required: true },
+    lyrics: { type: String, trim: true, required: true },
     musicElements: {
         chord: { type: String },
         tempo: { type: Number },
@@ -17,6 +17,7 @@ const songSchema = new Schema({
     },
     createdAt: {
         type: String,
+        trim: true,
         default: () => new Date().getFullYear().toString(),
     },
     updatedAt: { type: Date, default: Date.now },

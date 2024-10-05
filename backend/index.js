@@ -3,7 +3,7 @@ import { connect } from "./config/db.js";
 import express from "express";
 import apiRouter from "./routes/index.js";
 import cors from "cors";
-import { ServerFaultError } from "./utils/error.util.js";
+import "./config/nodemailer.config.js";
 
 if (config().error) throw config().error;
 
