@@ -12,50 +12,64 @@ import { loader as songLoader } from "./pages/lyrics.page.jsx";
 import SchedulePage from "./pages/schedule.page.jsx";
 import { Provider } from "react-redux";
 import store from "./store/store.js";
+import Auth from "./pages/auth.page.jsx";
+import LoginForm from "./components/login-form.component.jsx";
 
 const router = createBrowserRouter([
-	{
-		path: "/",
-		element: <App />,
-		children: [
-			{
-				index: true,
-				element: (
-					<MainBodyContainer title={"Recent Media"}></MainBodyContainer>
-				),
-			},
-			{
-				path: "songs",
-				element: <SongsPage />,
-				loader: songsLoader,
-			},
-			{
-				path: "songs/:songId",
-				element: <LyricsPage />,
-				loader: songLoader,
-			},
-			{
-				path: "albums",
-				element: <AlbumsPage />,
-			},
-			{
-				path: "playlists",
-				element: (
-					<MainBodyContainer title={"Playlists"}></MainBodyContainer>
-				),
-			},
-			{
-				path: "schedule",
-				element: <SchedulePage />,
-			},
-		],
-	},
+    {
+        path: "/",
+        element: <App />,
+        children: [
+            {
+                index: true,
+                element: (
+                    <MainBodyContainer
+                        title={"Recent Media"}
+                    ></MainBodyContainer>
+                ),
+            },
+            {
+                path: "songs",
+                element: <SongsPage />,
+                loader: songsLoader,
+            },
+            {
+                path: "songs/:songId",
+                element: <LyricsPage />,
+                loader: songLoader,
+            },
+            {
+                path: "albums",
+                element: <AlbumsPage />,
+            },
+            {
+                path: "playlists",
+                element: (
+                    <MainBodyContainer title={"Playlists"}></MainBodyContainer>
+                ),
+            },
+            {
+                path: "schedule",
+                element: <SchedulePage />,
+            },
+        ],
+    },
+    {
+        path: "/auth",
+        element: <Auth />,
+        children: [
+            {
+                index: true,
+                element: <LoginForm />,
+            },
+        ],
+    },
 ]);
 
 createRoot(document.getElementById("root")).render(
-	<StrictMode>
-		<Provider store={store}>
-			<RouterProvider router={router} />
-		</Provider>
-	</StrictMode>
+    <StrictMode>
+        <Provider store={store}>
+            <RouterProvider router={router} />
+        </Provider>
+    </StrictMode>
 );

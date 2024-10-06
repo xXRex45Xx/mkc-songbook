@@ -6,8 +6,6 @@ import {
     Await,
     defer,
     useLoaderData,
-    useLocation,
-    useNavigate,
     useNavigation,
     useSearchParams,
 } from "react-router-dom";
