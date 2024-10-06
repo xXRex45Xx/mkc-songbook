@@ -13,3 +13,12 @@ export const buttonGroupTheme = {
         end: "rounded-l-none border-l-0 pl-0",
     },
 };
+
+export const formButtonTheme = {
+    inner: {
+        base: "flex items-stretch transition-all duration-200 font-semibold",
+    },
+    size: {
+        lg: "px-5 py-2.5 text-lg",
+    },
+};

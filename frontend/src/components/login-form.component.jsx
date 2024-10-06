@@ -3,8 +3,10 @@ import { Form, Link } from "react-router-dom";
 import closedEye from "../assets/closed-eye.svg";
 import openEye from "../assets/open-eye.svg";
 import loginIcon from "../assets/login.svg";
-import googleIcon from "../assets/google.svg";
+
 import { useState } from "react";
+import { formButtonTheme } from "../config/button-theme.config";
+import GoogleLink from "./google-link.component";
 
 const eyeWrapper = (onClick, icon) => (
     <img className="cursor-pointer" src={icon} onClick={onClick} />
@@ -54,30 +56,20 @@ const LoginForm = () => {
                 </div>
                 <div className="flex flex-col gap-2.5">
                     <Button
-                        theme={{
-                            inner: {
-                                base: "flex items-stretch transition-all duration-200 font-semibold",
-                            },
-                            size: {
-                                lg: "px-5 py-2.5 text-lg",
-                            },
-                        }}
+                        theme={formButtonTheme}
                         size="lg"
-                        className="bg-secondary"
+                        className="bg-secondary focus:ring-0"
                         type="submit"
                     >
                         Login
                         <img className="ml-2.5" src={loginIcon} alt="" />
                     </Button>
                     <span className="text-center">or</span>
-                    <Link className="flex py-4 px-8 border rounded-[0.625rem] border-solid border-[#A0A0A8] justify-center items-center gap-3.5 text-baseblack text-lg font-semibold">
-                        <img className="w-5" src={googleIcon} alt="Google" />
-                        Login with Google
-                    </Link>
+                    <GoogleLink>Login with Google</GoogleLink>
                 </div>
                 <span className="text-center">
                     Don't have an account?{" "}
-                    <Link className="text-secondary font-semibold">
+                    <Link to="signup" className="text-secondary font-semibold">
                         Sign Up
                     </Link>
                 </span>
