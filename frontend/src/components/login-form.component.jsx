@@ -18,7 +18,7 @@ const LoginForm = () => {
         setShowPass((prev) => !prev);
     };
     return (
-        <Form className="flex-1 flex flex-col justify-center gap-7 text-baseblack overflow-auto">
+        <Form className="flex-1 flex flex-col gap-7 text-baseblack overflow-auto">
             <h3 className="text-2xl font-bold">Login</h3>
             <div className="flex pt-3.5 flex-col gap-5 items-stretch">
                 <div className="flex flex-col pb-10 gap-5">
