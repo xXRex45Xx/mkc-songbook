@@ -44,3 +44,20 @@ export const rangeSliderTheme = {
         },
     },
 };
+
+export const numberInputTheme = {
+    field: {
+        base: "relative",
+        input: {
+            base: "inline text-center w-11 text-base font-bold border disabled:cursor-not-allowed disabled:opacity-50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
+        },
+    },
+};
+
+export const passwordInputTheme = {
+    field: {
+        rightIcon: {
+            base: "absolute inset-y-0 right-0 flex items-center pr-3",
+        },
+    },
+};

@@ -6,7 +6,7 @@ const Auth = () => (
         <AuthMainContainer>
             <Outlet />
         </AuthMainContainer>
-        <aside className="flex-1 flex flex-col items-stretch gap-7 py-10 px-5 md:justify-center md:gap-16 md:py-10 md:px-5 lg:py-20 lg:px-10 bg-secondary text-basewhite">
+        <aside className="flex flex-col items-stretch gap-7 py-10 px-5 md:flex-1 md:justify-center md:gap-16 md:py-10 md:px-5 lg:py-20 lg:px-10 bg-secondary text-basewhite">
             <h1 className="text-3xl md:text-5xl font-bold">
                 Your Source for MKC Choir's Gospel Songs
             </h1>

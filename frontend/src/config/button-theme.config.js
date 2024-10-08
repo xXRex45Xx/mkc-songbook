@@ -16,7 +16,7 @@ export const buttonGroupTheme = {
 
 export const formButtonTheme = {
     inner: {
-        base: "flex items-stretch transition-all duration-200 font-semibold",
+        base: "flex items-stretch transition-all duration-200 font-semibold w-full justify-center",
     },
     size: {
         lg: "px-5 py-2.5 text-lg",

@@ -15,6 +15,8 @@ import store from "./store/store.js";
 import Auth from "./pages/auth.page.jsx";
 import LoginForm from "./components/login-form.component.jsx";
 import SignUpForm from "./components/sign-up-form.component.jsx";
+import VerifyEmailForm from "./components/verify-email-form.component.jsx";
+import CreatePasswordForm from "./components/create-password-form.component.jsx";
 
 const router = createBrowserRouter([
     {
@@ -66,6 +68,14 @@ const router = createBrowserRouter([
             {
                 path: "signup",
                 element: <SignUpForm />,
+            },
+            {
+                path: "verify",
+                element: <VerifyEmailForm />,
+            },
+            {
+                path: "create-password",
+                element: <CreatePasswordForm />,
             },
         ],
     },

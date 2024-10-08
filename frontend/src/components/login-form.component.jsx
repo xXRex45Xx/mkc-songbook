@@ -7,6 +7,7 @@ import loginIcon from "../assets/login.svg";
 import { useState } from "react";
 import { formButtonTheme } from "../config/button-theme.config";
 import GoogleLink from "./google-link.component";
+import { passwordInputTheme } from "../config/forms-theme.config";
 
 const eyeWrapper = (onClick, icon) => (
     <img className="cursor-pointer" src={icon} onClick={onClick} />
@@ -18,7 +19,7 @@ const LoginForm = () => {
         setShowPass((prev) => !prev);
     };
     return (
-        <Form className="flex-1 flex flex-col gap-7 text-baseblack overflow-auto">
+        <Form className="flex-1 flex flex-col gap-7 min-h-3/4 justify-center text-baseblack overflow-auto md:flex-initial">
             <h3 className="text-2xl font-bold">Login</h3>
             <div className="flex pt-3.5 flex-col gap-5 items-stretch">
                 <div className="flex flex-col pb-10 gap-5">
@@ -33,13 +34,7 @@ const LoginForm = () => {
                     <div className="flex flex-col gap-1.5">
                         <Label htmlFor="password" value="Password" />
                         <TextInput
-                            theme={{
-                                field: {
-                                    rightIcon: {
-                                        base: "absolute inset-y-0 right-0 flex items-center pr-3",
-                                    },
-                                },
-                            }}
+                            theme={passwordInputTheme}
                             id="password"
                             type={showPass ? "text" : "password"}
                             placeholder="********"
