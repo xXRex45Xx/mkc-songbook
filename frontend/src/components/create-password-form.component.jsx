@@ -17,7 +17,7 @@ const CreatePasswordForm = () => {
     const toggleShowPass = () => setShowPass((prev) => !prev);
     const toggleShowVerifyPass = () => setShowVerifyPass((prev) => !prev);
     return (
-        <Form className="flex-1 flex flex-col gap-7 justify-center text-baseblack overflow-auto md:flex-initial">
+        <Form className="flex-1 flex flex-col gap-7 justify-center text-baseblack overflow-auto">
             <div className="flex flex-col gap-1">
                 <span className="text-neutrals-800">Step 3 of 3</span>
                 <h3 className="text-2xl font-bold">Create Your Account</h3>

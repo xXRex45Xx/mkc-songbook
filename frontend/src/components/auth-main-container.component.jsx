@@ -5,7 +5,7 @@ const AuthMainContainer = ({ children }) => {
     const location = useLocation();
     const navigate = useNavigate();
     return (
-        <main className="flex-1 flex flex-col gap-7 py-10 px-5 bg-basewhite justify-center md:flex-initial md:self-stretch md:w-[26.25rem] md:px-8 lg:p-10 md:gap-16">
+        <main className="flex-1 flex flex-col gap-7 py-10 px-5 bg-basewhite md:flex-initial md:self-stretch md:w-[26.25rem] md:px-8 lg:p-10 md:gap-16">
             <div className="flex items-center gap-3">
                 {location.state && location.state.prevLocation ? (
                     <>

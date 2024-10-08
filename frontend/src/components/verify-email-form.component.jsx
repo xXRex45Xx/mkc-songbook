@@ -23,7 +23,7 @@ const VerifyEmailForm = () => {
         if (e.target.value !== "") nextInputRef.current.focus();
     };
     return (
-        <Form className="flex-1 flex flex-col gap-7 min-h-3/4 text-baseblack justify-center overflow-auto md:flex-initial">
+        <Form className="flex-1 flex flex-col gap-7 min-h-3/4 text-baseblack justify-center overflow-auto">
             <div className="flex flex-col gap-1">
                 <span className="text-neutrals-800">Step 2 of 3</span>
                 <h3 className="text-2xl font-bold">Verify Email</h3>
