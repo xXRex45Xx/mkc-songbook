@@ -6,3 +6,4 @@ export const validateGetAllAlbums = async (req, _res, next) => {
 	await validateSchema(req.query, getAllAlbumQuerySchema);
 	next();
 };
+// kdhgjfg
