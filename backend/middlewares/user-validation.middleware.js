@@ -2,6 +2,7 @@ import {
     loginBodySchema,
     registerOTPBodySchema,
     registerUserBodySchema,
+    verifyOTPBodySchema,
 } from "../models/validation-schemas/user.validaton-schema.js";
 import validateSchema from "../utils/validator.util.js";
 
@@ -17,5 +18,10 @@ export const validateRegisterOTP = async (req, _res, next) => {
 
 export const validateLogin = async (req, _res, next) => {
     await validateSchema(req.body, loginBodySchema);
+    next();
+};
+
+export const validateVerifyOTP = async (req, _res, next) => {
+    await validateSchema(req.body, verifyOTPBodySchema);
     next();
 };

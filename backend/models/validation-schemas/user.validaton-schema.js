@@ -39,3 +39,22 @@ export const loginBodySchema = Joi.object({
         .required(),
     password: Joi.string().min(8).max(100).required(),
 }).required();
+
+export const verifyOTPBodySchema = Joi.object({
+    email: Joi.string()
+        .regex(
+            /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+        )
+        .email()
+        .required(),
+    otp: Joi.number()
+        .integer()
+        .positive()
+        .min(100000)
+        .max(999999)
+        .required()
+        .messages({
+            "number.min": "The verification code must be a 6 digit number.",
+            "number.max": "The verification code must be a 6 digit number.",
+        }),
+}).required();

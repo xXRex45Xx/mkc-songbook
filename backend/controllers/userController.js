@@ -3,6 +3,7 @@ import generateOtp from "../utils/otp.util.js";
 import bcrypt from "bcrypt";
 import UserModel from "../models/user.model.js";
 import jwt from "jsonwebtoken";
+import { ClientFaultError } from "../utils/error.util.js";
 
 export const registerOTP = async (req, res) => {
     const { email } = req.body;
@@ -14,6 +15,15 @@ export const registerOTP = async (req, res) => {
         current.save();
     } else await OTPModel.create({ otp, email });
     res.status(200).json({ success: true });
+};
+
+export const verifyOTP = async (req, res) => {
+    let { email, otp } = req.body;
+    if (typeof otp === "string") otp = parseInt(otp);
+    const storedOtp = await OTPModel.findOne({ email, otp });
+    if (!storedOtp)
+        throw new ClientFaultError("The verification code is invalid");
+    return res.status(200).json({ success: true });
 };
 
 export const registerUser = async (req, res) => {
@@ -32,7 +42,6 @@ export const registerUser = async (req, res) => {
         { expiresIn: "30 days" }
     );
     res.status(201).json({
-        success: true,
         user: {
             id: user._id,
             name: user.name,

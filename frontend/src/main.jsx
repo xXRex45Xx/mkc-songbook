@@ -13,10 +13,18 @@ import SchedulePage from "./pages/schedule.page.jsx";
 import { Provider } from "react-redux";
 import store from "./store/store.js";
 import Auth from "./pages/auth.page.jsx";
-import LoginForm from "./components/login-form.component.jsx";
-import SignUpForm from "./components/sign-up-form.component.jsx";
-import VerifyEmailForm from "./components/verify-email-form.component.jsx";
-import CreatePasswordForm from "./components/create-password-form.component.jsx";
+import LoginForm, {
+    action as loginAction,
+} from "./components/login-form.component.jsx";
+import SignUpForm, {
+    action as signUpAction,
+} from "./components/sign-up-form.component.jsx";
+import VerifyEmailForm, {
+    action as verifyEmailAction,
+} from "./components/verify-email-form.component.jsx";
+import CreatePasswordForm, {
+    action as createPasswordAction,
+} from "./components/create-password-form.component.jsx";
 
 const router = createBrowserRouter([
     {
@@ -64,18 +72,22 @@ const router = createBrowserRouter([
             {
                 index: true,
                 element: <LoginForm />,
+                action: loginAction,
             },
             {
                 path: "signup",
                 element: <SignUpForm />,
+                action: signUpAction,
             },
             {
                 path: "verify",
                 element: <VerifyEmailForm />,
+                action: verifyEmailAction,
             },
             {
                 path: "create-password",
                 element: <CreatePasswordForm />,
+                action: createPasswordAction,
             },
         ],
     },

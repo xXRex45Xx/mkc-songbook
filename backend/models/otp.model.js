@@ -1,6 +1,5 @@
 import { Schema, model } from "mongoose";
 import sendEmail from "../config/nodemailer.config.js";
-import bcrypt from "bcrypt";
 
 const otpSchema = new Schema({
     email: {
@@ -8,6 +7,7 @@ const otpSchema = new Schema({
         required: true,
         unique: true,
         trim: true,
+        match: /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
     },
     otp: {
         type: Number,
@@ -21,13 +21,11 @@ const otpSchema = new Schema({
 });
 
 otpSchema.pre("save", async function (next) {
-    if (this.isNew) {
-        const mailResponse = await sendEmail(
-            this.email,
-            "MKC-Choir Email Verification",
-            `Your verification code is ${this.otp}`
-        );
-    }
+    await sendEmail(
+        this.email,
+        "MKC-Choir Email Verification",
+        `Your verification code is ${this.otp}`
+    );
     next();
 });
 
