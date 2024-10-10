@@ -108,3 +108,18 @@ export const login = async (email, password) => {
 
     return { success: true, ...data };
 };
+
+export const getCurrentLoggedInUser = async (token) => {
+    const response = await fetch(`${backendURL}/api/user/current-user`, {
+        method: "GET",
+        headers: {
+            Authorization: `bearer ${token}`,
+        },
+    });
+    if (response.status === 401) throw { status: response.status };
+    const data = await response.json();
+
+    if (!response.ok) throw { message: data.message, status: response.status };
+
+    return data;
+};

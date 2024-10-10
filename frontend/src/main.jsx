@@ -1,6 +1,6 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import App from "./App.jsx";
+import App, { loader as mainLoader } from "./App.jsx";
 import "./index.css";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import MainBodyContainer from "./components/main-body-container.component.jsx";
@@ -30,6 +30,7 @@ const router = createBrowserRouter([
     {
         path: "/",
         element: <App />,
+        loader: mainLoader,
         children: [
             {
                 index: true,

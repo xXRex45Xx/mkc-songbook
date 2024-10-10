@@ -21,9 +21,17 @@ export const userSlice = createSlice({
         setCurrentUser: (state, action) => {
             state.currentUser = action.payload;
         },
+        resetCurrentUser: (state, _action) => {
+            state.currentUser = null;
+        },
     },
 });
 
-export const { setAuthEmail, setAuthOtp, resetAuth, setCurrentUser } =
-    userSlice.actions;
+export const {
+    setAuthEmail,
+    setAuthOtp,
+    resetAuth,
+    setCurrentUser,
+    resetCurrentUser,
+} = userSlice.actions;
 export default userSlice.reducer;

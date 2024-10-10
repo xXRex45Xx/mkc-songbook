@@ -1,6 +1,6 @@
 import { Avatar, Button, Dropdown, Navbar } from "flowbite-react";
 import { navbarTheme } from "../config/navbar-theme.config";
-import { useLocation, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useSearchParams } from "react-router-dom";
 
 import Bell from "../assets/active-bell.svg?react";
 import heart from "../assets/heart.svg";
@@ -8,6 +8,8 @@ import SearchBar from "./search-bar.component";
 import SearchToggleSvg from "../assets/search-toggle.svg?react";
 import { useState } from "react";
 import { buttonTheme } from "../config/button-theme.config";
+import { useDispatch, useSelector } from "react-redux";
+import { resetCurrentUser } from "../store/slices/user.slice";
 
 const Header = () => {
     const { pathname } = useLocation();
@@ -15,9 +17,16 @@ const Header = () => {
     const [showSearch, setShowSearch] = useState(
         searchParams.has("q") || searchParams.has("type")
     );
+    const dispatch = useDispatch();
 
     const toggleSearch = () => setShowSearch((prev) => !prev);
 
+    const user = useSelector((state) => state.user.currentUser);
+
+    const handleLogout = () => {
+        dispatch(resetCurrentUser());
+        localStorage.removeItem("_s");
+    };
     return (
         <>
             <Navbar fluid theme={navbarTheme} border>
@@ -68,50 +77,71 @@ const Header = () => {
                             />
                         }
                     >
-                        <Dropdown.Header>
-                            <span className="block text-sm">
-                                Eteye Askalech
-                            </span>
-                            <span className="block truncate text-sm font-medium">
-                                askalech@my.email.com
-                            </span>
-                        </Dropdown.Header>
-                        <Dropdown.Item>My Profile</Dropdown.Item>
-                        <Dropdown.Item>Account Settings</Dropdown.Item>
-                        <Dropdown.Item>
-                            <img src={heart} alt="" />
-                            My Favorites
-                        </Dropdown.Item>
-                        <Dropdown.Divider />
-                        <Dropdown.Item>Log Out</Dropdown.Item>
+                        {user ? (
+                            <>
+                                <Dropdown.Header>
+                                    <span className="block text-sm">
+                                        {user.name}
+                                    </span>
+                                    <span className="block truncate text-sm font-medium">
+                                        {user.email}
+                                    </span>
+                                </Dropdown.Header>
+                                <Dropdown.Item>My Profile</Dropdown.Item>
+                                <Dropdown.Item>Account Settings</Dropdown.Item>
+                                <Dropdown.Item>
+                                    <img src={heart} alt="" />
+                                    My Favorites
+                                </Dropdown.Item>
+                                <Dropdown.Divider />
+                                <Dropdown.Item onClick={handleLogout}>
+                                    Log Out
+                                </Dropdown.Item>
+                            </>
+                        ) : (
+                            <>
+                                <Dropdown.Item>
+                                    <Link to="/auth/signup">
+                                        Create Account
+                                    </Link>
+                                </Dropdown.Item>
+                                <Dropdown.Item>
+                                    <Link to="auth">Login</Link>
+                                </Dropdown.Item>
+                            </>
+                        )}
                     </Dropdown>
                 </div>
             </Navbar>
             <Navbar fluid border theme={navbarTheme}>
                 <Navbar.Collapse>
-                    <Navbar.Link href="/" active={pathname === "/"}>
+                    <Navbar.Link as={Link} to="/" active={pathname === "/"}>
                         Home
                     </Navbar.Link>
                     <Navbar.Link
-                        href="/songs"
+                        as={Link}
+                        to="/songs"
                         active={pathname.startsWith("/songs")}
                     >
                         Songs
                     </Navbar.Link>
                     <Navbar.Link
-                        href="/albums"
+                        as={Link}
+                        to="/albums"
                         active={pathname.startsWith("/albums")}
                     >
                         Albums
                     </Navbar.Link>
                     <Navbar.Link
-                        href="/playlists"
+                        as={Link}
+                        to="/playlists"
                         active={pathname.startsWith("/playlists")}
                     >
                         Playlists
                     </Navbar.Link>
                     <Navbar.Link
-                        href="/schedule"
+                        as={Link}
+                        to="/schedule"
                         active={pathname.startsWith("/schedule")}
                     >
                         Schedule

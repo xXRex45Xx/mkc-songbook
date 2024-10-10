@@ -39,9 +39,12 @@ passport.use(
         },
         async (payload, done) => {
             try {
-                const user = await UserModel.findById(payload.id);
-                if (!user || user.email !== payload.email)
-                    return done(null, false);
+                const user = await UserModel.findById(payload.id, {
+                    email: true,
+                    name: true,
+                    role: true,
+                });
+                if (!user) return done(null, false);
                 done(null, user);
             } catch (error) {
                 done(error, false);

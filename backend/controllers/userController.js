@@ -36,11 +36,9 @@ export const registerUser = async (req, res) => {
         password: hashedPassword,
     });
 
-    const token = jwt.sign(
-        { id: user._id, email: user.email, role: user.role },
-        process.env.JWT_SECRET,
-        { expiresIn: "30 days" }
-    );
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+        expiresIn: "30 days",
+    });
     res.status(201).json({
         user: {
             id: user._id,
@@ -51,4 +49,15 @@ export const registerUser = async (req, res) => {
         token,
     });
     await OTPModel.deleteOne({ email });
+};
+
+export const getCurrentUser = async (req, res) => {
+    res.status(200).json({
+        user: {
+            id: req.user._id,
+            name: req.user.name,
+            email: req.user.email,
+            role: req.user.role,
+        },
+    });
 };
