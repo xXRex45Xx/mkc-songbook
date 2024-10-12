@@ -12,7 +12,7 @@ import { loader as songLoader } from "./pages/lyrics.page.jsx";
 import SchedulePage from "./pages/schedule.page.jsx";
 import { Provider } from "react-redux";
 import store from "./store/store.js";
-import Auth from "./pages/auth.page.jsx";
+import Auth, { loader as authLoader } from "./pages/auth.page.jsx";
 import LoginForm, {
     action as loginAction,
 } from "./components/login-form.component.jsx";
@@ -69,6 +69,7 @@ const router = createBrowserRouter([
     {
         path: "/auth",
         element: <Auth />,
+        loader: authLoader,
         children: [
             {
                 index: true,

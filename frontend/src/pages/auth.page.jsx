@@ -1,4 +1,4 @@
-import { Outlet } from "react-router-dom";
+import { Outlet, redirect } from "react-router-dom";
 import AuthMainContainer from "../components/auth-main-container.component";
 
 const Auth = () => (
@@ -19,3 +19,8 @@ const Auth = () => (
 );
 
 export default Auth;
+
+export const loader = () => {
+    if (localStorage.getItem("_s")) return redirect("/");
+    return null;
+};
