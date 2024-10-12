@@ -7,6 +7,7 @@ import { getCurrentLoggedInUser } from "./utils/api/user-api.util";
 import { setCurrentUser } from "./store/slices/user.slice";
 import { Suspense } from "react";
 import { TailSpin } from "react-loader-spinner";
+import Cookies from "js-cookie";
 
 function App() {
     const data = useLoaderData();
@@ -36,7 +37,10 @@ function App() {
 export default App;
 
 export const loader = async () => {
-    const token = localStorage.getItem("_s");
+    let token = Cookies.get("x-auth-cookie");
+    Cookies.remove("x-auth-cookie");
+    if (token) localStorage.setItem("_s", token);
+    else token = localStorage.getItem("_s");
     if (!token || store.getState().user.currentUser) return null;
     const getUser = async () => {
         try {
@@ -52,5 +56,4 @@ export const loader = async () => {
         }
     };
     return defer({ user: getUser() });
-    return null;
 };

@@ -101,12 +101,20 @@ const Header = () => {
                         ) : (
                             <>
                                 <Dropdown.Item>
-                                    <Link to="/auth/signup">
+                                    <Link
+                                        to="/auth/signup"
+                                        className="w-full text-start"
+                                    >
                                         Create Account
                                     </Link>
                                 </Dropdown.Item>
                                 <Dropdown.Item>
-                                    <Link to="auth">Login</Link>
+                                    <Link
+                                        to="auth"
+                                        className="w-full text-start"
+                                    >
+                                        Login
+                                    </Link>
                                 </Dropdown.Item>
                             </>
                         )}

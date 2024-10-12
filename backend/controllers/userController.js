@@ -61,3 +61,12 @@ export const getCurrentUser = async (req, res) => {
         },
     });
 };
+
+export const OAuthCreateToken = async (req, res) => {
+    const token = jwt.sign({ id: req.user._id }, process.env.JWT_SECRET, {
+        expiresIn: "30 days",
+    });
+
+    res.cookie("x-auth-cookie", token);
+    res.redirect(process.env.CLIENT_URL);
+};

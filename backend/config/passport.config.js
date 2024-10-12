@@ -1,6 +1,7 @@
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import { Strategy as JWTStrategy, ExtractJwt } from "passport-jwt";
+import { OAuth2Strategy as GoogleStrategy } from "passport-google-oauth";
 import UserModel from "../models/user.model.js";
 import bcrypt from "bcrypt";
 import { config } from "dotenv";
@@ -49,6 +50,28 @@ passport.use(
             } catch (error) {
                 done(error, false);
             }
+        }
+    )
+);
+
+passport.use(
+    new GoogleStrategy(
+        {
+            clientID: process.env.GOOGLE_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+            callbackURL: process.env.GOOGLE_CALLBACK_URL,
+        },
+        async (accessToken, refreshToken, profile, done) => {
+            let user = await UserModel.findOne({
+                email: profile.emails[0].value,
+            });
+            if (user) return done(null, user);
+            user = await UserModel.create({
+                email: profile.emails[0].value,
+                name: profile.displayName,
+                photo: profile.photos[0].value,
+            });
+            done(null, user);
         }
     )
 );

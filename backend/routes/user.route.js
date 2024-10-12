@@ -2,6 +2,7 @@ import { Router } from "express";
 import { wrapAsync } from "../utils/error.util.js";
 import validateOtp from "../middlewares/validate-otp.middleware.js";
 import {
+    OAuthCreateToken,
     getCurrentUser,
     registerOTP,
     registerUser,
@@ -42,5 +43,16 @@ userRouter.get(
     passport.authenticate("jwt", { session: false }),
     wrapAsync(getCurrentUser)
 );
+userRouter.get(
+    "/google",
+    passport.authenticate("google", { scope: ["profile", "email"] })
+);
 
+userRouter.get(
+    "/google/callback",
+    passport.authenticate("google", {
+        session: false,
+    }),
+    wrapAsync(OAuthCreateToken)
+);
 export default userRouter;
