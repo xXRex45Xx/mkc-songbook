@@ -1,13 +1,18 @@
 import { TextInput, Select } from "flowbite-react";
-import { searchInputTheme, selectTheme } from "../config/forms-theme.config";
+import {
+    numberInputTheme,
+    searchInputTheme,
+    selectTheme,
+} from "../config/forms-theme.config";
 
 import searchIcon from "../assets/search.svg";
 import { Form, useSearchParams, useSubmit } from "react-router-dom";
+import { useState } from "react";
 
 const SearchBar = ({ action, searchValue = "", selectValue = "all" }) => {
     const submit = useSubmit();
     const [searchParams, _setSearchParams] = useSearchParams();
-
+    const [selectInpValue, setSelectInpValue] = useState(selectValue);
     const handleSubmit = (e) => {
         e.preventDefault();
         const formData = new FormData(e.target);
@@ -16,6 +21,10 @@ const SearchBar = ({ action, searchValue = "", selectValue = "all" }) => {
         submit(formData, { action });
     };
 
+    const handleSelectInpValue = (e) => setSelectInpValue(e.target.value);
+    const handleIdInpPress = (e) => {
+        if (e.key !== "Backspace" && isNaN(parseInt(e.key))) e.preventDefault();
+    };
     return (
         <Form
             method="GET"
@@ -25,14 +34,15 @@ const SearchBar = ({ action, searchValue = "", selectValue = "all" }) => {
         >
             <div className="flex items-stretch">
                 <Select
-                    defaultValue={selectValue}
                     name="type"
                     theme={selectTheme}
                     id="categories"
                     required
+                    value={selectInpValue}
+                    onChange={handleSelectInpValue}
                 >
                     <option value="all">All Categories</option>
-                    <option value="id">Id</option>
+                    <option value="id">Song Number</option>
                     <option value="title">Title</option>
                     <option value="lyrics">Lyrics</option>
                 </Select>
@@ -44,6 +54,10 @@ const SearchBar = ({ action, searchValue = "", selectValue = "all" }) => {
                         theme={searchInputTheme}
                         placeholder="Search..."
                         defaultValue={searchValue}
+                        type={selectInpValue === "id" ? "number" : "text"}
+                        onKeyDown={
+                            selectInpValue === "id" ? handleIdInpPress : null
+                        }
                     />
                     <button
                         type="submit"

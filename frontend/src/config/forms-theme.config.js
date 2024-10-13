@@ -19,7 +19,7 @@ export const searchInputTheme = {
     base: "flex flex-1",
     field: {
         input: {
-            base: "block border-x-0 min-h-full",
+            base: "block border-x-0 min-h-full [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
             colors: {
                 gray: "border-y-neutrals-200 text-baseblack",
             },
