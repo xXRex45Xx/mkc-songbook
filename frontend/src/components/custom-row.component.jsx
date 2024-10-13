@@ -9,7 +9,7 @@ import DownloadSvg from "../assets/download.svg?react";
 const SongsTableRow = ({ song, highlight }) => {
     const navigate = useNavigate();
     const location = useLocation();
-    const searchParams = useSearchParams();
+    const [searchParams, _setSearchParams] = useSearchParams();
     const windowWidth = useSelector((state) => state.configs.windowWidth);
 
     return (

@@ -78,7 +78,6 @@ const LyricsPage = () => {
                 {searchParams.get("q")
                     ? songData.lyrics
                           .split(regex)
-
                           .map((part) =>
                               regex.test(part) ? (
                                   <span className="bg-primary rounded-md">
