@@ -70,3 +70,11 @@ export const OAuthCreateToken = async (req, res) => {
     res.cookie("x-auth-cookie", token);
     res.redirect(process.env.CLIENT_URL);
 };
+
+export const resetPassword = async (req, res) => {
+    const { email, password } = req.body;
+    const hashedPassword = await bcrypt.hash(password, 10);
+    await UserModel.findOneAndUpdate({ email }, { password: hashedPassword });
+    res.status(200).json({ success: true });
+    await OTPModel.deleteOne({ email });
+};

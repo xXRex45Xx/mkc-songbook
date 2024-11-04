@@ -5,6 +5,7 @@ export const userSlice = createSlice({
     initialState: {
         authEmail: "",
         authOtp: "",
+        forgotEmail: "",
         currentUser: null,
     },
     reducers: {
@@ -24,6 +25,9 @@ export const userSlice = createSlice({
         resetCurrentUser: (state, _action) => {
             state.currentUser = null;
         },
+        setForgotPassEmail: (state, action) => {
+            state.forgotEmail = action.payload;
+        },
     },
 });
 
@@ -33,5 +37,6 @@ export const {
     resetAuth,
     setCurrentUser,
     resetCurrentUser,
+    setForgotPassEmail,
 } = userSlice.actions;
 export default userSlice.reducer;

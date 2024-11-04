@@ -18,6 +18,7 @@ export class ServerFaultError extends Error {
     constructor(internalError) {
         super("Internal server error");
         this.internalError = internalError;
+        this.statusCode = 500;
     }
 }
 

@@ -25,6 +25,12 @@ import VerifyEmailForm, {
 import CreatePasswordForm, {
     action as createPasswordAction,
 } from "./components/create-password-form.component.jsx";
+import ForgotPasswordForm, {
+    action as forgotPasswordAction,
+} from "./components/forgot-password-form.component.jsx";
+import ResetPasswordForm, {
+    action as resetPasswordAction,
+} from "./components/reset-password.component.jsx";
 
 const router = createBrowserRouter([
     {
@@ -90,6 +96,16 @@ const router = createBrowserRouter([
                 path: "create-password",
                 element: <CreatePasswordForm />,
                 action: createPasswordAction,
+            },
+            {
+                path: "forgot-password",
+                element: <ForgotPasswordForm />,
+                action: forgotPasswordAction,
+            },
+            {
+                path: "reset-password",
+                element: <ResetPasswordForm />,
+                action: resetPasswordAction,
             },
         ],
     },

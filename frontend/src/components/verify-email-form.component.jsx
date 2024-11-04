@@ -26,10 +26,11 @@ const VerifyEmailForm = () => {
 
     const error = useActionData();
     const email = useSelector((state) => state.user.authEmail);
+    const forgotEmail = useSelector((state) => state.user.forgotEmail);
 
     useEffect(() => {
-        if (!email) navigate("/auth/signup");
-    }, [email]);
+        if (!email && !forgotEmail) navigate("/auth/signup");
+    }, [email, forgotEmail]);
 
     const handleInputPress = (e) => {
         if (
@@ -50,11 +51,14 @@ const VerifyEmailForm = () => {
         }
         dispatch(setAuthOtp(otp));
         formData.set("otp", otp);
-        formData.set("email", email);
+        if (forgotEmail) {
+            formData.set("forgot-email", true);
+            formData.set("email", forgotEmail);
+        } else formData.set("email", email);
         submit(formData, { action: "/auth/verify", method: "POST" });
     };
     const handleResend = () => {
-        requestOTP(email);
+        requestOTP(email, forgotEmail ? true : false);
     };
     return (
         <Form
@@ -63,7 +67,9 @@ const VerifyEmailForm = () => {
         >
             <div className="flex flex-col gap-1">
                 <span className="text-neutrals-800">Step 2 of 3</span>
-                <h3 className="text-2xl font-bold">Verify Email</h3>
+                <h3 className="text-2xl font-bold">
+                    Verify {forgotEmail ? "It's You" : "Email"}
+                </h3>
             </div>
             <div className="flex gap-2.5 self-center">
                 <TextInput
@@ -139,12 +145,13 @@ export const action = async ({ request }) => {
     const formData = await request.formData();
     const email = formData.get("email");
     const otp = formData.get("otp");
-
+    const forgotEmail = formData.get("forgot-email");
     try {
         const data = await verifyOTP({ email, otp });
         if (!data.success)
             throw { message: "An unexpected error occurred.", status: 500 };
         store.dispatch(setAuthOtp(otp));
+        if (forgotEmail) return redirect("/auth/reset-password");
         return redirect("/auth/create-password");
     } catch (error) {
         if (error.status === 400) return { message: error.message };

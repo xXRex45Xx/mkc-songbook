@@ -1,17 +1,22 @@
 import backendURL from "../../config/backend-url.config";
 import { emailRegex } from "../regex.util";
 
-export const requestOTP = async (email) => {
+export const requestOTP = async (email, forgotPassword) => {
     if (!emailRegex.test(email))
         throw { message: "Please enter a valid email address.", status: 400 };
 
-    const response = await fetch(`${backendURL}/api/user/otp`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            email,
-        }),
-    });
+    const response = await fetch(
+        `${backendURL}/api/user/otp${
+            forgotPassword ? "?forgotPassword=true" : ""
+        }`,
+        {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                email,
+            }),
+        }
+    );
     const data = await response.json();
 
     if (!response.ok) throw { message: data.message, status: response.status };
@@ -119,6 +124,36 @@ export const getCurrentLoggedInUser = async (token) => {
     if (response.status === 401) throw { status: response.status };
     const data = await response.json();
 
+    if (!response.ok) throw { message: data.message, status: response.status };
+
+    return data;
+};
+
+export const resetPassword = async (email, otp, password, confirmPass) => {
+    const error = { status: 400 };
+    let errorOccured = false;
+
+    if (!password || password.length < 8) {
+        errorOccured = true;
+        error.passwordMessage = "Password must be atleast 8 characters.";
+    }
+    if (password !== confirmPass) {
+        errorOccured = true;
+        error.confirmPassMessage = "Passwords don't match.";
+    }
+    if (errorOccured) throw error;
+
+    const response = await fetch(`${backendURL}/api/user/reset-password`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            email,
+            otp,
+            password,
+        }),
+    });
+
+    const data = await response.json();
     if (!response.ok) throw { message: data.message, status: response.status };
 
     return data;

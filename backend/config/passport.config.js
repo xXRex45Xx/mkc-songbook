@@ -19,7 +19,7 @@ passport.use(
             try {
                 const user = await UserModel.findOne({ email: email.trim() });
 
-                if (!user) return done(null, false);
+                if (!user || !user.password) return done(null, false);
                 const matches = await bcrypt.compare(password, user.password);
 
                 if (!matches) return done(null, false);

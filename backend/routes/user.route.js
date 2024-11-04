@@ -6,6 +6,7 @@ import {
     getCurrentUser,
     registerOTP,
     registerUser,
+    resetPassword,
     verifyOTP,
 } from "../controllers/userController.js";
 import localAuth from "../middlewares/local-auth.middleware.js";
@@ -13,6 +14,7 @@ import {
     validateLogin,
     validateRegisterOTP,
     validateRegisterUser,
+    validateResetPassword,
     validateVerifyOTP,
 } from "../middlewares/user-validation.middleware.js";
 import checkUserExists from "../middlewares/check-user-exists.middleware.js";
@@ -54,5 +56,12 @@ userRouter.get(
         session: false,
     }),
     wrapAsync(OAuthCreateToken)
+);
+
+userRouter.put(
+    "/reset-password",
+    wrapAsync(validateResetPassword),
+    wrapAsync(validateOtp),
+    wrapAsync(resetPassword)
 );
 export default userRouter;

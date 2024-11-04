@@ -12,7 +12,9 @@ import { useState } from "react";
 const SearchBar = ({ action, searchValue = "", selectValue = "all" }) => {
     const submit = useSubmit();
     const [searchParams, _setSearchParams] = useSearchParams();
-    const [selectInpValue, setSelectInpValue] = useState(selectValue);
+    const [selectInpValue, setSelectInpValue] = useState(
+        selectValue ? selectValue : "all"
+    );
     const handleSubmit = (e) => {
         e.preventDefault();
         const formData = new FormData(e.target);

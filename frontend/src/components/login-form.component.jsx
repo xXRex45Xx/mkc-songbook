@@ -74,7 +74,10 @@ const LoginForm = () => {
                                 </span>
                             }
                         />
-                        <Link className="text-secondary self-end text-sm mt-1">
+                        <Link
+                            to="forgot-password"
+                            className="text-secondary self-end text-sm mt-1"
+                        >
                             Forgot Password?
                         </Link>
                     </div>
