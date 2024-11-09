@@ -5,6 +5,7 @@ import apiRouter from "./routes/index.js";
 import cors from "cors";
 import "./config/nodemailer.config.js";
 import "./config/passport.config.js";
+import { MulterError } from "multer";
 
 if (config().error) throw config().error;
 
@@ -20,7 +21,8 @@ app.use("/api", apiRouter);
 
 app.use(async (err, _req, res, _next) => {
     let { message, statusCode = 500 } = err;
-
+    if (err instanceof MulterError && err.code === "LIMIT_FILE_SIZE")
+        statusCode = 400;
     if (statusCode === 500) {
         console.error("Server error: ", err);
         console.error("Internal error: ", err.internalError);
