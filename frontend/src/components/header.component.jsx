@@ -6,7 +6,7 @@ import Bell from "../assets/active-bell.svg?react";
 import heart from "../assets/heart.svg";
 import SearchBar from "./search-bar.component";
 import SearchToggleSvg from "../assets/search-toggle.svg?react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { buttonTheme } from "../config/button-theme.config";
 import { useDispatch, useSelector } from "react-redux";
 import { resetCurrentUser } from "../store/slices/user.slice";
@@ -22,6 +22,11 @@ const Header = () => {
     const toggleSearch = () => setShowSearch((prev) => !prev);
 
     const user = useSelector((state) => state.user.currentUser);
+
+    const role = useMemo(() => {
+        if (!user || user.role === "public") return "public";
+        return user.role;
+    }, [user]);
 
     const handleLogout = () => {
         dispatch(resetCurrentUser());
@@ -123,9 +128,11 @@ const Header = () => {
             </Navbar>
             <Navbar fluid border theme={navbarTheme}>
                 <Navbar.Collapse>
-                    <Navbar.Link as={Link} to="/" active={pathname === "/"}>
-                        Home
-                    </Navbar.Link>
+                    {role !== "admin" && (
+                        <Navbar.Link as={Link} to="/" active={pathname === "/"}>
+                            Home
+                        </Navbar.Link>
+                    )}
                     <Navbar.Link
                         as={Link}
                         to="/songs"
@@ -140,20 +147,42 @@ const Header = () => {
                     >
                         Albums
                     </Navbar.Link>
-                    <Navbar.Link
-                        as={Link}
-                        to="/playlists"
-                        active={pathname.startsWith("/playlists")}
-                    >
-                        Playlists
-                    </Navbar.Link>
-                    <Navbar.Link
-                        as={Link}
-                        to="/schedule"
-                        active={pathname.startsWith("/schedule")}
-                    >
-                        Schedule
-                    </Navbar.Link>
+                    {role !== "admin" && (
+                        <Navbar.Link
+                            as={Link}
+                            to="/playlists"
+                            active={pathname.startsWith("/playlists")}
+                        >
+                            Playlists
+                        </Navbar.Link>
+                    )}
+                    {role !== "public" && (
+                        <Navbar.Link
+                            as={Link}
+                            to="/schedule"
+                            active={pathname.startsWith("/schedule")}
+                        >
+                            Schedule
+                        </Navbar.Link>
+                    )}
+                    {role === "admin" && (
+                        <Navbar.Link
+                            as={Link}
+                            to="/users"
+                            active={pathname.startsWith("/users")}
+                        >
+                            Users
+                        </Navbar.Link>
+                    )}
+                    {role === "admin" && (
+                        <Navbar.Link
+                            as={Link}
+                            to="/announcements"
+                            active={pathname.startsWith("/announcements")}
+                        >
+                            Announcements
+                        </Navbar.Link>
+                    )}
                 </Navbar.Collapse>
             </Navbar>
             <div

@@ -19,7 +19,7 @@ const SongsTable = ({ songs, totalPages }) => {
                   { align: "left", name: "SONG NUMBER" },
                   { align: "left", name: "SONG NAME" },
                   { align: "left", name: "ALBUMS" },
-                  { align: "right", name: "DOWNLOAD" },
+                  { align: "right", name: "ACTIONS" },
               ]
             : [];
 

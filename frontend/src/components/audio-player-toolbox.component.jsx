@@ -6,7 +6,7 @@ import { buttonTheme } from "../config/button-theme.config";
 
 import TextSizeSvg from "../assets/text-size.svg?react";
 import PresentationSvg from "../assets/presentation.svg?react";
-import PlaylistSvg from "../assets/playlist.svg?react";
+import QueueSvg from "../assets/queue.svg?react";
 
 const AudioPlayerToolbox = () => {
     const dispatch = useDispatch();
@@ -67,14 +67,14 @@ const AudioPlayerToolbox = () => {
                 </Popover>
             </Tooltip>
 
-            <Tooltip content="Playlist">
+            <Tooltip content="Queue">
                 <Button
                     className="focus:ring-0"
                     theme={buttonTheme}
                     positionInGroup="end"
                     size="xxs"
                 >
-                    <PlaylistSvg className="first:stroke-baseblack last:stroke-baseblack hover:first:stroke-neutrals-1000 hover:second:stroke-neutrals-1000 active:first:stroke-neutrals-baseblack active:second:stroke-neutrals-1000" />
+                    <QueueSvg className="first:stroke-baseblack last:stroke-baseblack hover:first:stroke-neutrals-1000 hover:second:stroke-neutrals-1000 active:first:stroke-neutrals-baseblack active:second:stroke-neutrals-1000" />
                 </Button>
             </Tooltip>
         </div>

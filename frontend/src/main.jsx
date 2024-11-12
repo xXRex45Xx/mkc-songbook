@@ -70,6 +70,20 @@ const router = createBrowserRouter([
                 path: "schedule",
                 element: <SchedulePage />,
             },
+            {
+                path: "users",
+                element: (
+                    <MainBodyContainer title={"Users"}></MainBodyContainer>
+                ),
+            },
+            {
+                path: "announcements",
+                element: (
+                    <MainBodyContainer
+                        title={"Announcements"}
+                    ></MainBodyContainer>
+                ),
+            },
         ],
     },
     {
