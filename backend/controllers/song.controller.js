@@ -1,7 +1,7 @@
 import MediaFileModel from "../models/media-file.model.js";
 import SongModel from "../models/song.model.js";
 import { regexBuilder } from "../utils/amharic-map.util.js";
-import { NotFoundError } from "../utils/error.util.js";
+import { NotFoundError, ServerFaultError } from "../utils/error.util.js";
 
 export const getAllOrSearchSongs = async (req, res) => {
     const { q, page = 1, all, type, sortBy } = req.query;
@@ -97,6 +97,13 @@ export const addSong = async (req, res) => {
             rythm: song.rythm,
         },
     });
+
+    if (req.file)
+        await MediaFileModel.create({
+            songId: insertedSong.id,
+            filePath: req.file.path,
+            fileType: "Audio",
+        });
 
     res.status(201).json({ insertedId: insertedSong._id });
 };

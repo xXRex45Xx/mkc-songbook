@@ -6,6 +6,7 @@ import cors from "cors";
 import "./config/nodemailer.config.js";
 import "./config/passport.config.js";
 import { MulterError } from "multer";
+import fs from "fs";
 
 if (config().error) throw config().error;
 
@@ -19,7 +20,11 @@ app.use(
 app.use(express.json());
 app.use("/api", apiRouter);
 
-app.use(async (err, _req, res, _next) => {
+app.use(async (err, req, res, _next) => {
+    if (req.file)
+        fs.unlink(req.file.path, (err) => {
+            if (err) console.error(err);
+        });
     let { message, statusCode = 500 } = err;
     if (err instanceof MulterError && err.code === "LIMIT_FILE_SIZE")
         statusCode = 400;

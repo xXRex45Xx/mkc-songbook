@@ -1,4 +1,5 @@
 import {
+    createSongBodyValidationSchema,
     getAllSongsQuerySchema,
     getSongParamsSchema,
 } from "../models/validation-schemas/song.validation-shcema.js";
@@ -14,5 +15,10 @@ export const validateGetAllSongs = async (req, _res, next) => {
 
 export const validateGetSong = async (req, _res, next) => {
     await validateSchema(req.params, getSongParamsSchema);
+    next();
+};
+
+export const validateCreateSong = async (req, _res, next) => {
+    await validateSchema(req.body, createSongBodyValidationSchema);
     next();
 };

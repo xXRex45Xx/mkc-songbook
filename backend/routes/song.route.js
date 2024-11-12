@@ -8,10 +8,12 @@ import {
 } from "../controllers/song.controller.js";
 import { wrapAsync } from "../utils/error.util.js";
 import {
+    validateCreateSong,
     validateGetAllSongs,
     validateGetSong,
 } from "../middlewares/song-validation.middleware.js";
 import mapSongSortBy from "../middlewares/song-map-sortby.middleware.js";
+import { audioUpload } from "../middlewares/file-upload.middleware.js";
 
 const songRouter = Router();
 
@@ -22,7 +24,12 @@ songRouter
         wrapAsync(mapSongSortBy),
         wrapAsync(getAllOrSearchSongs)
     )
-    .post(wrapAsync(addSong));
+    .post(
+        audioUpload.single("audio-file"),
+        wrapAsync(validateCreateSong),
+        wrapAsync(addSong)
+    );
+
 songRouter
     .route("/:id")
     .get(wrapAsync(validateGetSong), wrapAsync(getSong))
