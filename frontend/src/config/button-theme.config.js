@@ -5,6 +5,11 @@ export const buttonTheme = {
     },
 };
 
+export const uploadButtonTheme = {
+    size: { xs: "text-xs px-3 py-2" },
+    inner: { base: "flex gap-2" },
+};
+
 export const buttonGroupTheme = {
     base: "flex px-5 justify-center items-center gap-7 ",
     position: {

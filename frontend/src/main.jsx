@@ -31,6 +31,7 @@ import ForgotPasswordForm, {
 import ResetPasswordForm, {
     action as resetPasswordAction,
 } from "./components/reset-password.component.jsx";
+import UploadSongPage from "./pages/upload-song.page.jsx";
 
 const router = createBrowserRouter([
     {
@@ -57,8 +58,18 @@ const router = createBrowserRouter([
                 loader: songLoader,
             },
             {
+                path: "songs/new",
+                element: <UploadSongPage />,
+            },
+            {
                 path: "albums",
                 element: <AlbumsPage />,
+            },
+            {
+                path: "albums/new",
+                element: (
+                    <MainBodyContainer title="Upload Album"></MainBodyContainer>
+                ),
             },
             {
                 path: "playlists",
