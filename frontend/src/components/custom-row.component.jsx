@@ -1,30 +1,20 @@
-import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { Table } from "flowbite-react";
 import SongTools from "./song-tools.component";
 
 const SongsTableRow = ({ song, highlight }) => {
     const navigate = useNavigate();
-    const location = useLocation();
     const [searchParams, _setSearchParams] = useSearchParams();
     const windowWidth = useSelector((state) => state.configs.windowWidth);
 
     return (
         <Table.Row
             onClick={() =>
-                navigate(
-                    {
-                        pathname: song._id.toString(),
-                        search: highlight
-                            ? `?q=${searchParams.get("q")}`
-                            : null,
-                    },
-                    {
-                        state: {
-                            prevLocation: location.pathname + location.search,
-                        },
-                    }
-                )
+                navigate({
+                    pathname: song._id.toString(),
+                    search: highlight ? `?q=${searchParams.get("q")}` : null,
+                })
             }
             key={song._id}
         >

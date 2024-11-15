@@ -1,7 +1,7 @@
 import MediaFileModel from "../models/media-file.model.js";
 import SongModel from "../models/song.model.js";
 import { regexBuilder } from "../utils/amharic-map.util.js";
-import { NotFoundError, ServerFaultError } from "../utils/error.util.js";
+import { NotFoundError } from "../utils/error.util.js";
 
 export const getAllOrSearchSongs = async (req, res) => {
     const { q, page = 1, all, type, sortBy } = req.query;

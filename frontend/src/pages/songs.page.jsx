@@ -11,6 +11,7 @@ import { Button } from "flowbite-react";
 import uploadMultipleIcon from "../assets/upload-multiple.svg";
 import uploadSingleIcon from "../assets/upload-single.svg";
 import { uploadButtonTheme } from "../config/button-theme.config";
+import CustomTailSpin from "../components/custom-tail-spin.component";
 
 const SongsPage = () => {
     const loaderData = useLoaderData();
@@ -48,19 +49,7 @@ const SongsPage = () => {
                 </div>
             }
         >
-            <Suspense
-                fallback={
-                    <TailSpin
-                        visible={true}
-                        height="80"
-                        width="80"
-                        color="#C9184A"
-                        ariaLabel="tail-spin-loading"
-                        radius="2"
-                        wrapperClass="flex-1 self-stretch flex justify-center items-center"
-                    />
-                }
-            >
+            <Suspense fallback={<CustomTailSpin />}>
                 <Await resolve={loaderData.songData}>
                     {({ songs, totalPages }) => (
                         <SongsTable songs={songs} totalPages={totalPages} />

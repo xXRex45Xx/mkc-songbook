@@ -10,6 +10,13 @@ export const uploadButtonTheme = {
     inner: { base: "flex gap-2" },
 };
 
+export const uploadFormButtonTheme = {
+    base: "group relative flex items-stretch justify-center text-center font-medium transition-[color,background-color,border-color,text-decoration-color,fill,stroke,box-shadow] focus:z-10 focus:outline-none",
+    size: {
+        lg: "text-lg py-2.5 px-7",
+    },
+};
+
 export const buttonGroupTheme = {
     base: "flex px-5 justify-center items-center gap-7 ",
     position: {

@@ -1,13 +1,13 @@
 import { Label, TextInput, Button } from "flowbite-react";
 import { Form, redirect, useActionData, useNavigation } from "react-router-dom";
 import { formButtonTheme } from "../config/button-theme.config";
-import { TailSpin } from "react-loader-spinner";
 import { useSelector } from "react-redux";
 
 import sendIcon from "../assets/send.svg";
 import { requestOTP } from "../utils/api/user-api.util";
 import store from "../store/store";
 import { resetAuth, setForgotPassEmail } from "../store/slices/user.slice";
+import CustomTailSpin from "./custom-tail-spin.component";
 
 const ForgotPasswordForm = () => {
     const error = useActionData();
@@ -48,16 +48,7 @@ const ForgotPasswordForm = () => {
                         className="bg-secondary focus:ring-0"
                         type="submit"
                         isProcessing={navigation.state === "submitting"}
-                        processingSpinner={
-                            <TailSpin
-                                visible={true}
-                                height="30"
-                                width="30"
-                                color="#FCFDFE"
-                                ariaLabel="tail-spin-loading"
-                                radius="2"
-                            />
-                        }
+                        processingSpinner={<CustomTailSpin small white />}
                     >
                         Send Code
                         <img className="ml-2.5" src={sendIcon} alt="" />

@@ -6,25 +6,13 @@ import store from "./store/store";
 import { getCurrentLoggedInUser } from "./utils/api/user-api.util";
 import { setCurrentUser } from "./store/slices/user.slice";
 import { Suspense } from "react";
-import { TailSpin } from "react-loader-spinner";
 import Cookies from "js-cookie";
+import CustomTailSpin from "./components/custom-tail-spin.component";
 
 function App() {
     const data = useLoaderData();
     return (
-        <Suspense
-            fallback={
-                <TailSpin
-                    visible={true}
-                    height="80"
-                    width="80"
-                    color="#C9184A"
-                    ariaLabel="tail-spin-loading"
-                    radius="2"
-                    wrapperClass="flex-1 self-stretch flex justify-center items-center"
-                />
-            }
-        >
+        <Suspense fallback={<CustomTailSpin />}>
             <Await resolve={data?.user}>
                 <Header />
                 <Outlet />

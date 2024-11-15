@@ -2,9 +2,9 @@ import { useRef } from "react";
 import { useSearchParams, useNavigation } from "react-router-dom";
 import { useSelector } from "react-redux";
 import useWindowSize from "../hooks/useWindowSize.hook";
-import { TailSpin } from "react-loader-spinner";
 import CustomTable from "./custom-table.component";
 import SongsTableRow from "./custom-row.component";
+import CustomTailSpin from "./custom-tail-spin.component";
 
 const SongsTable = ({ songs, totalPages }) => {
     const neutralTableRef = useRef();
@@ -25,17 +25,7 @@ const SongsTable = ({ songs, totalPages }) => {
 
     return (
         <>
-            {navState === "loading" && (
-                <TailSpin
-                    visible={true}
-                    height="80"
-                    width="80"
-                    color="#C9184A"
-                    ariaLabel="tail-spin-loading"
-                    radius="2"
-                    wrapperClass="flex-1 self-stretch flex justify-center items-center"
-                />
-            )}
+            {navState === "loading" && <CustomTailSpin />}
             {navState !== "loading" && searchParams.get("type") !== "all" && (
                 <CustomTable
                     headers={tableHeaders}

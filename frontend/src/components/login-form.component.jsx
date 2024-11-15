@@ -14,10 +14,10 @@ import { useState } from "react";
 import { formButtonTheme } from "../config/button-theme.config";
 import GoogleLink from "./google-link.component";
 import { passwordInputTheme } from "../config/forms-theme.config";
-import { TailSpin } from "react-loader-spinner";
 import { login } from "../utils/api/user-api.util";
 import store from "../store/store";
 import { setCurrentUser } from "../store/slices/user.slice";
+import CustomTailSpin from "./custom-tail-spin.component";
 
 const eyeWrapper = (onClick, icon) => (
     <img className="cursor-pointer" src={icon} onClick={onClick} />
@@ -92,16 +92,7 @@ const LoginForm = () => {
                         className="bg-secondary focus:ring-0"
                         type="submit"
                         isProcessing={navigation.state === "submitting"}
-                        processingSpinner={
-                            <TailSpin
-                                visible={true}
-                                height="30"
-                                width="30"
-                                color="#FCFDFE"
-                                ariaLabel="tail-spin-loading"
-                                radius="2/"
-                            />
-                        }
+                        processingSpinner={<CustomTailSpin small white />}
                     >
                         Login
                         <img className="ml-2.5" src={loginIcon} alt="" />

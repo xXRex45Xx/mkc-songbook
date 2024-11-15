@@ -15,8 +15,8 @@ import { formButtonTheme } from "../config/button-theme.config";
 import { registerUser } from "../utils/api/user-api.util";
 import { useSelector } from "react-redux";
 import { setCurrentUser } from "../store/slices/user.slice";
-import { TailSpin } from "react-loader-spinner";
 import store from "../store/store";
+import CustomTailSpin from "./custom-tail-spin.component";
 
 const eyeWrapper = (onClick, icon) => (
     <img className="cursor-pointer" src={icon} onClick={onClick} />
@@ -122,16 +122,7 @@ const CreatePasswordForm = () => {
                         className="bg-secondary focus:ring-0"
                         type="submit"
                         isProcessing={navigation.state === "submitting"}
-                        processingSpinner={
-                            <TailSpin
-                                visible={true}
-                                height="30"
-                                width="30"
-                                color="#FCFDFE"
-                                ariaLabel="tail-spin-loading"
-                                radius="2"
-                            />
-                        }
+                        processingSpinner={<CustomTailSpin small white />}
                     >
                         Get Started
                         <img className="ml-2.5" src={getStarted} alt="" />

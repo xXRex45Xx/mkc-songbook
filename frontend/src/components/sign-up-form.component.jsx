@@ -10,10 +10,10 @@ import { formButtonTheme } from "../config/button-theme.config";
 import nextIcon from "../assets/next-filled.svg";
 import GoogleLink from "./google-link.component";
 import { requestOTP } from "../utils/api/user-api.util";
-import { TailSpin } from "react-loader-spinner";
 import { useSelector } from "react-redux";
 import { setAuthEmail } from "../store/slices/user.slice";
 import store from "../store/store";
+import CustomTailSpin from "./custom-tail-spin.component";
 
 const SignUpForm = () => {
     const error = useActionData();
@@ -52,16 +52,7 @@ const SignUpForm = () => {
                         className="bg-secondary focus:ring-0"
                         type="submit"
                         isProcessing={navigation.state === "submitting"}
-                        processingSpinner={
-                            <TailSpin
-                                visible={true}
-                                height="30"
-                                width="30"
-                                color="#FCFDFE"
-                                ariaLabel="tail-spin-loading"
-                                radius="2"
-                            />
-                        }
+                        processingSpinner={<CustomTailSpin small white />}
                     >
                         Next
                         <img className="ml-2.5" src={nextIcon} alt="" />
