@@ -40,6 +40,6 @@ songRouter
     .route("/:id")
     .get(wrapAsync(validateGetSong), wrapAsync(getSong))
     .patch(wrapAsync(updateSong))
-    .delete(wrapAsync(deleteSong));
+    .delete(wrapAsync(validateGetSong), wrapAsync(deleteSong));
 
 export default songRouter;

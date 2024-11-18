@@ -43,19 +43,19 @@ const LyricViewer = ({ song }) => {
                     {song.title}
                 </h1>
                 <div className="ml-auto flex items-center gap-12">
-                    {song.musicElements.chord && (
+                    {song.musicElements?.chord && (
                         <MusicElement
                             type="chord"
                             detail={song.musicElements.chord}
                         />
                     )}
-                    {song.musicElements.tempo && (
+                    {song.musicElements?.tempo && (
                         <MusicElement
                             type="tempo"
                             detail={song.musicElements.tempo}
                         />
                     )}
-                    {song.musicElements.rythm && (
+                    {song.musicElements?.rythm && (
                         <MusicElement
                             type="rythm"
                             detail={song.musicElements.rythm}
@@ -69,7 +69,6 @@ const LyricViewer = ({ song }) => {
             >
                 {searchParams.get("q")
                     ? song.lyrics.split(regex).map((part) => {
-                          console.log(part);
                           return regex.test(part) ? (
                               <span className="bg-primary rounded-md">
                                   {part}

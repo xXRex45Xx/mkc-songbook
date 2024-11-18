@@ -4,7 +4,12 @@ const albumSchema = new Schema({
     _id: { type: String, minLength: 1, required: true },
     name: { type: String, minLength: 1, required: true },
     volume: { type: String, minLength: 1, required: true },
-    year: { type: String, minLength: 4, required: true },
+    createdAt: {
+        type: String,
+        default: () => new Date().getFullYear().toString(),
+        minLength: 4,
+        required: true,
+    },
     photo: { data: Buffer, contentType: String },
     songs: [{ type: Number, ref: "Song" }],
 });

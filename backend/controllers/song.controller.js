@@ -1,7 +1,9 @@
+import AlbumModel from "../models/album.model.js";
 import MediaFileModel from "../models/media-file.model.js";
 import SongModel from "../models/song.model.js";
 import { regexBuilder } from "../utils/amharic-map.util.js";
 import { NotFoundError } from "../utils/error.util.js";
+import fs from "fs";
 
 export const getAllOrSearchSongs = async (req, res) => {
     const { q, page = 1, all, type, sortBy } = req.query;
@@ -98,6 +100,11 @@ export const addSong = async (req, res) => {
         albums: song.album ? [song.album] : [],
     });
 
+    if (song.album) {
+        song.album.songs.push(insertedSong);
+        await song.album.save();
+    }
+
     if (req.file)
         insertedSong.mediaFiles.push(
             await MediaFileModel.create({
@@ -148,8 +155,24 @@ export const updateSong = async (req, res) => {
 
 export const deleteSong = async (req, res) => {
     const { id } = req.params;
+    const song = await SongModel.findById(id);
+    if (!song) throw new NotFoundError("Song doesn't exist.");
+    for (const albumId of song.albums) {
+        const album = await AlbumModel.findById(albumId);
+        const songIdx = album.songs.indexOf(id);
+        album.songs.splice(songIdx, 1);
+        await album.save();
+    }
 
-    await MediaFileModel.deleteMany({ songId: id });
+    const mediaFiles = await MediaFileModel.find({ songId: id });
+
+    for (const mediaFile of mediaFiles) {
+        if (mediaFile.fileType === "Audio")
+            fs.unlink(mediaFile.filePath, (err) => {
+                if (err) console.error(err);
+            });
+        await MediaFileModel.findByIdAndDelete(mediaFile._id);
+    }
     await SongModel.findByIdAndDelete(id);
 
     res.status(200).json({ deleted: true });
