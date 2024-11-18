@@ -20,7 +20,6 @@ const LyricViewer = ({ song }) => {
         return null;
     }, [searchParams]);
 
-    console.log(regex);
     return (
         <>
             <Card

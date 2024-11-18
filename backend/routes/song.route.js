@@ -14,6 +14,10 @@ import {
 } from "../middlewares/song-validation.middleware.js";
 import mapSongSortBy from "../middlewares/song-map-sortby.middleware.js";
 import { audioUpload } from "../middlewares/file-upload.middleware.js";
+import {
+    checkAlbumExists,
+    checkSongNumberExists,
+} from "../middlewares/pre-add-song.middleware.js";
 
 const songRouter = Router();
 
@@ -27,6 +31,8 @@ songRouter
     .post(
         audioUpload.single("audio-file"),
         wrapAsync(validateCreateSong),
+        wrapAsync(checkSongNumberExists),
+        wrapAsync(checkAlbumExists),
         wrapAsync(addSong)
     );
 

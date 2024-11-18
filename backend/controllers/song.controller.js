@@ -86,7 +86,6 @@ export const getAllOrSearchSongs = async (req, res) => {
 
 export const addSong = async (req, res) => {
     const song = req.body;
-
     const insertedSong = await SongModel.create({
         _id: song.id,
         title: song.title,
@@ -96,15 +95,26 @@ export const addSong = async (req, res) => {
             tempo: song.tempo,
             rythm: song.rythm,
         },
+        albums: song.album ? [song.album] : [],
     });
 
     if (req.file)
-        await MediaFileModel.create({
-            songId: insertedSong.id,
-            filePath: req.file.path,
-            fileType: "Audio",
-        });
+        insertedSong.mediaFiles.push(
+            await MediaFileModel.create({
+                songId: insertedSong._id,
+                filePath: req.file.path,
+                fileType: "Audio",
+            })
+        );
 
+    if (song["video-link"])
+        insertedSong.mediaFiles.push(
+            await MediaFileModel.create({
+                songId: insertedSong._id,
+                filePath: song["video-link"],
+                fileType: "Video",
+            })
+        );
     res.status(201).json({ insertedId: insertedSong._id });
 };
 

@@ -19,7 +19,15 @@ export const createSongBodyValidationSchema = Joi.object({
     id: Joi.number().integer().min(1).required(),
     title: Joi.string().min(2).max(100).required(),
     lyrics: Joi.string().min(2).max(50000).required(),
-    chord: Joi.string().min(1).max(10).optional(),
+    chord: Joi.string().allow("").min(1).max(10).optional(),
     tempo: Joi.number().integer().min(0).optional(),
-    rythm: Joi.string().min(2).max(50).optional(),
+    rythm: Joi.string().allow("").min(2).max(50).optional(),
+    album: Joi.string().allow("").optional(),
+    "video-link": Joi.string()
+        .uri()
+        .regex(
+            /^(?:https?:\/\/)?(?:m\.|www\.)?(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))((\w|-){11})(?:\S+)?$/
+        )
+        .allow("")
+        .optional(),
 }).required();

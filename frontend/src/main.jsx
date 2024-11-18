@@ -33,6 +33,7 @@ import ResetPasswordForm, {
 } from "./components/reset-password.component.jsx";
 import UploadSongPage, {
     loader as albumNameLoader,
+    action as uploadSongAction,
 } from "./pages/upload-song.page.jsx";
 
 const router = createBrowserRouter([
@@ -63,6 +64,7 @@ const router = createBrowserRouter([
                 path: "songs/new",
                 element: <UploadSongPage />,
                 loader: albumNameLoader,
+                action: uploadSongAction,
             },
             {
                 path: "albums",
