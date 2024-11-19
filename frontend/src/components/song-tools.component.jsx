@@ -1,5 +1,5 @@
 import { Button, Dropdown, Modal } from "flowbite-react";
-
+import { Form, useNavigation, useRevalidator } from "react-router-dom";
 import OptionsSvg from "../assets/options.svg?react";
 import HeartSvg from "../assets/heart.svg?react";
 import DownloadSvg from "../assets/download.svg?react";
@@ -12,12 +12,28 @@ import editIcon from "../assets/edit.svg";
 import deleteIcon from "../assets/delete.svg";
 import { useSelector } from "react-redux";
 import { useState } from "react";
+import CustomTailSpin from "./custom-tail-spin.component";
+import { deleteSong } from "../utils/api/songs-api.util";
 
-const SongTools = () => {
+const SongTools = ({ songId }) => {
+    const revalidator = useRevalidator();
     const windowWidth = useSelector((state) => state.configs.windowWidth);
     const user = useSelector((state) => state.user.currentUser);
     const [openDeleteModal, setOpenDeleteModal] = useState(false);
-
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [deleteError, setDeleteError] = useState("");
+    const handleDeleteSong = async () => {
+        setIsDeleting(true);
+        try {
+            await deleteSong(songId);
+            setOpenDeleteModal(false);
+            revalidator.revalidate();
+        } catch (error) {
+            setDeleteError(error.message);
+        } finally {
+            setIsDeleting(false);
+        }
+    };
     return (
         <div
             onClick={(e) => e.stopPropagation()}
@@ -54,6 +70,11 @@ const SongTools = () => {
                             <p className="text-baseblack">
                                 This can't be undone!
                             </p>
+                            {deleteError && (
+                                <p className="text-secondary mt-2">
+                                    {deleteError}
+                                </p>
+                            )}
                         </Modal.Body>
                         <Modal.Footer className="flex justify-end">
                             <Button
@@ -68,6 +89,12 @@ const SongTools = () => {
                                 size="sm"
                                 color="failure"
                                 className="focus:ring-0"
+                                type="submit"
+                                isProcessing={isDeleting}
+                                processingSpinner={
+                                    <CustomTailSpin small white />
+                                }
+                                onClick={handleDeleteSong}
                             >
                                 Delete
                             </Button>

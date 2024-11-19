@@ -74,3 +74,17 @@ export const addSong = async (formData) => {
 
     return data;
 };
+
+export const deleteSong = async (songId) => {
+    const response = await fetch(`${backendURL}/api/song/${songId}`, {
+        method: "DELETE",
+    });
+
+    const data = await response.json();
+    if (!response.ok)
+        throw {
+            message: "An unexpected error occurred.",
+            status: response.status,
+        };
+    if (!data.deleted) throw { message: "An unexpected error occurred." };
+};

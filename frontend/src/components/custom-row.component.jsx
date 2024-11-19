@@ -31,7 +31,7 @@ const SongsTableRow = ({ song, highlight }) => {
                 </Table.Cell>
             )}
             <Table.Cell className="text-end flex justify-end">
-                <SongTools />
+                <SongTools songId={song._id} />
             </Table.Cell>
         </Table.Row>
     );
