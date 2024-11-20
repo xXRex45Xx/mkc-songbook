@@ -8,15 +8,17 @@ import { setCurrentUser } from "./store/slices/user.slice";
 import { Suspense } from "react";
 import Cookies from "js-cookie";
 import CustomTailSpin from "./components/custom-tail-spin.component";
+import { useSelector } from "react-redux";
 
 function App() {
     const data = useLoaderData();
+    const user = useSelector((state) => state.user.currentUser);
     return (
         <Suspense fallback={<CustomTailSpin />}>
             <Await resolve={data?.user}>
                 <Header />
                 <Outlet />
-                <AudioPlayer />
+                {user?.role !== "admin" && <AudioPlayer />}
             </Await>
         </Suspense>
     );

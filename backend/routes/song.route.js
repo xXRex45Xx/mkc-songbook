@@ -18,6 +18,7 @@ import {
     checkAlbumExists,
     checkSongNumberExists,
 } from "../middlewares/pre-add-song.middleware.js";
+import { checkSongNumberConflict } from "../middlewares/pre-update-song.middleware.js";
 
 const songRouter = Router();
 
@@ -39,7 +40,13 @@ songRouter
 songRouter
     .route("/:id")
     .get(wrapAsync(validateGetSong), wrapAsync(getSong))
-    .patch(wrapAsync(updateSong))
+    .put(
+        audioUpload.single("audio-file"),
+        wrapAsync(validateCreateSong),
+        wrapAsync(checkSongNumberConflict),
+        wrapAsync(checkAlbumExists),
+        wrapAsync(updateSong)
+    )
     .delete(wrapAsync(validateGetSong), wrapAsync(deleteSong));
 
 export default songRouter;

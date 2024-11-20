@@ -104,24 +104,25 @@ export const addSong = async (req, res) => {
         song.album.songs.push(insertedSong);
         await song.album.save();
     }
-
-    if (req.file)
-        insertedSong.mediaFiles.push(
-            await MediaFileModel.create({
-                songId: insertedSong._id,
-                filePath: req.file.path,
-                fileType: "Audio",
-            })
-        );
-
-    if (song["video-link"])
-        insertedSong.mediaFiles.push(
-            await MediaFileModel.create({
-                songId: insertedSong._id,
-                filePath: song["video-link"],
-                fileType: "Video",
-            })
-        );
+    if (req.file || song["video-link"]) {
+        if (req.file)
+            insertedSong.mediaFiles.push(
+                await MediaFileModel.create({
+                    songId: insertedSong._id,
+                    filePath: req.file.path,
+                    fileType: "Audio",
+                })
+            );
+        if (song["video-link"])
+            insertedSong.mediaFiles.push(
+                await MediaFileModel.create({
+                    songId: insertedSong._id,
+                    filePath: song["video-link"],
+                    fileType: "Video",
+                })
+            );
+        insertedSong.save();
+    }
     res.status(201).json({ insertedId: insertedSong._id });
 };
 
@@ -139,16 +140,73 @@ export const updateSong = async (req, res) => {
     const { id } = req.params;
     const song = req.body;
 
-    await SongModel.findByIdAndUpdate(id, {
-        _id: song.id,
-        title: song.title,
-        lyrics: song.lyrics,
-        musicElements: {
-            chord: song.chord,
-            tempo: song.tempo,
-            rythm: song.rythm,
-        },
-    });
+    const songInDb = await SongModel.findById(id).populate("mediaFiles albums");
+
+    const audioMediaFiles = songInDb.mediaFiles.filter(
+        (mediaFile) => mediaFile.fileType === "Audio"
+    );
+    const videoMediaFiles = songInDb.mediaFiles.filter(
+        (mediaFile) => mediaFile.fileType === "Video"
+    );
+
+    if (audioMediaFiles.length !== 0) {
+        if (id != song.id) audioMediaFiles[0].songId = song.id;
+        if (req.file) {
+            fs.unlink(audioMediaFiles[0].filePath, (err) => console.error(err));
+            audioMediaFiles[0].filePath = req.file.path;
+        }
+        await audioMediaFiles[0].save();
+    }
+    if (audioMediaFiles.length === 0 && req.file) {
+        songInDb.mediaFiles.push(
+            await MediaFileModel.create({
+                songId: song.id,
+                filePath: req.file.path,
+                fileType: "Audio",
+            })
+        );
+    }
+    if (videoMediaFiles.length !== 0) {
+        if (song["video-link"]) {
+            videoMediaFiles[0].filePath = song["video-link"];
+            if (song.id != id) videoMediaFiles[0].songId = song.id;
+            await videoMediaFiles[0].save();
+        }
+        if (!song["video-link"]) {
+            await MediaFileModel.findByIdAndDelete(videoMediaFiles[0]._id);
+            songInDb.mediaFiles = songInDb.mediaFiles.filter(
+                (mediaFile) => mediaFile._id !== videoMediaFiles[0]._id
+            );
+        }
+    }
+    if (videoMediaFiles.length === 0 && song["video-link"]) {
+        songInDb.mediaFiles.push(
+            await MediaFileModel.create({
+                songId: song.id,
+                filePath: song["video-link"],
+                fileType: "Video",
+            })
+        );
+    }
+    songInDb.title = song.title;
+    songInDb.lyrics = song.lyrics;
+    songInDb.musicElements = {
+        chord: song.chord,
+        tempo: song.tempo,
+        rythm: song.rythm,
+    };
+    if (song.id != id) {
+        await SongModel.findByIdAndDelete(songInDb._id);
+        await SongModel.create({
+            _id: song.id,
+            albums: songInDb.albums,
+            createdAt: songInDb.createdAt,
+            lyrics: songInDb.lyrics,
+            mediaFiles: songInDb.mediaFiles,
+            musicElements: songInDb.musicElements,
+            title: songInDb.title,
+        });
+    } else await songInDb.save();
 
     res.status(200).json({ updated: true });
 };

@@ -1,5 +1,5 @@
 import { Button, Dropdown, Modal } from "flowbite-react";
-import { Form, useNavigation, useRevalidator } from "react-router-dom";
+import { Form, Link, useNavigation, useRevalidator } from "react-router-dom";
 import OptionsSvg from "../assets/options.svg?react";
 import HeartSvg from "../assets/heart.svg?react";
 import DownloadSvg from "../assets/download.svg?react";
@@ -51,9 +51,12 @@ const SongTools = ({ songId }) => {
             )}
             {user?.role === "admin" ? (
                 <>
-                    <div className="cursor-pointer">
+                    <Link
+                        to={`/songs/${songId}/edit`}
+                        className="cursor-pointer"
+                    >
                         <img src={editIcon} alt="edit" />
-                    </div>
+                    </Link>
                     <button
                         className="cursor-pointer"
                         onClick={() => setOpenDeleteModal(true)}

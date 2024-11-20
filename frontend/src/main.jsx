@@ -35,6 +35,10 @@ import UploadSongPage, {
     loader as albumNameLoader,
     action as uploadSongAction,
 } from "./pages/upload-song.page.jsx";
+import EditSongPage, {
+    loader as editSongLoader,
+    action as editSongAction,
+} from "./pages/edit-song.page.jsx";
 
 const router = createBrowserRouter([
     {
@@ -59,6 +63,12 @@ const router = createBrowserRouter([
                 path: "songs/:songId",
                 element: <LyricsPage />,
                 loader: songLoader,
+            },
+            {
+                path: "songs/:songId/edit",
+                element: <EditSongPage />,
+                loader: editSongLoader,
+                action: editSongAction,
             },
             {
                 path: "songs/new",

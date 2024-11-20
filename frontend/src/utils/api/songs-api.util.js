@@ -23,7 +23,7 @@ export const getSong = async (id) => {
     return data;
 };
 
-export const addSong = async (formData) => {
+export const addOrEditSong = async (formData, edit = false, songId = null) => {
     const error = { status: 400 };
     let errorOccured = false;
     if (!formData.get("title") || formData.get("title").trim().length === 0) {
@@ -64,10 +64,13 @@ export const addSong = async (formData) => {
     if (!formData.get("video-link")) formData.delete("video-link");
     if (errorOccured) throw error;
 
-    const response = await fetch(`${backendURL}/api/song`, {
-        method: "POST",
-        body: formData,
-    });
+    const response = await fetch(
+        `${backendURL}/api/song${edit ? "/" + songId : ""}`,
+        {
+            method: edit ? "PUT" : "POST",
+            body: formData,
+        }
+    );
 
     const data = await response.json();
     if (!response.ok) throw { message: data.message, status: response.status };
