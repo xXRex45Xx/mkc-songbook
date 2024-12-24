@@ -24,9 +24,6 @@ const SearchBar = ({ action, searchValue = "", selectValue = "all" }) => {
     };
 
     const handleSelectInpValue = (e) => setSelectInpValue(e.target.value);
-    const handleIdInpPress = (e) => {
-        if (e.key !== "Backspace" && isNaN(parseInt(e.key))) e.preventDefault();
-    };
     return (
         <Form
             method="GET"
@@ -56,10 +53,7 @@ const SearchBar = ({ action, searchValue = "", selectValue = "all" }) => {
                         theme={searchInputTheme}
                         placeholder="Search..."
                         defaultValue={searchValue}
-                        type={selectInpValue === "id" ? "number" : "text"}
-                        onKeyDown={
-                            selectInpValue === "id" ? handleIdInpPress : null
-                        }
+                        type="text"
                     />
                     <button
                         type="submit"

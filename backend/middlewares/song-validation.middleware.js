@@ -8,8 +8,6 @@ import validateSchema from "../utils/validator.util.js";
 
 export const validateGetAllSongs = async (req, _res, next) => {
     await validateSchema(req.query, getAllSongsQuerySchema);
-    if (req.query.type === "id" && !Number.isInteger(parseInt(req.query.q)))
-        throw new ClientFaultError("Id is an integer.");
     next();
 };
 

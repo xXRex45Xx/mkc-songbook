@@ -30,11 +30,7 @@ export const addOrEditSong = async (formData, edit = false, songId = null) => {
         errorOccured = true;
         error.titleMessage = "Title is required.";
     }
-    if (
-        !formData.get("id") ||
-        isNaN(parseInt(formData.get("id"))) ||
-        parseInt(formData.get("id")) < 1
-    ) {
+    if (!formData.get("id")) {
         errorOccured = true;
         error.songNumberMessage = "Please enter a valid song number.";
     }

@@ -77,7 +77,7 @@ const SongForm = ({ albums, method, action, song }) => {
                     <TextInput
                         id="song-number"
                         name="id"
-                        type="number"
+                        type="text"
                         helperText={
                             <span className="text-sm">
                                 {error?.songNumberMessage

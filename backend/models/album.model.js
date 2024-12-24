@@ -11,7 +11,7 @@ const albumSchema = new Schema({
         required: true,
     },
     photo: { data: Buffer, contentType: String },
-    songs: [{ type: Number, ref: "Song" }],
+    songs: [{ type: String, ref: "Song" }],
 });
 
 const AlbumModel = model("Album", albumSchema);

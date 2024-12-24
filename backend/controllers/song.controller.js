@@ -11,6 +11,7 @@ export const getAllOrSearchSongs = async (req, res) => {
     else if (!q) {
         songs = await SongModel.find({}, { title: true })
             .sort(sortBy)
+            .collation({ locale: "en_US", numericOrdering: sortBy === "_id" })
             .populate("albums", "name")
             .skip((page - 1) * 100)
             .limit(100);
@@ -21,6 +22,10 @@ export const getAllOrSearchSongs = async (req, res) => {
         if (type === "title") {
             songs = await SongModel.find({ title: regex }, { title: true })
                 .sort(sortBy)
+                .collation({
+                    locale: "en_US",
+                    numericOrdering: sortBy === "_id",
+                })
                 .populate("albums", "name")
                 .skip((page - 1) * 100)
                 .limit(100);
@@ -31,6 +36,10 @@ export const getAllOrSearchSongs = async (req, res) => {
         } else if (type === "lyrics") {
             songs = await SongModel.find({ lyrics: regex }, { title: true })
                 .sort(sortBy)
+                .collation({
+                    locale: "en_US",
+                    numericOrdering: sortBy === "_id",
+                })
                 .populate("albums", "name")
                 .skip((page - 1) * 100)
                 .limit(100);
@@ -39,13 +48,17 @@ export const getAllOrSearchSongs = async (req, res) => {
             }).countDocuments();
             totalPages = Math.floor(totalDocuments / 100) + 1;
         } else if (type === "id") {
-            songs = await SongModel.find({ _id: parseInt(q) }, { title: true })
+            songs = await SongModel.find({ _id: q }, { title: true })
                 .sort(sortBy)
+                .collation({
+                    locale: "en_US",
+                    numericOrdering: sortBy === "_id",
+                })
                 .populate("albums", "name")
                 .skip((page - 1) * 100)
                 .limit(100);
             const totalDocuments = await SongModel.find({
-                _id: parseInt(q),
+                _id: q,
             }).countDocuments();
             totalPages = Math.floor(totalDocuments / 100) + 1;
         } else {
@@ -55,6 +68,10 @@ export const getAllOrSearchSongs = async (req, res) => {
                     { title: true }
                 )
                     .sort(sortBy)
+                    .collation({
+                        locale: "en_US",
+                        numericOrdering: sortBy === "_id",
+                    })
                     .populate("albums", "name")
                     .skip((page - 1) * 100)
                     .limit(100),
@@ -63,6 +80,10 @@ export const getAllOrSearchSongs = async (req, res) => {
                     { title: true }
                 )
                     .sort(sortBy)
+                    .collation({
+                        locale: "en_US",
+                        numericOrdering: sortBy === "_id",
+                    })
                     .populate("albums", "name")
                     .skip((page - 1) * 100)
                     .limit(100),
