@@ -1,5 +1,4 @@
 import AlbumModel from "../models/album.model.js";
-import MediaFileModel from "../models/media-file.model.js";
 import SongModel from "../models/song.model.js";
 import { regexBuilder } from "../utils/amharic-map.util.js";
 import { NotFoundError } from "../utils/error.util.js";
@@ -97,31 +96,16 @@ export const addSong = async (req, res) => {
             tempo: song.tempo,
             rythm: song.rythm,
         },
-        albums: song.album ? [song.album] : [],
+        songFilePath: req.file ? req.file.path : null,
+        youtubeLink: song["video-link"] ? song["video-link"] : null,
+        albums: song.albums ? song.albums : [],
     });
 
-    if (song.album) {
-        song.album.songs.push(insertedSong);
-        await song.album.save();
-    }
-    if (req.file || song["video-link"]) {
-        if (req.file)
-            insertedSong.mediaFiles.push(
-                await MediaFileModel.create({
-                    songId: insertedSong._id,
-                    filePath: req.file.path,
-                    fileType: "Audio",
-                })
-            );
-        if (song["video-link"])
-            insertedSong.mediaFiles.push(
-                await MediaFileModel.create({
-                    songId: insertedSong._id,
-                    filePath: song["video-link"],
-                    fileType: "Video",
-                })
-            );
-        insertedSong.save();
+    if (song.albums) {
+        for (const album of song.albums) {
+            album.songs.push(insertedSong);
+            await album.save();
+        }
     }
     res.status(201).json({ insertedId: insertedSong._id });
 };
@@ -129,7 +113,7 @@ export const addSong = async (req, res) => {
 export const getSong = async (req, res) => {
     const { id } = req.params;
 
-    const song = await SongModel.findById(id).populate("mediaFiles");
+    const song = await SongModel.findById(id, { songFilePath: false });
 
     if (!song) throw new NotFoundError("Song not found");
 
@@ -140,54 +124,14 @@ export const updateSong = async (req, res) => {
     const { id } = req.params;
     const song = req.body;
 
-    const songInDb = await SongModel.findById(id).populate("mediaFiles albums");
+    let songInDb = await SongModel.findById(id).populate("albums");
 
-    const audioMediaFiles = songInDb.mediaFiles.filter(
-        (mediaFile) => mediaFile.fileType === "Audio"
-    );
-    const videoMediaFiles = songInDb.mediaFiles.filter(
-        (mediaFile) => mediaFile.fileType === "Video"
-    );
-
-    if (audioMediaFiles.length !== 0) {
-        if (id != song.id) audioMediaFiles[0].songId = song.id;
-        if (req.file) {
+    if (req.file) {
+        if (songInDb.songFilePath)
             fs.unlink(audioMediaFiles[0].filePath, (err) => console.error(err));
-            audioMediaFiles[0].filePath = req.file.path;
-        }
-        await audioMediaFiles[0].save();
+        songInDb.songFilePath = req.file.path;
     }
-    if (audioMediaFiles.length === 0 && req.file) {
-        songInDb.mediaFiles.push(
-            await MediaFileModel.create({
-                songId: song.id,
-                filePath: req.file.path,
-                fileType: "Audio",
-            })
-        );
-    }
-    if (videoMediaFiles.length !== 0) {
-        if (song["video-link"]) {
-            videoMediaFiles[0].filePath = song["video-link"];
-            if (song.id != id) videoMediaFiles[0].songId = song.id;
-            await videoMediaFiles[0].save();
-        }
-        if (!song["video-link"]) {
-            await MediaFileModel.findByIdAndDelete(videoMediaFiles[0]._id);
-            songInDb.mediaFiles = songInDb.mediaFiles.filter(
-                (mediaFile) => mediaFile._id !== videoMediaFiles[0]._id
-            );
-        }
-    }
-    if (videoMediaFiles.length === 0 && song["video-link"]) {
-        songInDb.mediaFiles.push(
-            await MediaFileModel.create({
-                songId: song.id,
-                filePath: song["video-link"],
-                fileType: "Video",
-            })
-        );
-    }
+    songInDb.youtubeLink = song["video-link"];
     songInDb.title = song.title;
     songInDb.lyrics = song.lyrics;
     songInDb.musicElements = {
@@ -195,11 +139,22 @@ export const updateSong = async (req, res) => {
         tempo: song.tempo,
         rythm: song.rythm,
     };
+
+    for (const album of songInDb.albums) {
+        album.songs = album.songs.filter((s) => s != id);
+        await album.save();
+    }
+    for (const album of song.albums) {
+        album.songs.push(song.id);
+        await album.save();
+    }
+    songInDb.albums = song.albums;
     if (song.id != id) {
         await SongModel.findByIdAndDelete(songInDb._id);
+
         await SongModel.create({
             _id: song.id,
-            albums: songInDb.albums,
+            albums: song.albums,
             createdAt: songInDb.createdAt,
             lyrics: songInDb.lyrics,
             mediaFiles: songInDb.mediaFiles,
@@ -222,15 +177,6 @@ export const deleteSong = async (req, res) => {
         await album.save();
     }
 
-    const mediaFiles = await MediaFileModel.find({ songId: id });
-
-    for (const mediaFile of mediaFiles) {
-        if (mediaFile.fileType === "Audio")
-            fs.unlink(mediaFile.filePath, (err) => {
-                if (err) console.error(err);
-            });
-        await MediaFileModel.findByIdAndDelete(mediaFile._id);
-    }
     await SongModel.findByIdAndDelete(id);
 
     res.status(200).json({ deleted: true });

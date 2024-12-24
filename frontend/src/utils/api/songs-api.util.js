@@ -64,6 +64,13 @@ export const addOrEditSong = async (formData, edit = false, songId = null) => {
     if (!formData.get("video-link")) formData.delete("video-link");
     if (errorOccured) throw error;
 
+    const albums = formData.getAll("albums");
+    if (albums.length === 1 && !albums[0]) formData.delete("albums");
+    else
+        formData.set(
+            "albums",
+            albums.filter((a) => a)
+        );
     const response = await fetch(
         `${backendURL}/api/song${edit ? "/" + songId : ""}`,
         {

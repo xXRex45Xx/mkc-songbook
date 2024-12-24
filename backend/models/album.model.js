@@ -1,4 +1,4 @@
-import { Schema, model, Types } from "mongoose";
+import { Schema, model } from "mongoose";
 
 const albumSchema = new Schema({
     _id: { type: String, minLength: 1, required: true },

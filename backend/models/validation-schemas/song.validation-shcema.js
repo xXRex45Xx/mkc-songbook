@@ -22,7 +22,7 @@ export const createSongBodyValidationSchema = Joi.object({
     chord: Joi.string().allow("").min(1).max(10).optional(),
     tempo: Joi.number().integer().min(0).optional(),
     rythm: Joi.string().allow("").min(2).max(50).optional(),
-    album: Joi.string().allow("").optional(),
+    albums: Joi.string().allow("").optional(),
     "video-link": Joi.string()
         .uri()
         .regex(

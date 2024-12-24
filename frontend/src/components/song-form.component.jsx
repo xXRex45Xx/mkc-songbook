@@ -43,14 +43,6 @@ const SongForm = ({ albums, method, action, song }) => {
             return setFileInputErrorMessage("Unsupported file type");
         setFileInputErrorMessage("");
     };
-    const youtubeVideoLink = useMemo(() => {
-        if (!song || song.mediaFiles?.length === 0) return "";
-        const videoMediaFile = song.mediaFiles.filter(
-            (mediaFile) => mediaFile.fileType === "Video"
-        );
-        if (videoMediaFile.length === 0) return "";
-        return videoMediaFile[0].filePath;
-    }, [song]);
 
     const formSubmitHandler = (e) => {
         e.preventDefault();
@@ -136,14 +128,15 @@ const SongForm = ({ albums, method, action, song }) => {
                     />
                 </div>
                 <div className="flex flex-col gap-2.5">
-                    <Label htmlFor="album" value="Album Title (Optional)" />
+                    <Label htmlFor="albums" value="Albums (Optional)" />
                     <Select
-                        id="album"
-                        name="album"
+                        id="albums"
+                        name="albums"
                         helperText="The album the song belongs to."
-                        defaultValue={song?.albums ? song.albums[0] : ""}
+                        defaultValue={song?.albums ? song.albums : [""]}
+                        multiple
                     >
-                        <option value=""></option>
+                        <option value="">None</option>
                         {albums.map((album) => (
                             <option key={album._id} value={album._id}>
                                 {album.name}
@@ -184,7 +177,7 @@ const SongForm = ({ albums, method, action, song }) => {
                                 The video link of the song if it has any.
                             </span>
                         }
-                        defaultValue={youtubeVideoLink}
+                        defaultValue={song?.youtubeLink}
                     />
                 </div>
             </div>

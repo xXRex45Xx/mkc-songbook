@@ -13,10 +13,17 @@ export const checkSongNumberExists = async (req, _res, next) => {
 };
 
 export const checkAlbumExists = async (req, _res, next) => {
-    const { album: albumId } = req.body;
-    if (!albumId) return next();
-    const album = await AlbumModel.findById(albumId);
-    if (!album) throw new ClientFaultError("The provided album doesn't exist.");
-    req.body.album = album;
+    const { albums: albumIds } = req.body;
+    if (!albumIds) return next();
+    const albums = [];
+    for (const albumId of albumIds.split(",")) {
+        const album = await AlbumModel.findById(albumId);
+        if (!album)
+            throw new ClientFaultError(
+                `The album with id "${albumId}" doesn't exist.`
+            );
+        albums.push(album);
+    }
+    req.body.albums = albums;
     next();
 };

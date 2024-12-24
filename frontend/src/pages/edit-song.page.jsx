@@ -46,7 +46,6 @@ export const action = async ({ request, params }) => {
     const formData = await request.formData();
     try {
         const data = await addOrEditSong(formData, true, params.songId);
-        console.log(data);
         if (!data || !data.updated)
             throw { status: 500, message: "An unexpected error occurred." };
         return redirect(`/songs/${formData.get("id")}`);

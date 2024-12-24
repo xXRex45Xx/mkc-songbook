@@ -21,7 +21,8 @@ const songSchema = new Schema({
         default: () => new Date().getFullYear().toString(),
     },
     updatedAt: { type: Date, default: Date.now },
-    mediaFiles: [{ type: Types.ObjectId, ref: "MediaFile" }],
+    songFilePath: { type: String },
+    youtubeLink: { type: String },
     albums: [{ type: String, ref: "Album" }],
 });
 
