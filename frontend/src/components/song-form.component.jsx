@@ -169,14 +169,17 @@ const SongForm = ({ albums, method, action, song }) => {
                         value="Youtube Video Link (Optional)"
                     />
                     <TextInput
-                        id="video-link"
+                        id="video"
                         name="video-link"
                         type="url"
                         helperText={
                             <span className="text-sm">
-                                The video link of the song if it has any.
+                                {error?.videoLinkMessage
+                                    ? error?.videoLinkMessage
+                                    : "The video link of the song if it has any."}
                             </span>
                         }
+                        color={error?.videoLinkMessage ? "failure" : undefined}
                         defaultValue={song?.youtubeLink}
                     />
                 </div>
@@ -201,13 +204,13 @@ const SongForm = ({ albums, method, action, song }) => {
             <div className="flex justify-end gap-7">
                 <Button
                     onClick={() => navigate(-1)}
-                    className="text-nowrap focus:ring-0 h-full border border-secondary text-secondary"
+                    className="text-nowrap focus:ring-0 h-full border border-secondary text-secondary px-7"
                 >
                     Cancel
                 </Button>
                 <Button
                     color="failure"
-                    className="text-nowrap focus:ring-0 h-full"
+                    className="text-nowrap focus:ring-0 h-full px-7"
                     type="submit"
                     isProcessing={navigation.state === "submitting"}
                     processingSpinner={<CustomTailSpin small white />}

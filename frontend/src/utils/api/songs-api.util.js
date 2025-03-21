@@ -15,6 +15,9 @@ export const getAllOrSearchSongs = async (searchQuery = null, page = 1) => {
 };
 
 export const getSong = async (id) => {
+    if (id.length === 0) {
+        throw { message: "Song number is required.", status: 400 };
+    }
     const response = await fetch(`${backendURL}/api/song/${id}`);
     const data = await response.json();
 
@@ -67,6 +70,7 @@ export const addOrEditSong = async (formData, edit = false, songId = null) => {
             "albums",
             albums.filter((a) => a)
         );
+
     const response = await fetch(
         `${backendURL}/api/song${edit ? "/" + songId : ""}`,
         {

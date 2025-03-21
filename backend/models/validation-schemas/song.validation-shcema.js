@@ -12,7 +12,7 @@ export const getAllSongsQuerySchema = Joi.object({
     .required();
 
 export const getSongParamsSchema = Joi.object({
-    id: Joi.string().required(),
+    id: Joi.string().min(1).required(),
 }).required();
 
 export const createSongBodyValidationSchema = Joi.object({

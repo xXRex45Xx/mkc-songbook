@@ -134,11 +134,15 @@ export const addSong = async (req, res) => {
 export const getSong = async (req, res) => {
     const { id } = req.params;
 
-    const song = await SongModel.findById(id, { songFilePath: false });
+    const song = await SongModel.findById(id);
 
     if (!song) throw new NotFoundError("Song not found");
 
-    res.status(200).json(song);
+    res.status(200).json({
+        ...song._doc,
+        hasAudio: song.songFilePath ? true : false,
+        songFilePath: undefined,
+    });
 };
 
 export const updateSong = async (req, res) => {
@@ -149,7 +153,7 @@ export const updateSong = async (req, res) => {
 
     if (req.file) {
         if (songInDb.songFilePath)
-            fs.unlink(audioMediaFiles[0].filePath, (err) => console.error(err));
+            fs.unlink(songInDb.songFilePath, (err) => console.error(err));
         songInDb.songFilePath = req.file.path;
     }
     songInDb.youtubeLink = song["video-link"];
@@ -161,15 +165,18 @@ export const updateSong = async (req, res) => {
         rythm: song.rythm,
     };
 
-    for (const album of songInDb.albums) {
-        album.songs = album.songs.filter((s) => s != id);
-        await album.save();
+    if (song.albums) {
+        for (const album of songInDb.albums) {
+            album.songs = album.songs.filter((s) => s != id);
+            await album.save();
+        }
+        for (const album of song.albums) {
+            album.songs.push(song.id);
+            await album.save();
+        }
+        songInDb.albums = song.albums;
     }
-    for (const album of song.albums) {
-        album.songs.push(song.id);
-        await album.save();
-    }
-    songInDb.albums = song.albums;
+
     if (song.id != id) {
         await SongModel.findByIdAndDelete(songInDb._id);
 

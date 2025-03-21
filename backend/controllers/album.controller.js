@@ -5,3 +5,7 @@ export const getAllOrSearchAlbums = async (req, res) => {
     const albums = await AlbumModel.find({}, names ? { name: true } : null);
     res.status(200).json(albums);
 };
+
+export const addAlbum = async (req, res) => {
+    const album = req.body;
+};
