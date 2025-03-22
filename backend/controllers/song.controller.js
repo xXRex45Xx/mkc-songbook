@@ -133,7 +133,6 @@ export const addSong = async (req, res) => {
 
 export const getSong = async (req, res) => {
     const { id } = req.params;
-
     const song = await SongModel.findById(id);
 
     if (!song) throw new NotFoundError("Song not found");
@@ -153,7 +152,10 @@ export const updateSong = async (req, res) => {
 
     if (req.file) {
         if (songInDb.songFilePath)
-            fs.unlink(songInDb.songFilePath, (err) => console.error(err));
+            fs.unlink(
+                songInDb.songFilePath,
+                (err) => (req.error.fileDeleteError = err)
+            );
         songInDb.songFilePath = req.file.path;
     }
     songInDb.youtubeLink = song["video-link"];

@@ -19,6 +19,8 @@ import {
     checkSongNumberExists,
 } from "../middlewares/pre-add-song.middleware.js";
 import { checkSongNumberConflict } from "../middlewares/pre-update-song.middleware.js";
+import passport from "passport";
+import roleBasedAuthorization from "../middlewares/authorization.middleware.js";
 
 const songRouter = Router();
 
@@ -30,6 +32,8 @@ songRouter
         wrapAsync(getAllOrSearchSongs)
     )
     .post(
+        passport.authenticate("jwt", { session: false }),
+        wrapAsync(roleBasedAuthorization(["admin"])),
         audioUpload.single("audio-file"),
         wrapAsync(validateCreateSong),
         wrapAsync(checkSongNumberExists),
@@ -41,6 +45,8 @@ songRouter
     .route("/:id")
     .get(wrapAsync(validateGetSong), wrapAsync(getSong))
     .put(
+        passport.authenticate("jwt", { session: false }),
+        wrapAsync(roleBasedAuthorization(["admin"])),
         audioUpload.single("audio-file"),
         wrapAsync(validateCreateSong),
         wrapAsync(checkSongNumberConflict),

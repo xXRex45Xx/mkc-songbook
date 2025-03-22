@@ -69,7 +69,6 @@ const NewAlbumSong = ({ song, onSave, onSearch, onRemove, onClear }) => {
             if (song.musicElements.tempo)
                 formData.set("tempo", song.musicElements.tempo);
             formData.set("rythm", song.musicElements.rythm);
-            console.log(videoLink);
             if (videoLink.trim()) formData.set("video-link", videoLink.trim());
             if (audioFile) formData.set("audio-file", audioFile);
             const data = await addOrEditSong(formData, true, song._id);

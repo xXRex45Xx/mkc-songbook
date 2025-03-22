@@ -18,6 +18,7 @@ import { login } from "../utils/api/user-api.util";
 import store from "../store/store";
 import { setCurrentUser } from "../store/slices/user.slice";
 import CustomTailSpin from "./custom-tail-spin.component";
+import { useSearchParams } from "react-router-dom";
 
 const eyeWrapper = (onClick, icon) => (
     <img className="cursor-pointer" src={icon} onClick={onClick} />

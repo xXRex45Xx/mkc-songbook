@@ -14,6 +14,18 @@ export class ClientFaultError extends Error {
     }
 }
 
+export class UnauthorizedError extends ClientFaultError {
+    constructor(message) {
+        super(message, 401);
+    }
+}
+
+export class ForbiddenError extends ClientFaultError {
+    constructor(message) {
+        super(message, 403);
+    }
+}
+
 export class ServerFaultError extends Error {
     constructor(internalError) {
         super("Internal server error");

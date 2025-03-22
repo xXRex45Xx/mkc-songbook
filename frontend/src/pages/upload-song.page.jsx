@@ -4,14 +4,14 @@ import { Await, defer, redirect, useLoaderData } from "react-router-dom";
 
 import "./upload-song.styles.css";
 import { getAllAlbums } from "../utils/api/album-api.util";
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import CustomTailSpin from "../components/custom-tail-spin.component";
 import { addOrEditSong } from "../utils/api/songs-api.util";
 import SongForm from "../components/song-form.component";
+import { useSelector } from "react-redux";
 
 const UploadSongPage = () => {
     const loaderData = useLoaderData();
-
     return (
         <MainBodyContainer title="Upload Song">
             <Suspense fallback={<CustomTailSpin />}>

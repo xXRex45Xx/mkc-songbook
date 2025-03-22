@@ -42,20 +42,20 @@ import EditSongPage, {
 import UploadAlbumPage, {
     action as uploadAlbumAction,
 } from "./pages/upload-album.page.jsx";
+import HomePage from "./pages/home.page.jsx";
+import ProtectedRoute from "./components/protected-route.component.jsx";
+import ErrorPage from "./pages/error.page.jsx";
 
 const router = createBrowserRouter([
     {
         path: "/",
         element: <App />,
+        errorElement: <ErrorPage />,
         loader: mainLoader,
         children: [
             {
                 index: true,
-                element: (
-                    <MainBodyContainer
-                        title={"Recent Media"}
-                    ></MainBodyContainer>
-                ),
+                element: <HomePage />,
             },
             {
                 path: "songs",
@@ -69,13 +69,21 @@ const router = createBrowserRouter([
             },
             {
                 path: "songs/:songId/edit",
-                element: <EditSongPage />,
+                element: (
+                    <ProtectedRoute roles={["admin"]}>
+                        <EditSongPage />
+                    </ProtectedRoute>
+                ),
                 loader: editSongLoader,
                 action: editSongAction,
             },
             {
                 path: "songs/new",
-                element: <UploadSongPage />,
+                element: (
+                    <ProtectedRoute roles={["admin"]}>
+                        <UploadSongPage />
+                    </ProtectedRoute>
+                ),
                 loader: albumNameLoader,
                 action: uploadSongAction,
             },
@@ -85,7 +93,11 @@ const router = createBrowserRouter([
             },
             {
                 path: "albums/new",
-                element: <UploadAlbumPage />,
+                element: (
+                    <ProtectedRoute roles={"admin"}>
+                        <UploadAlbumPage />
+                    </ProtectedRoute>
+                ),
                 action: uploadAlbumAction,
             },
             {
@@ -121,6 +133,7 @@ const router = createBrowserRouter([
         path: "/auth",
         element: <Auth />,
         loader: authLoader,
+        errorElement: <ErrorPage />,
         children: [
             {
                 index: true,
