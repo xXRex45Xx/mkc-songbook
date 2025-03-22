@@ -13,7 +13,8 @@ export const getAllAlbums = async (namesOnly = false) => {
 export const addOrEditAlbum = async (
     formData,
     edit = false,
-    albumId = null
+    albumId = null,
+    token = localStorage.getItem("_s")
 ) => {
     const error = { status: 400 };
     let errorOccured = false;
@@ -51,6 +52,9 @@ export const addOrEditAlbum = async (
         {
             method: edit ? "PUT" : "POST",
             body: formData,
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
         }
     );
     const data = await response.json();

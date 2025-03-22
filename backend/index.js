@@ -9,6 +9,7 @@ import { MulterError } from "multer";
 import fs from "fs";
 import helmet from "helmet";
 import morgan from "morgan";
+import initDb from "./init-db/init-db.js";
 
 if (config().error) throw config().error;
 
@@ -47,7 +48,12 @@ app.use(async (err, req, res, _next) => {
     res.status(statusCode).json({ message });
 });
 
-connect(process.env.DB_URI).then(() => {
+connect(process.env.DB_URI).then(async () => {
+    await initDb({
+        email: process.env.DEFAULT_ADMIN_EMAIL,
+        name: process.env.DEFAULT_ADMIN_NAME,
+        photoLink: process.env.DEFAULT_ADMIN_PHOTO_LINK,
+    });
     app.listen(process.env.PORT, () =>
         console.log("Server started on port: ", process.env.PORT)
     );

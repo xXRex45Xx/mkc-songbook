@@ -26,7 +26,12 @@ export const getSong = async (id) => {
     return data;
 };
 
-export const addOrEditSong = async (formData, edit = false, songId = null) => {
+export const addOrEditSong = async (
+    formData,
+    edit = false,
+    songId = null,
+    token = localStorage.getItem("_s")
+) => {
     const error = { status: 400 };
     let errorOccured = false;
     if (!formData.get("title") || formData.get("title").trim().length === 0) {
@@ -76,6 +81,9 @@ export const addOrEditSong = async (formData, edit = false, songId = null) => {
         {
             method: edit ? "PUT" : "POST",
             body: formData,
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
         }
     );
 
@@ -85,9 +93,15 @@ export const addOrEditSong = async (formData, edit = false, songId = null) => {
     return data;
 };
 
-export const deleteSong = async (songId) => {
+export const deleteSong = async (
+    songId,
+    token = localStorage.getItem("_s")
+) => {
     const response = await fetch(`${backendURL}/api/song/${songId}`, {
         method: "DELETE",
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
     });
 
     const data = await response.json();

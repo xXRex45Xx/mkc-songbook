@@ -15,7 +15,6 @@ export default UploadAlbumPage;
 
 export const action = async ({ request }) => {
     const formData = await request.formData();
-
     try {
         const data = await addOrEditAlbum(formData, false);
         if (!data || !data.insertedId)

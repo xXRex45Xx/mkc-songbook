@@ -1,7 +1,7 @@
 import { Schema, model, Types } from "mongoose";
 
 const songSchema = new Schema({
-    _id: { type: String },
+    _id: { type: String, minLength: 1, required: true },
     title: {
         type: String,
         trim: true,
