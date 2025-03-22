@@ -55,7 +55,7 @@ const NewAlbumSong = ({ song, onSave, onSearch, onRemove, onClear }) => {
             }));
             errorOccurred = true;
         }
-        if (errorOccurred) return;
+        if (errorOccurred || error?.audioFileMessage) return;
         if (!audioFile && (!videoLink || videoLink === song.youtubeLink)) {
             setIsLoadingSong(false);
             return onSave(song);

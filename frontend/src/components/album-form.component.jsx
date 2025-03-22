@@ -1,4 +1,4 @@
-import { Accordion, Button, Label, TextInput } from "flowbite-react";
+import { Accordion, Button, FileInput, Label, TextInput } from "flowbite-react";
 import { Form, useActionData, useNavigate, useSubmit } from "react-router-dom";
 
 import addIcon from "../assets/add-small.svg";
@@ -12,8 +12,11 @@ const AlbumForm = ({ method, action, album }) => {
     const submit = useSubmit();
     const titleRef = useRef();
     const playlistRef = useRef();
+    const idRef = useRef();
     const [songList, setSongList] = useState(album?.songs ? album?.songs : []);
     const [trackError, setTrackError] = useState(null);
+    const [albumCoverMessage, setAlbumCoverMessage] = useState(null);
+    const [alubmCover, setAlbumCover] = useState(null);
     const error = useActionData();
 
     const handleAddSong = (e) => {
@@ -66,6 +69,27 @@ const AlbumForm = ({ method, action, album }) => {
         });
     };
 
+    const handleAlbumCoverChange = (e) => {
+        if (
+            e.target.files &&
+            e.target.files[0] &&
+            e.target.files[0].size > 30 * 1024 * 1024
+        )
+            return setAlbumCoverMessage(
+                "File is too large. Maximum size is 30 MBs."
+            );
+        if (
+            e.target.files &&
+            e.target.files[0] &&
+            !["image/jpeg", "image/jpg", "image/png"].includes(
+                e.target.files[0].type
+            )
+        )
+            return setAlbumCoverMessage("Unsupported file type.");
+        setAlbumCoverMessage(null);
+        setAlbumCover(e.target.files[0]);
+    };
+
     const handleSubmit = (e) => {
         e.preventDefault();
         setTrackError(null);
@@ -86,12 +110,14 @@ const AlbumForm = ({ method, action, album }) => {
         }
 
         const formData = new FormData();
+        formData.append("id", idRef.current.value);
         formData.append("title", titleRef.current.value);
         if (playlistRef.current.value)
             formData.append("youtube_playlist_link", playlistRef.current.value);
-        songList.forEach(({ song }) => formData.append("songList", song._id));
+        songList.forEach(({ song }) => formData.append("songs", song._id));
+        if (alubmCover) formData.append("cover", alubmCover);
 
-        submit(formData, { action: "/albums/new", method: "POST" });
+        submit(formData, { action, method });
     };
     return (
         <Form
@@ -101,6 +127,24 @@ const AlbumForm = ({ method, action, album }) => {
         >
             <div className="flex gap-7">
                 <div className="flex-1 flex flex-col gap-2.5">
+                    <Label htmlFor="id" value="Album Number" />
+                    <TextInput
+                        id="id"
+                        name="id"
+                        type="text"
+                        ref={idRef}
+                        defaultValue={album?._id}
+                        color={error?.idMessage ? "failure" : undefined}
+                        helperText={
+                            <span className="text-sm">
+                                {error?.idMessage
+                                    ? error?.idMessage
+                                    : "The number assigned to the album."}
+                            </span>
+                        }
+                    />
+                </div>
+                <div className="flex-1 flex flex-col gap-2.5">
                     <Label htmlFor="title" value="Album Title" />
                     <TextInput
                         id="title"
@@ -108,6 +152,29 @@ const AlbumForm = ({ method, action, album }) => {
                         type="text"
                         ref={titleRef}
                         defaultValue={album?.title}
+                        color={error?.titleMessage ? "failure" : undefined}
+                        helperText={
+                            <span className="text-sm">
+                                {error?.titleMessage}
+                            </span>
+                        }
+                    />
+                </div>
+            </div>
+            <div className="flex gap-7">
+                <div className="flex-1 flex flex-col gap-2.5">
+                    <Label htmlFor="cover" value="Album Photo (Optional)" />
+                    <FileInput
+                        id="cover"
+                        helperText={
+                            <span className="text-sm">
+                                {albumCoverMessage
+                                    ? albumCoverMessage
+                                    : "JPG, JPEG, or PNG (MAX. 30MBs)"}
+                            </span>
+                        }
+                        color={albumCoverMessage ? "failure" : undefined}
+                        onChange={handleAlbumCoverChange}
                     />
                 </div>
                 <div className="flex-1 flex flex-col gap-2.5">
@@ -120,14 +187,20 @@ const AlbumForm = ({ method, action, album }) => {
                         name="youtube_playlist_link"
                         type="text"
                         ref={playlistRef}
+                        color={
+                            error?.playlistLinkMessage ? "failure" : undefined
+                        }
                         helperText={
                             <span className="text-sm">
-                                If the album has a youtube playlist.
+                                {error?.playlistLinkMessage
+                                    ? error?.playlistLinkMessage
+                                    : "If the album has a youtube playlist."}
                             </span>
                         }
                     />
                 </div>
             </div>
+
             <div className="flex-1 overflow-y-auto flex flex-col items-stretch gap-3.5">
                 <Accordion
                     collapseAll
@@ -159,9 +232,9 @@ const AlbumForm = ({ method, action, album }) => {
                         </Accordion.Panel>
                     ))}
                 </Accordion>
-                {trackError && (
+                {(trackError || error?.message) && (
                     <p className="text-sm text-secondary text-center">
-                        {trackError}
+                        {trackError ? trackError : error?.message}
                     </p>
                 )}
                 <div className="mt-auto flex justify-end">

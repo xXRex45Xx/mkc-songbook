@@ -1,7 +1,8 @@
 import { redirect } from "react-router-dom";
 import AlbumForm from "../components/album-form.component";
 import MainBodyContainer from "../components/main-body-container.component";
-
+import { addOrEditAlbum } from "../utils/api/album-api.util";
+import "./upload-album.styles.css";
 const UploadAlbumPage = () => {
     return (
         <MainBodyContainer title="Upload Album">
@@ -14,15 +15,12 @@ export default UploadAlbumPage;
 
 export const action = async ({ request }) => {
     const formData = await request.formData();
-    const albumTitle = formData.get("title");
-    const albumPlaylistLink = formData.get("youtube_playlist_link");
-    const songList = formData.getAll("songs");
 
-    console.log(albumTitle);
-    console.log(albumPlaylistLink);
-    console.log(songList);
     try {
-        return redirect("/");
+        const data = await addOrEditAlbum(formData, false);
+        if (!data || !data.insertedId)
+            throw { status: 500, message: "An unexpected error occurred." };
+        return redirect(`/albums/${data.insertedId}`);
     } catch (error) {
         if (error.status === 400) return { ...error, status: null };
         throw error;
