@@ -57,7 +57,7 @@ A comprehensive web application for managing choir songs, lyrics, and related me
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/yourusername/mkc-choir.git
+git clone https://github.com/xXRex45Xx/mkc-choir.git
 cd mkc-choir
 ```
 

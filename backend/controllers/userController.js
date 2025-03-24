@@ -4,7 +4,6 @@ import bcrypt from "bcrypt";
 import UserModel from "../models/user.model.js";
 import jwt from "jsonwebtoken";
 import { ClientFaultError, UnauthorizedError } from "../utils/error.util.js";
-import { response } from "express";
 
 export const registerOTP = async (req, res) => {
     const { email } = req.body;
