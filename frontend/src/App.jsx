@@ -27,10 +27,7 @@ function App() {
 export default App;
 
 export const loader = async () => {
-    let token = Cookies.get("x-auth-cookie");
-    Cookies.remove("x-auth-cookie");
-    if (token) localStorage.setItem("_s", token);
-    else token = localStorage.getItem("_s");
+    const token = localStorage.getItem("_s");
     if (!token || store.getState().user.currentUser) return null;
     const getUser = async () => {
         try {

@@ -5,6 +5,7 @@ import {
     redirect,
     useActionData,
     useNavigation,
+    useSearchParams,
 } from "react-router-dom";
 import closedEye from "../assets/closed-eye.svg";
 import openEye from "../assets/open-eye.svg";
@@ -18,7 +19,6 @@ import { login } from "../utils/api/user-api.util";
 import store from "../store/store";
 import { setCurrentUser } from "../store/slices/user.slice";
 import CustomTailSpin from "./custom-tail-spin.component";
-import { useSearchParams } from "react-router-dom";
 
 const eyeWrapper = (onClick, icon) => (
     <img className="cursor-pointer" src={icon} onClick={onClick} />
@@ -27,7 +27,9 @@ const eyeWrapper = (onClick, icon) => (
 const LoginForm = () => {
     const error = useActionData();
     const navigation = useNavigation();
+    const [searchParams, _setSearchParams] = useSearchParams();
     const [showPass, setShowPass] = useState(false);
+    const [googleLoginError, setGoogleLoginError] = useState("");
     const toggleShowPass = () => {
         setShowPass((prev) => !prev);
     };
@@ -84,7 +86,7 @@ const LoginForm = () => {
                     </div>
                 </div>
                 <span className="text-sm text-secondary text-center">
-                    {error?.message}
+                    {error?.message || googleLoginError}
                 </span>
                 <div className="flex flex-col gap-2.5">
                     <Button
@@ -99,7 +101,12 @@ const LoginForm = () => {
                         <img className="ml-2.5" src={loginIcon} alt="" />
                     </Button>
                     <span className="text-center">or</span>
-                    <GoogleLink>Login with Google</GoogleLink>
+                    <GoogleLink
+                        redirectOnSuccess={searchParams.get("redirect")}
+                        setErrorMessage={setGoogleLoginError}
+                    >
+                        Login with Google
+                    </GoogleLink>
                 </div>
                 <span className="text-center">
                     Don't have an account?{" "}
@@ -115,6 +122,7 @@ const LoginForm = () => {
 export default LoginForm;
 
 export const action = async ({ request }) => {
+    const searchParams = new URL(request.url).searchParams;
     const formData = await request.formData();
     const email = formData.get("email");
     const password = formData.get("password");
@@ -125,7 +133,9 @@ export const action = async ({ request }) => {
             throw { status: 500, message: "An unexpected error occured." };
         localStorage.setItem("_s", data.token);
         store.dispatch(setCurrentUser(data.user));
-        return redirect("/");
+        return redirect(
+            searchParams.get("redirect") ? searchParams.get("redirect") : "/"
+        );
     } catch (error) {
         if (error.status === 400 || error.status === 401)
             return {

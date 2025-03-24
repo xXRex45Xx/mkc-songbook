@@ -45,6 +45,7 @@ import UploadAlbumPage, {
 import HomePage from "./pages/home.page.jsx";
 import ProtectedRoute from "./components/protected-route.component.jsx";
 import ErrorPage from "./pages/error.page.jsx";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 
 const router = createBrowserRouter([
     {
@@ -137,7 +138,13 @@ const router = createBrowserRouter([
         children: [
             {
                 index: true,
-                element: <LoginForm />,
+                element: (
+                    <GoogleOAuthProvider
+                        clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}
+                    >
+                        <LoginForm />
+                    </GoogleOAuthProvider>
+                ),
                 action: loginAction,
             },
             {

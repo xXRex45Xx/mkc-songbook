@@ -82,3 +82,7 @@ export const resetPasswordBodySchema = Joi.object({
             "number.max": "The verification code must be a 6 digit number",
         }),
 }).required();
+
+export const googleOAuthBodySchema = Joi.object({
+    accessToken: Joi.string().min(1).required(),
+}).required();

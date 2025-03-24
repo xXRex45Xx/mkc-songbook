@@ -158,3 +158,24 @@ export const resetPassword = async (email, otp, password, confirmPass) => {
 
     return data;
 };
+
+export const googleOauthLogin = async (accessToken) => {
+    const error = {
+        message: "Failed to sign up or login with google. Please, try again.",
+        status: 401,
+    };
+    if (!accessToken) throw error;
+
+    const response = await fetch(`${backendURL}/api/user/google/callback`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            accessToken,
+        }),
+    });
+
+    if (!response.ok) throw error;
+
+    const data = await response.json();
+    return data;
+};

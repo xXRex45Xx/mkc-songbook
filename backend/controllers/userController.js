@@ -3,7 +3,8 @@ import generateOtp from "../utils/otp.util.js";
 import bcrypt from "bcrypt";
 import UserModel from "../models/user.model.js";
 import jwt from "jsonwebtoken";
-import { ClientFaultError } from "../utils/error.util.js";
+import { ClientFaultError, UnauthorizedError } from "../utils/error.util.js";
+import { response } from "express";
 
 export const registerOTP = async (req, res) => {
     const { email } = req.body;
@@ -62,13 +63,45 @@ export const getCurrentUser = async (req, res) => {
     });
 };
 
-export const OAuthCreateToken = async (req, res) => {
-    const token = jwt.sign({ id: req.user._id }, process.env.JWT_SECRET, {
+export const googleOAuthLogin = async (req, res) => {
+    const { accessToken } = req.body;
+
+    const googleApiResponse = await fetch(
+        "https://www.googleapis.com/oauth2/v3/userinfo",
+        {
+            headers: { Authorization: `Bearer ${accessToken}` },
+        }
+    );
+
+    if (!googleApiResponse.ok) {
+        throw new UnauthorizedError(
+            "Failed to sign up or login with google. Please, try again."
+        );
+    }
+
+    const googleApiData = await googleApiResponse.json();
+    let user = await UserModel.findOne({ email: googleApiData.email });
+
+    if (!user)
+        user = await UserModel.create({
+            email: googleApiData.email,
+            name: googleApiData.name,
+            photo: googleApiData.picture,
+        });
+
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
         expiresIn: "30 days",
     });
 
-    res.cookie("x-auth-cookie", token);
-    res.redirect(process.env.CLIENT_URL);
+    res.json({
+        token,
+        user: {
+            id: user._id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+        },
+    });
 };
 
 export const resetPassword = async (req, res) => {

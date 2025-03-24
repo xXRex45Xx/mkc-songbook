@@ -1,4 +1,5 @@
 import {
+    googleOAuthBodySchema,
     loginBodySchema,
     registerOTPBodySchema,
     registerOTPQuerySchema,
@@ -31,5 +32,10 @@ export const validateVerifyOTP = async (req, _res, next) => {
 
 export const validateResetPassword = async (req, _res, next) => {
     await validateSchema(req.body, resetPasswordBodySchema);
+    next();
+};
+
+export const validateGoogleOAuthLogin = async (req, _res, next) => {
+    await validateSchema(req.body, googleOAuthBodySchema);
     next();
 };
