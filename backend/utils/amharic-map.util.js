@@ -1,3 +1,16 @@
+/**
+ * Amharic Character Mapping Utility Module.
+ * Provides functionality for handling similar Amharic characters in search operations.
+ * Maps Amharic characters to their similar variants for flexible text matching.
+ * @module utils/amharic-map
+ */
+
+/**
+ * Maps Amharic characters to regex patterns containing similar characters.
+ * Used for flexible text matching that accounts for character variants.
+ * For example, 'ሀ' matches any of '[ሀሃሐሓኀኃኻ]'.
+ * @constant {Object.<string, string>}
+ */
 export const similarRegexMap = {
     ሀ: "[ሀሃሐሓኀኃኻ]",
     ሁ: "[ሁሑኁኹ]",
@@ -72,6 +85,17 @@ export const similarRegexMap = {
     ፆ: "[ጾፆ]",
 };
 
+/**
+ * Builds a regex pattern string that matches similar Amharic characters.
+ * For each character in the input string, if it exists in the similarRegexMap,
+ * replaces it with its corresponding regex pattern. Otherwise, keeps the original character.
+ *
+ * @param {string} s - Input string containing Amharic characters
+ * @returns {string} A regex pattern string that matches similar characters
+ * @example
+ * // Returns '[ሀሃሐሓኀኃኻ][ኡዑ]' for input 'ሀዑ'
+ * regexBuilder('ሀዑ')
+ */
 export const regexBuilder = (s) => {
     let str = "";
     for (let i = 0; i < s.length; i++) {

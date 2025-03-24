@@ -1,3 +1,10 @@
+/**
+ * Main Application Entry Point.
+ * Sets up the Express server with middleware, routes, and error handling.
+ * Initializes database connection and default admin user.
+ * @module index
+ */
+
 import { config } from "dotenv";
 import { connect } from "./config/db.js";
 import express from "express";
@@ -15,9 +22,21 @@ if (config().error) throw config().error;
 
 const app = express();
 
+/**
+ * Custom Morgan tokens for logging errors.
+ * Adds error message and file deletion error tokens to the logging format.
+ */
 morgan.token("error", (req) => req.error?.message || "");
 morgan.token("fileerror", (req) => req.fileDeleteError?.message || "");
 
+/**
+ * Express application setup with security and utility middleware:
+ * - Helmet for security headers
+ * - Morgan for request logging
+ * - CORS with configured origins
+ * - JSON body parser
+ * - API routes mounted at /api
+ */
 app.use(helmet());
 app.use(
     morgan(
@@ -32,6 +51,20 @@ app.use(
 app.use(express.json());
 app.use("/api", apiRouter);
 
+/**
+ * Global error handling middleware.
+ * Handles various error types:
+ * - File upload errors (Multer)
+ * - Server errors (500)
+ * - Client errors (4xx)
+ * Cleans up uploaded files on error
+ * Logs internal errors while sending safe messages to clients
+ *
+ * @param {Error} err - The error object
+ * @param {Request} req - Express request object
+ * @param {Response} res - Express response object
+ * @param {NextFunction} _next - Express next function
+ */
 app.use(async (err, req, res, _next) => {
     if (req.file)
         fs.unlink(req.file.path, (err) => {
@@ -48,6 +81,11 @@ app.use(async (err, req, res, _next) => {
     res.status(statusCode).json({ message });
 });
 
+/**
+ * Database connection and server initialization.
+ * Connects to MongoDB, initializes the default admin user,
+ * and starts the Express server.
+ */
 connect(process.env.DB_URI).then(async () => {
     await initDb({
         email: process.env.DEFAULT_ADMIN_EMAIL,

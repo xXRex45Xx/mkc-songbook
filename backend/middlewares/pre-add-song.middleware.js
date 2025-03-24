@@ -36,15 +36,23 @@ export const checkSongNumberExists = async (req, _res, next) => {
 export const checkAlbumExists = async (req, _res, next) => {
     const { albums: albumIds } = req.body;
     if (!albumIds) return next();
-    const albums = [];
-    for (const albumId of albumIds.split(",")) {
-        const album = await AlbumModel.findById(albumId);
-        if (!album)
-            throw new ClientFaultError(
-                `The album with id "${albumId}" doesn't exist.`
-            );
-        albums.push(album);
-    }
-    req.body.albums = albums;
+    const albumIdsList = albumIds.split(",");
+
+    const existingAlbums = await AlbumModel.find({
+        _id: { $in: albumIdsList },
+    });
+
+    const foundAlbums = new Map(
+        existingAlbums.map((album) => [album._id, album])
+    );
+
+    const missingAlbumIds = albumIdsList.filter((id) => !foundAlbums.has(id));
+
+    if (missingAlbumIds > 0)
+        throw new ClientFaultError(
+            `The following albums don't exist: ${missingAlbumIds.join(", ")}`
+        );
+
+    req.body.albums = albumIdsList.map((id) => foundAlbums.get(id));
     next();
 };
