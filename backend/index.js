@@ -26,7 +26,7 @@ app.use(
 );
 app.use(
     cors({
-        origin: process.env.CLIENT_URL.split(","),
+        origin: process.env.ALLOWED_ORIGINS.split(","),
     })
 );
 app.use(express.json());

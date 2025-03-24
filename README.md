@@ -1,87 +1,223 @@
-# MKC Choir Song Book Web
+# MKC Choir Song Book Web Application
 
-## Repository Name: `mkc-choir-songs-app`
+A comprehensive web application for managing choir songs, lyrics, and related media files. Built with the MERN stack (MongoDB, Express, React, Node.js).
 
-## Description:
+## Features
 
-The MKC Choir Song Book Application is a comprehensive platform designed to manage, view, and share choir songs, lyrics, and related media files. Developed using the MERN stack (MongoDB, Express, React, and Node.js), this application serves both choir members and public users by providing robust functionality for accessing and managing choir resources.
+### For Choir Members
 
-## Key Features:
+-   **Song Management**
 
--   **Song Lyrics Viewer:**
+    -   Create and edit song lyrics
+    -   Organize songs into albums
+    -   Upload and manage media files
+    -   Search and filter songs
 
-    -   View song lyrics in alphabetical and chronological order.
-    -   Display music elements like chords, tempo, and rhythm.
-    -   Adjustable font size for better readability.
-    -   Share songs and associated media on social media and via email.
+-   **Service Logbook**
+    -   Record choir services
+    -   Track songs performed
+    -   Maintain service history
 
--   **Audio and Video Playback:**
+### For Public Users
 
-    -   Stream songs directly from the web app.
-    -   Sync with a cloud-based media repository to update song lists and media files.
+-   **Song Access**
+    -   View song lyrics
+    -   Search through song database
+    -   Access public media files
 
--   **Search Functionality:**
-    -   Search for songs by title or within the full lyrics.
-    -   Highlight search results with context and display the number of matching songs.
--   **Choir Service Logbook:**
-    -   Maintain an electronic logbook of choir services, tracking church name, service date, and songs performed.
-    -   Synchronize the logbook with a cloud database for easy access by choir members.
--   **User Roles and Access Control:**
-    -   Differentiate between public and internal users, restricting access to certain features for internal use only.
+## Tech Stack
 
-## Technology Stack:
+### Frontend
 
--   **Frontend:**
-    -   **React:** For building recative web applications with a consistent and smooth user interface.
--   **Backend:**
+-   React 18 with Vite
+-   Redux Toolkit for state management
+-   React Router DOM for routing
+-   Flowbite React for UI components
+-   Tailwind CSS for styling
+-   @react-oauth/google for Google authentication
 
-    -   **Node.js:** For building a scalable, high-performance server to handle application logic.
-    -   **Express.js:** For setting up a robust RESTful API to manage requests from the frontend and interact with the database.
+### Backend
 
--   **Database:**
+-   Node.js with Express
+-   MongoDB with Mongoose
+-   Passport.js for authentication
+-   JWT for token-based auth
+-   Joi for validation
 
-    -   **MongoDB:** A flexible NoSQL database to manage and store song lyrics, media files, and user data efficiently.
+## Getting Started
 
--   **Authentication:**
-    -   **JWT (JSON Web Tokens):** For secure user authentication and role-based access control.
+### Prerequisites
 
-## Installation and Setup:
+-   Node.js (v14 or higher)
+-   MongoDB
+-   Google OAuth credentials
 
-1. **Clone the Repository:**
-    ```
-    git clone https://github.com/xXRex45Xx/mkc-songbook.git
-    ```
-2. **Navigate to the Project Repository:**
-    ```
-    cd mkc-songbook
-    ```
-3. **Install Backend Dependencies:**
-    ```
-    cd backend
-    npm install
-    ```
-4. **Install Frontend Dependencies:**
-    ```
-    cd ../frontend
-    npm install
-    ```
-5. **Set Up Environment Variables:**
-    - Create a `.env` file in the backend directory and configure the following environment variables:
-    ```
-    DB_URI: database connection uri
-    PORT: server port
-    ```
-6. **Run the Application**
+### Installation
 
-    - Backend:
-        ```
-        cd backend
-        npm start
-        ```
-    - Frontend:
+1. Clone the repository:
 
-        ```
-        cd ../frontend
-        npm start
+```bash
+git clone https://github.com/yourusername/mkc-choir.git
+cd mkc-choir
+```
 
-        ```
+2. Install backend dependencies:
+
+```bash
+cd backend
+npm install
+```
+
+3. Install frontend dependencies:
+
+```bash
+cd ../frontend
+npm install
+```
+
+4. Set up environment variables:
+
+Backend (.env):
+
+```env
+# Server Configuration
+PORT=5000
+MONGODB_URI=your_mongodb_uri
+JWT_SECRET=your_jwt_secret
+
+# Google OAuth
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+GOOGLE_CALLBACK_URL=http://localhost:5000/api/user/google/callback
+
+# SMTP Configuration
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your_email@gmail.com
+SMTP_PASS=your_app_specific_password
+SMTP_FROM=your_email@gmail.com
+
+# Client URLs (for CORS)=
+ALLOWED_ORIGINS=http://localhost:5173,https://your-production-domain.com
+
+# Media Storage
+IMAGE_STORAGE=path_to_image_storage
+AUDIO_STORAGE=path_to_audio_storage
+```
+
+Frontend (.env):
+
+```env
+VITE_BACKEND_URL=http://localhost:5000
+VITE_GOOGLE_CLIENT_ID=your_google_client_id
+```
+
+### Environment Configuration Details
+
+#### Email Configuration
+
+The application uses SMTP for sending emails:
+
+-   Verification emails
+-   Password reset links
+-   Important notifications
+
+For Gmail SMTP:
+
+1. Enable 2-factor authentication on your Google account
+2. Generate an App Password in Google Account settings
+3. Use the App Password in `SMTP_PASS`
+
+#### CORS Configuration
+
+Configure allowed origins for security:
+
+-   Development: `http://localhost:5173`
+-   Production: Your production domain
+-   Multiple origins can be comma-separated in `ALLOWED_ORIGINS`
+
+5. Start the development servers:
+
+Backend:
+
+```bash
+cd backend
+npm run dev
+```
+
+Frontend:
+
+```bash
+cd frontend
+npm run dev
+```
+
+## Project Structure
+
+```
+mkc-choir/
+├── frontend/           # React frontend application
+│   ├── src/
+│   │   ├── assets/    # Static assets
+│   │   ├── components/# React components
+│   │   ├── config/    # Configuration files
+│   │   ├── pages/     # Page components
+│   │   ├── store/     # Redux store
+│   │   └── utils/     # Utility functions
+│   └── package.json
+│
+└── backend/           # Node.js backend server
+    ├── config/       # Configuration files
+    ├── controllers/  # Route controllers
+    ├── middlewares/  # Custom middleware
+    ├── models/      # Database models
+    ├── routes/      # API routes
+    └── utils/       # Utility functions
+```
+
+## API Documentation
+
+### Authentication Endpoints
+
+-   `POST /api/user/login` - Email/password login
+-   `POST /api/user/google/callback` - Google OAuth login
+-   `POST /api/user/register` - User registration
+-   `POST /api/user/verify` - Email verification
+-   `POST /api/user/reset-password` - Password reset
+
+### User Management
+
+-   `GET /api/user/me` - Get current user profile
+-   `PUT /api/user/profile` - Update user profile
+
+### Songs
+
+-   `GET /api/songs` - Get all songs
+-   `POST /api/songs` - Create new song
+-   `GET /api/songs/:id` - Get song by ID
+-   `PUT /api/songs/:id` - Update song
+-   `DELETE /api/songs/:id` - Delete song
+
+### Albums
+
+-   `GET /api/albums` - Get all albums
+-   `POST /api/albums` - Create new album
+-   `GET /api/albums/:id` - Get album by ID
+-   `PUT /api/albums/:id` - Update album
+-   `DELETE /api/albums/:id` - Delete album
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## Acknowledgments
+
+-   [React](https://reactjs.org/)
+-   [Express](https://expressjs.com/)
+-   [MongoDB](https://www.mongodb.com/)
+-   [Flowbite React](https://flowbite-react.com/)
+-   [Tailwind CSS](https://tailwindcss.com/)
