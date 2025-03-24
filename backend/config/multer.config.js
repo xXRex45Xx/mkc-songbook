@@ -1,3 +1,15 @@
+/**
+ * Multer Configuration
+ *
+ * This module configures Multer for handling file uploads in the application.
+ * It provides:
+ * 1. File storage configuration (local)
+ * 2. File filtering and validation
+ * 3. Upload limits and error handling
+ *
+ * @module multer.config
+ */
+
 import multer from "multer";
 import { ClientFaultError } from "../utils/error.util.js";
 import {
@@ -8,8 +20,17 @@ import { v1 } from "uuid";
 import { config } from "dotenv";
 import path from "path";
 
+// Load environment variables
 config();
 
+/**
+ * Configuration for user profile image uploads
+ *
+ * @type {Object}
+ * @property {Object} storage - Disk storage configuration
+ * @property {number} limits.fileSize - Maximum file size (30MB)
+ * @property {Function} fileFilter - File type validation
+ */
 export const userImageOpts = {
     storage: multer.diskStorage({
         destination: path.join(process.cwd(), process.env.IMAGE_STORAGE),
@@ -27,6 +48,14 @@ export const userImageOpts = {
     },
 };
 
+/**
+ * Configuration for album cover image uploads
+ *
+ * @type {Object}
+ * @property {Object} storage - Disk storage configuration
+ * @property {number} limits.fileSize - Maximum file size (30MB)
+ * @property {Function} fileFilter - File type validation
+ */
 export const albumImageOpts = {
     storage: multer.diskStorage({
         destination: path.join(process.cwd(), process.env.IMAGE_STORAGE),
@@ -43,6 +72,14 @@ export const albumImageOpts = {
     },
 };
 
+/**
+ * Configuration for audio file uploads
+ *
+ * @type {Object}
+ * @property {Object} storage - Disk storage configuration
+ * @property {number} limits.fileSize - Maximum file size (50MB)
+ * @property {Function} fileFilter - File type validation
+ */
 export const audioOpts = {
     storage: multer.diskStorage({
         destination: path.join(process.cwd(), process.env.AUDIO_STORAGE),
