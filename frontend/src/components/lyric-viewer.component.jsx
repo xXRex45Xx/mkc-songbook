@@ -7,7 +7,7 @@ import BackSvg from "../assets/back.svg?react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { useMemo } from "react";
-import { regexBuilder } from "../../../backend/utils/amharic-map.util";
+import { regexBuilder } from "../utils/amharic-map.util";
 
 /**
  * Lyric Viewer Component
