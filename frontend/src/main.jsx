@@ -11,10 +11,8 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import MainBodyContainer from "./components/main-body-container.component.jsx";
 import SongsPage from "./pages/songs.page.jsx";
 import LyricsPage from "./pages/lyrics.page.jsx";
-import AlbumsPage from "./pages/albums.page.jsx";
 import { loader as songsLoader } from "./pages/songs.page.jsx";
 import { loader as songLoader } from "./pages/lyrics.page.jsx";
-import SchedulePage from "./pages/schedule.page.jsx";
 import { Provider } from "react-redux";
 import store from "./store/store.js";
 import Auth, { loader as authLoader } from "./pages/auth.page.jsx";
@@ -101,7 +99,11 @@ const router = createBrowserRouter([
             },
             {
                 path: "albums",
-                element: <AlbumsPage />,
+                element: (
+                    <MainBodyContainer
+                        title={"Under Construction"}
+                    ></MainBodyContainer>
+                ),
             },
             {
                 path: "albums/new",
@@ -114,28 +116,45 @@ const router = createBrowserRouter([
             },
             {
                 path: "albums/:albumId/edit",
+                element: (
+                    <ProtectedRoute roles={"admin"}>
+                        <MainBodyContainer
+                            title={"Under Construction"}
+                        ></MainBodyContainer>
+                    </ProtectedRoute>
+                ),
             },
             {
                 path: "playlists",
                 element: (
-                    <MainBodyContainer title={"Playlists"}></MainBodyContainer>
+                    <MainBodyContainer
+                        title={"Under Construction"}
+                    ></MainBodyContainer>
                 ),
             },
             {
                 path: "schedule",
-                element: <SchedulePage />,
+                element: (
+                    <MainBodyContainer
+                        title={"Under Construction"}
+                    ></MainBodyContainer>
+                ),
             },
             {
                 path: "users",
                 element: (
-                    <MainBodyContainer title={"Users"}></MainBodyContainer>
+                    <ProtectedRoute roles={"admin"}>
+                        <MainBodyContainer
+                            title={"Under Construction"}
+                        ></MainBodyContainer>
+                    </ProtectedRoute>
                 ),
             },
             {
                 path: "announcements",
                 element: (
                     <MainBodyContainer
-                        title={"Announcements"}
+                        title={"Under Construction"}
                     ></MainBodyContainer>
                 ),
             },

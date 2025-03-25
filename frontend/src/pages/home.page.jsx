@@ -9,7 +9,7 @@ const HomePage = () => {
     useEffect(() => {
         if (user?.role === "admin") navigate("/songs");
     }, [user]);
-    return <MainBodyContainer title={"Recent Media"}></MainBodyContainer>;
+    return <MainBodyContainer title={"Under Construction"}></MainBodyContainer>;
 };
 
 export default HomePage;
