@@ -1,3 +1,13 @@
+/**
+ * @fileoverview Form theme configurations for the application
+ * Contains various form element styling themes
+ */
+
+/**
+ * Select input theme configuration
+ * Defines styling for select dropdowns
+ * @type {Object}
+ */
 export const selectTheme = {
     field: {
         select: {
@@ -15,6 +25,11 @@ export const selectTheme = {
     },
 };
 
+/**
+ * Search input theme configuration
+ * Styling for search input fields with custom appearance
+ * @type {Object}
+ */
 export const searchInputTheme = {
     base: "flex flex-1",
     field: {
@@ -33,6 +48,11 @@ export const searchInputTheme = {
     },
 };
 
+/**
+ * Range slider theme configuration
+ * Styling for range input sliders
+ * @type {Object}
+ */
 export const rangeSliderTheme = {
     root: {
         base: "flex",
@@ -45,6 +65,11 @@ export const rangeSliderTheme = {
     },
 };
 
+/**
+ * Number input theme configuration
+ * Styling for numeric input fields with custom appearance
+ * @type {Object}
+ */
 export const numberInputTheme = {
     field: {
         base: "relative",
@@ -54,6 +79,11 @@ export const numberInputTheme = {
     },
 };
 
+/**
+ * Password input theme configuration
+ * Styling for password fields with right icon support
+ * @type {Object}
+ */
 export const passwordInputTheme = {
     field: {
         rightIcon: {

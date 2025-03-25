@@ -1,3 +1,13 @@
+/**
+ * @fileoverview Table theme configuration
+ * Defines styling for table components
+ */
+
+/**
+ * Table theme configuration
+ * Contains styling for table root, header, and body elements
+ * @type {Object}
+ */
 export const tableTheme = {
     root: {
         shadow: "",

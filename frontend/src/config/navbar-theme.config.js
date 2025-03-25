@@ -1,3 +1,14 @@
+/**
+ * @fileoverview Navigation bar theme configuration
+ * Defines styling for the application's navigation bar components
+ */
+
+/**
+ * Navbar theme configuration
+ * Contains styling for root, brand, collapse, and link elements
+ * Includes responsive design classes for mobile and desktop views
+ * @type {Object}
+ */
 export const navbarTheme = {
     root: {
         base: "px-5 pt-6 md:px-10 lg:px-16",
