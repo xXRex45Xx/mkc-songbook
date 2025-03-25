@@ -3,6 +3,23 @@ import { Button } from "flowbite-react";
 import { buttonTheme } from "../config/button-theme.config";
 import BackSvg from "../assets/back.svg?react";
 
+/**
+ * Authentication Main Container Component
+ *
+ * Layout container for authentication-related pages.
+ * Provides consistent styling and navigation for auth flows.
+ *
+ * Features:
+ * - Responsive layout with different styles for mobile/desktop
+ * - Back navigation for email verification page
+ * - Logo and brand display for other auth pages
+ * - Consistent padding and spacing
+ * - Flexible content area for auth forms
+ *
+ * @component
+ * @param {Object} props - Component props
+ * @param {React.ReactNode} props.children - Auth form or content to render
+ */
 const AuthMainContainer = ({ children }) => {
     const location = useLocation();
     const navigate = useNavigate();

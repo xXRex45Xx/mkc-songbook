@@ -13,6 +13,12 @@ import { useDispatch, useSelector } from "react-redux";
 import { setAuthOtp } from "../store/slices/user.slice";
 import store from "../store/store";
 
+/**
+ * Form component for email verification with OTP
+ * Represents step 2 of both signup and password reset flows
+ * Provides a 6-digit OTP input interface with auto-focus functionality
+ * @returns {JSX.Element} Verify email form component
+ */
 const VerifyEmailForm = () => {
     const input2 = useRef();
     const input3 = useRef();
@@ -32,6 +38,11 @@ const VerifyEmailForm = () => {
         if (!email && !forgotEmail) navigate("/auth/signup");
     }, [email, forgotEmail]);
 
+    /**
+     * Handles keypress events for OTP input fields
+     * Prevents non-numeric input and limits to single digit
+     * @param {KeyboardEvent} e - Keypress event object
+     */
     const handleInputPress = (e) => {
         if (
             e.key !== "Backspace" &&
@@ -39,9 +50,20 @@ const VerifyEmailForm = () => {
         )
             e.preventDefault();
     };
+    /**
+     * Handles input change events and manages focus
+     * Auto-focuses next input field when a digit is entered
+     * @param {Event} e - Input change event
+     * @param {React.RefObject} nextInputRef - Reference to next input field
+     */
     const handleInputOnChange = (e, nextInputRef) => {
         if (e.target.value !== "" && nextInputRef) nextInputRef.current.focus();
     };
+    /**
+     * Handles form changes and submits OTP for verification
+     * Combines individual digit inputs into complete OTP
+     * @param {Event} e - Form change event
+     */
     const handleFormChange = (e) => {
         const formData = new FormData(e.currentTarget);
         let otp = "";
@@ -57,6 +79,10 @@ const VerifyEmailForm = () => {
         } else formData.set("email", email);
         submit(formData, { action: "/auth/verify", method: "POST" });
     };
+    /**
+     * Handles OTP resend request
+     * Requests new OTP to be sent to user's email
+     */
     const handleResend = () => {
         requestOTP(email, forgotEmail ? true : false);
     };
@@ -141,6 +167,13 @@ const VerifyEmailForm = () => {
 
 export default VerifyEmailForm;
 
+/**
+ * Action handler for the verify email form submission
+ * Verifies the provided OTP and redirects based on flow type
+ * @param {Object} params - Parameters object containing the request
+ * @param {Request} params.request - Form submission request object
+ * @returns {Promise<Response>} Redirects to next step on success, returns validation errors otherwise
+ */
 export const action = async ({ request }) => {
     const formData = await request.formData();
     const email = formData.get("email");

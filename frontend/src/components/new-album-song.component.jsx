@@ -3,6 +3,17 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import CustomTailSpin from "./custom-tail-spin.component";
 import { addOrEditSong } from "../utils/api/songs-api.util";
 
+/**
+ * Component for adding or editing a song in an album
+ * Handles song metadata, audio file upload, and YouTube video link
+ * @param {Object} props - Component props
+ * @param {Object} props.song - Song object containing existing song data (optional)
+ * @param {Function} props.onSave - Callback function when song is saved
+ * @param {Function} props.onSearch - Callback function to search for a song
+ * @param {Function} props.onRemove - Callback function to remove song from album
+ * @param {Function} props.onClear - Callback function to clear form
+ * @returns {JSX.Element} New album song form component
+ */
 const NewAlbumSong = ({ song, onSave, onSearch, onRemove, onClear }) => {
     const [songNumber, setSongNumber] = useState(song?._id ? song?._id : "");
 
@@ -24,6 +35,10 @@ const NewAlbumSong = ({ song, onSave, onSearch, onRemove, onClear }) => {
         setVideoLink(song.youtubeLink ? song.youtubeLink : "");
     }, [song]);
 
+    /**
+     * Handles form submission for searching or saving song
+     * @param {Event} e - Form submission event
+     */
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError({});
@@ -85,6 +100,11 @@ const NewAlbumSong = ({ song, onSave, onSearch, onRemove, onClear }) => {
         }
     };
 
+    /**
+     * Handles audio file selection and validation
+     * Validates file size (max 50MB) and type (MP3 or AAC)
+     * @param {Event} e - File input change event
+     */
     const handleAudioFileChange = (e) => {
         if (
             e.target.files &&

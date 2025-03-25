@@ -18,10 +18,21 @@ import { setCurrentUser } from "../store/slices/user.slice";
 import store from "../store/store";
 import CustomTailSpin from "./custom-tail-spin.component";
 
+/**
+ * Helper function to wrap eye icon with click handler for password visibility toggle
+ * @param {Function} onClick - Function to handle click event
+ * @param {string} icon - Path to the eye icon image
+ * @returns {JSX.Element} Image element with click handler
+ */
 const eyeWrapper = (onClick, icon) => (
     <img className="cursor-pointer" src={icon} onClick={onClick} />
 );
 
+/**
+ * Form component for creating a new user account with password
+ * Represents step 3 of the signup process
+ * @returns {JSX.Element} Create password form component
+ */
 const CreatePasswordForm = () => {
     const navigate = useNavigate();
     const error = useActionData();
@@ -135,6 +146,13 @@ const CreatePasswordForm = () => {
 
 export default CreatePasswordForm;
 
+/**
+ * Action handler for the create password form submission
+ * Registers a new user with the provided name and password
+ * @param {Object} params - Parameters object containing the request
+ * @param {Request} params.request - Form submission request object
+ * @returns {Promise<Response>} Redirects to home on success, returns validation errors otherwise
+ */
 export const action = async ({ request }) => {
     const formData = await request.formData();
     const password = formData.get("password");

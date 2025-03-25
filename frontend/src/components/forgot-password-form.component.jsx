@@ -9,6 +9,12 @@ import store from "../store/store";
 import { resetAuth, setForgotPassEmail } from "../store/slices/user.slice";
 import CustomTailSpin from "./custom-tail-spin.component";
 
+/**
+ * Form component for initiating password reset process
+ * Represents step 1 of the password reset flow
+ * Allows users to enter their email to receive a reset code
+ * @returns {JSX.Element} Forgot password form component
+ */
 const ForgotPasswordForm = () => {
     const error = useActionData();
     const navigation = useNavigation();
@@ -61,6 +67,13 @@ const ForgotPasswordForm = () => {
 
 export default ForgotPasswordForm;
 
+/**
+ * Action handler for the forgot password form submission
+ * Requests an OTP to be sent to the provided email
+ * @param {Object} params - Parameters object containing the request
+ * @param {Request} params.request - Form submission request object
+ * @returns {Promise<Response>} Redirects to verification page on success, returns validation errors otherwise
+ */
 export const action = async ({ request }) => {
     const formData = await request.formData();
     const email = formData.get("email");

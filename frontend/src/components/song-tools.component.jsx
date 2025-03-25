@@ -15,6 +15,14 @@ import { useState } from "react";
 import CustomTailSpin from "./custom-tail-spin.component";
 import { deleteSong } from "../utils/api/songs-api.util";
 
+/**
+ * Component for song interaction tools and options
+ * Provides different functionality based on user role (admin/regular user)
+ * Includes options for song management, playback control, and sharing
+ * @param {Object} props - Component props
+ * @param {string} props.songId - ID of the song to manage
+ * @returns {JSX.Element} Song tools component
+ */
 const SongTools = ({ songId }) => {
     const revalidator = useRevalidator();
     const windowWidth = useSelector((state) => state.configs.windowWidth);

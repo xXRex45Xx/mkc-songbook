@@ -20,16 +20,46 @@ import store from "../store/store";
 import { setCurrentUser } from "../store/slices/user.slice";
 import CustomTailSpin from "./custom-tail-spin.component";
 
+/**
+ * Wrapper function for password visibility toggle icon
+ * @param {Function} onClick - Click handler for the icon
+ * @param {string} icon - Path to the eye icon image
+ * @returns {JSX.Element} Icon element with click handler
+ */
 const eyeWrapper = (onClick, icon) => (
     <img className="cursor-pointer" src={icon} onClick={onClick} />
 );
 
+/**
+ * Login Form Component
+ *
+ * Provides user authentication through email/password or Google OAuth.
+ * Features:
+ * - Email and password input fields
+ * - Password visibility toggle
+ * - Forgot password link
+ * - Google OAuth login option
+ * - Form validation and error handling
+ * - Loading states during submission
+ */
 const LoginForm = () => {
     const error = useActionData();
     const navigation = useNavigation();
     const [searchParams, _setSearchParams] = useSearchParams();
+
+    /**
+     * State for password visibility toggle
+     */
     const [showPass, setShowPass] = useState(false);
+
+    /**
+     * State for Google OAuth login errors
+     */
     const [googleLoginError, setGoogleLoginError] = useState("");
+
+    /**
+     * Toggles password visibility
+     */
     const toggleShowPass = () => {
         setShowPass((prev) => !prev);
     };
@@ -121,6 +151,15 @@ const LoginForm = () => {
 
 export default LoginForm;
 
+/**
+ * Form action handler for login submission
+ * Processes the login request and handles authentication
+ *
+ * @param {Object} params - Action parameters
+ * @param {Request} params.request - Form submission request
+ * @returns {Object|Response} Redirect on success or error object on failure
+ * @throws {Error} For unexpected server errors
+ */
 export const action = async ({ request }) => {
     const searchParams = new URL(request.url).searchParams;
     const formData = await request.formData();

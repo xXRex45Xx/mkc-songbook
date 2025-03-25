@@ -10,14 +10,42 @@ import CustomTable from "./custom-table.component";
 import SongsTableRow from "./custom-row.component";
 import CustomTailSpin from "./custom-tail-spin.component";
 
+/**
+ * Songs Table Component
+ *
+ * Displays a responsive table of songs with search results and pagination.
+ * Features:
+ * - Responsive layout with different headers for mobile/desktop
+ * - Separate tables for title and lyrics search results
+ * - Pagination with smooth scroll to top
+ * - Loading states during navigation and revalidation
+ * - Highlight support for lyrics search matches
+ *
+ * @component
+ * @param {Object} props - Component props
+ * @param {Array<Object>} props.songs - Array of song objects to display
+ * @param {number} props.totalPages - Total number of pages for pagination
+ */
 const SongsTable = ({ songs, totalPages }) => {
+    /**
+     * Refs for table scroll behavior
+     */
     const neutralTableRef = useRef();
     const titleTableRef = useRef();
+
+    /**
+     * Window width from Redux store for responsive layout
+     */
     const windowWidth = useSelector((state) => state.configs.windowWidth);
     useWindowSize();
     const [searchParams, setSearchParams] = useSearchParams();
     const { state: navState } = useNavigation();
     const { state: revalidateState } = useRevalidator();
+
+    /**
+     * Table headers configuration based on screen width
+     * Shows headers only on desktop (>= 768px)
+     */
     const tableHeaders =
         windowWidth >= 768
             ? [

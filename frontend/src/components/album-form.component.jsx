@@ -7,23 +7,53 @@ import { useRef, useState } from "react";
 import NewAlbumSong from "./new-album-song.component";
 import { getSong } from "../utils/api/songs-api.util";
 
+/**
+ * Album Form Component
+ *
+ * A form component for creating and editing albums.
+ * Includes fields for album details, cover image, YouTube playlist,
+ * and a dynamic list of songs with search and validation functionality.
+ *
+ * @component
+ * @param {Object} props - Component props
+ * @param {string} props.method - HTTP method for form submission (POST/PUT)
+ * @param {string} props.action - Form submission endpoint
+ * @param {Object} props.album - Existing album data for editing (optional)
+ */
 const AlbumForm = ({ method, action, album }) => {
     const navigate = useNavigate();
     const submit = useSubmit();
     const titleRef = useRef();
     const playlistRef = useRef();
     const idRef = useRef();
+
+    /**
+     * State for managing the list of songs in the album
+     * Each song has a 'final' flag indicating if it's been confirmed
+     */
     const [songList, setSongList] = useState(album?.songs ? album?.songs : []);
+
+    /**
+     * States for error handling and file upload
+     */
     const [trackError, setTrackError] = useState(null);
     const [albumCoverMessage, setAlbumCoverMessage] = useState(null);
     const [alubmCover, setAlbumCover] = useState(null);
     const error = useActionData();
 
+    /**
+     * Adds a new empty song slot to the album
+     * @param {React.MouseEvent} e - Click event
+     */
     const handleAddSong = (e) => {
         e.preventDefault();
         setSongList((prev) => [...prev, { final: false, song: null }]);
     };
 
+    /**
+     * Removes a song from the album at the specified index
+     * @param {number} idx - Index of the song to remove
+     */
     const handleRemoveSong = (idx) => {
         setSongList((prev) => {
             const temp = [];
@@ -35,6 +65,10 @@ const AlbumForm = ({ method, action, album }) => {
         });
     };
 
+    /**
+     * Clears a song's data at the specified index
+     * @param {number} idx - Index of the song to clear
+     */
     const handleClearSong = (idx) => {
         setSongList((prev) => {
             prev[idx] = { final: false, song: null };
@@ -42,6 +76,10 @@ const AlbumForm = ({ method, action, album }) => {
         });
     };
 
+    /**
+     * Marks a song as finalized at the specified index
+     * @param {number} idx - Index of the song to finalize
+     */
     const handleChooseSong = (idx) => {
         setSongList((prev) => {
             prev[idx].final = true;
@@ -49,6 +87,14 @@ const AlbumForm = ({ method, action, album }) => {
         });
     };
 
+    /**
+     * Searches for a song by ID and adds it to the album
+     * Validates that the song isn't already in the album
+     *
+     * @param {string} id - Song ID to search for
+     * @param {number} idx - Index where to add the found song
+     * @throws {Error} If song is already in the album
+     */
     const handleSongSearch = async (id, idx) => {
         const songsWithId = songList.filter(
             ({ song }) => song?._id == id.trim()
@@ -69,6 +115,12 @@ const AlbumForm = ({ method, action, album }) => {
         });
     };
 
+    /**
+     * Handles album cover image upload and validation
+     * Validates file size (max 30MB) and type (JPG, JPEG, PNG)
+     *
+     * @param {React.ChangeEvent<HTMLInputElement>} e - File input change event
+     */
     const handleAlbumCoverChange = (e) => {
         if (
             e.target.files &&
@@ -90,6 +142,13 @@ const AlbumForm = ({ method, action, album }) => {
         setAlbumCover(e.target.files[0]);
     };
 
+    /**
+     * Handles form submission
+     * Validates that all songs are finalized
+     * Creates FormData with album details and songs
+     *
+     * @param {React.FormEvent<HTMLFormElement>} e - Form submission event
+     */
     const handleSubmit = (e) => {
         e.preventDefault();
         setTrackError(null);

@@ -5,6 +5,15 @@ import { setCurrentUser } from "../store/slices/user.slice";
 import { googleOauthLogin } from "../utils/api/user-api.util";
 import { useNavigate } from "react-router-dom";
 
+/**
+ * Component for Google OAuth authentication button
+ * Handles Google sign-in flow and authentication with backend
+ * @param {Object} props - Component props
+ * @param {ReactNode} props.children - Button label content
+ * @param {Function} props.setErrorMessage - Function to set error message state
+ * @param {string} props.redirectOnSuccess - Path to redirect after successful login (defaults to '/')
+ * @returns {JSX.Element} Google authentication button component
+ */
 const GoogleLink = ({ children, setErrorMessage, redirectOnSuccess = "/" }) => {
     const navigate = useNavigate();
 

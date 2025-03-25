@@ -6,7 +6,22 @@ import "./audio-player.styles.css";
 import CustomSlider from "./custom-slider.component";
 import AudioPlayerToolbox from "./audio-player-toolbox.component";
 
+/**
+ * Audio Player Component
+ *
+ * A responsive audio player with playback controls and progress tracking.
+ * Features:
+ * - Progress slider with gradient background
+ * - Time display (desktop only)
+ * - Song title and album/artist information
+ * - Playback controls
+ * - Additional toolbox controls
+ * - Responsive layout for mobile and desktop
+ */
 const AudioPlayer = () => {
+    /**
+     * State for tracking playback progress
+     */
     const [sliderValue, setSliderValue] = useState(0);
     const maxSliderValue = 100;
 

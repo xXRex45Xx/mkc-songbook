@@ -1,5 +1,16 @@
 import { TailSpin } from "react-loader-spinner";
 
+/**
+ * Custom Tail Spin Loading Component
+ *
+ * A styled loading spinner component with size and color variants.
+ * Centers itself in the available space.
+ *
+ * @component
+ * @param {Object} props - Component props
+ * @param {boolean} [props.small] - Whether to use small size (30px vs 80px)
+ * @param {boolean} [props.white] - Whether to use white color instead of default red
+ */
 const CustomTailSpin = ({ small, white }) => (
     <TailSpin
         visible={true}

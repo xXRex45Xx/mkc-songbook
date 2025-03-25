@@ -11,23 +11,59 @@ import { buttonTheme } from "../config/button-theme.config";
 import { useDispatch, useSelector } from "react-redux";
 import { resetCurrentUser } from "../store/slices/user.slice";
 
+/**
+ * Header Component
+ *
+ * Main navigation component that appears at the top of every page.
+ * Includes:
+ * - Logo and brand name
+ * - Search toggle button
+ * - Notifications dropdown (currently empty)
+ * - User profile dropdown with authentication options
+ * - Navigation links with role-based access control
+ * - Collapsible search bar
+ *
+ * @component
+ * @example
+ * return (
+ *   <Header />
+ * )
+ */
 const Header = () => {
     const { pathname } = useLocation();
     const [searchParams, _setSearchParams] = useSearchParams();
+
+    /**
+     * Controls visibility of the search bar.
+     * Initialized based on presence of search query parameters.
+     */
     const [showSearch, setShowSearch] = useState(
         searchParams.has("q") || searchParams.has("type")
     );
     const dispatch = useDispatch();
 
+    /**
+     * Toggles the visibility of the search bar
+     */
     const toggleSearch = () => setShowSearch((prev) => !prev);
 
+    /**
+     * Current user information from Redux store
+     */
     const user = useSelector((state) => state.user.currentUser);
 
+    /**
+     * Memoized user role for conditional rendering
+     * Defaults to "public" if no user or user has public role
+     */
     const role = useMemo(() => {
         if (!user || user.role === "public") return "public";
         return user.role;
     }, [user]);
 
+    /**
+     * Handles user logout by clearing Redux store and local storage
+     */
     const handleLogout = () => {
         dispatch(resetCurrentUser());
         localStorage.removeItem("_s");

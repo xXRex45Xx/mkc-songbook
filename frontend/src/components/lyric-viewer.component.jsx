@@ -9,11 +9,41 @@ import { useSelector } from "react-redux";
 import { useMemo } from "react";
 import { regexBuilder } from "../../../backend/utils/amharic-map.util";
 
+/**
+ * Lyric Viewer Component
+ *
+ * Displays song lyrics with music elements and search highlighting.
+ * Features:
+ * - Back navigation button
+ * - Song title display
+ * - Music elements (chord, tempo, rhythm) display
+ * - Configurable lyrics font size
+ * - Search term highlighting with Amharic character support
+ * - Whitespace preservation for lyrics formatting
+ *
+ * @component
+ * @param {Object} props - Component props
+ * @param {Object} props.song - Song object containing lyrics and metadata
+ * @param {string} props.song.title - Song title
+ * @param {string} props.song.lyrics - Song lyrics text
+ * @param {Object} [props.song.musicElements] - Optional music elements
+ * @param {string} [props.song.musicElements.chord] - Song chord notation
+ * @param {number} [props.song.musicElements.tempo] - Song tempo
+ * @param {string} [props.song.musicElements.rythm] - Song rhythm pattern
+ */
 const LyricViewer = ({ song }) => {
     const navigate = useNavigate();
     const [searchParams, _setSearchParams] = useSearchParams();
+
+    /**
+     * Font size configuration from Redux store
+     */
     const lyricsFontSize = useSelector((state) => state.configs.lyricsFontSize);
 
+    /**
+     * Memoized regex pattern for search term highlighting
+     * Supports Amharic character variations through regexBuilder
+     */
     const regex = useMemo(() => {
         if (searchParams.get("q"))
             return new RegExp(regexBuilder(`(${searchParams.get("q")})`), "gi");

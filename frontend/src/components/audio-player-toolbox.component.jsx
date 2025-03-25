@@ -8,8 +8,27 @@ import TextSizeSvg from "../assets/text-size.svg?react";
 import PresentationSvg from "../assets/presentation.svg?react";
 import QueueSvg from "../assets/queue.svg?react";
 
+/**
+ * Audio Player Toolbox Component
+ *
+ * Additional controls and settings for the audio player.
+ * Desktop-only component that provides presentation mode,
+ * lyrics font size adjustment, and queue management.
+ *
+ * Features:
+ * - Presentation mode toggle with tooltip
+ * - Font size adjustment with slider (9-60pts)
+ * - Queue management with tooltip
+ * - Popover for font size adjustment
+ * - Redux integration for font size persistence
+ * - Responsive hover and active states
+ */
 const AudioPlayerToolbox = () => {
     const dispatch = useDispatch();
+
+    /**
+     * Current lyrics font size from Redux store
+     */
     const lyricsFontSize = useSelector((state) => state.configs.lyricsFontSize);
 
     return (

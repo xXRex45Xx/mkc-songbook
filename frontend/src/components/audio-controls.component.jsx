@@ -6,6 +6,19 @@ import NextSvg from "../assets/next.svg?react";
 import RepeatSvg from "../assets/repeat.svg?react";
 import { buttonGroupTheme, buttonTheme } from "../config/button-theme.config";
 
+/**
+ * Audio Controls Component
+ *
+ * Provides playback control buttons for the audio player.
+ * Features:
+ * - Like/favorite button (always visible)
+ * - Previous track button (desktop only)
+ * - Play/pause button (always visible)
+ * - Next track button (always visible)
+ * - Repeat button (desktop only)
+ * - Responsive sizing for mobile and desktop layouts
+ * - Hover and active state styling
+ */
 const AudioControls = () => (
     <Button.Group className="self-center" theme={buttonGroupTheme}>
         <Button

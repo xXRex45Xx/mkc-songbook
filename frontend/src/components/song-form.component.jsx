@@ -17,13 +17,49 @@ import {
 import { useMemo, useState } from "react";
 import CustomTailSpin from "./custom-tail-spin.component";
 
+/**
+ * Song Form Component
+ *
+ * A form component for creating and editing songs.
+ * Includes fields for song details, music elements, album association, and media files.
+ * Handles file validation and form submission with error handling.
+ *
+ * @component
+ * @param {Object} props - Component props
+ * @param {Array} props.albums - List of available albums for song association
+ * @param {string} props.method - HTTP method for form submission (POST/PUT)
+ * @param {string} props.action - Form submission endpoint
+ * @param {Object} props.song - Existing song data for editing (optional)
+ *
+ * @example
+ * return (
+ *   <SongForm
+ *     albums={albumsList}
+ *     method="POST"
+ *     action="/api/songs"
+ *     song={existingSong}
+ *   />
+ * )
+ */
 const SongForm = ({ albums, method, action, song }) => {
     const submit = useSubmit();
     const navigate = useNavigate();
     const navigation = useNavigation();
     const location = useLocation();
     const error = useActionData();
+
+    /**
+     * State for file input validation error message
+     */
     const [fileInputErrorMessage, setFileInputErrorMessage] = useState("");
+
+    /**
+     * Handles file input changes and validates:
+     * - File size (max 50MB)
+     * - File type (MP3 or AAC only)
+     *
+     * @param {React.ChangeEvent<HTMLInputElement>} e - File input change event
+     */
     const fileInputChangeHandler = (e) => {
         if (
             e.target.files &&
@@ -44,6 +80,12 @@ const SongForm = ({ albums, method, action, song }) => {
         setFileInputErrorMessage("");
     };
 
+    /**
+     * Handles form submission
+     * Only submits if there are no file input errors
+     *
+     * @param {React.FormEvent<HTMLFormElement>} e - Form submission event
+     */
     const formSubmitHandler = (e) => {
         e.preventDefault();
         if (!fileInputErrorMessage) return submit(e.target);

@@ -1,6 +1,21 @@
 import { RangeSlider } from "flowbite-react";
 import { rangeSliderTheme } from "../config/forms-theme.config";
 
+/**
+ * Custom Slider Component
+ *
+ * A styled range slider with gradient progress bar.
+ * Desktop-only component that provides visual feedback for range selection.
+ *
+ * @component
+ * @param {Object} props - Component props
+ * @param {number} props.value - Current slider value
+ * @param {number} props.step - Step increment for the slider
+ * @param {number} [props.min=0] - Minimum slider value
+ * @param {number} props.max - Maximum slider value
+ * @param {Function} props.onChange - Handler for value changes
+ * @param {boolean} [props.show] - Whether to show the slider
+ */
 const CustomSlider = ({ value, step, min = 0, max, onChange, show }) => {
     return (
         <>
