@@ -1,5 +1,16 @@
+/**
+ * @fileoverview Album API utility functions
+ * Contains functions for interacting with the album endpoints
+ */
+
 import backendURL from "../../config/backend-url.config";
 
+/**
+ * Fetches all albums from the backend
+ * @param {boolean} namesOnly - If true, fetches only album names
+ * @returns {Promise<Object>} Album data from the server
+ * @throws {Object} Error with message and status if request fails
+ */
 export const getAllAlbums = async (namesOnly = false) => {
     const response = await fetch(
         `${backendURL}/api/album${namesOnly ? "?names=true" : ""}`
@@ -10,6 +21,15 @@ export const getAllAlbums = async (namesOnly = false) => {
     return data;
 };
 
+/**
+ * Creates or updates an album
+ * @param {FormData} formData - Form data containing album details
+ * @param {boolean} edit - If true, updates existing album; if false, creates new album
+ * @param {string|null} albumId - ID of album to edit (required if edit is true)
+ * @param {string} token - Authentication token (defaults to token in localStorage)
+ * @returns {Promise<Object>} Created or updated album data
+ * @throws {Object} Validation errors or server error response
+ */
 export const addOrEditAlbum = async (
     formData,
     edit = false,

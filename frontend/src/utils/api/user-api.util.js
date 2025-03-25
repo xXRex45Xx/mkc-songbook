@@ -1,6 +1,18 @@
 import backendURL from "../../config/backend-url.config";
 import { emailRegex } from "../regex.util";
 
+/**
+ * @fileoverview User API utility functions
+ * Contains functions for user authentication and management
+ */
+
+/**
+ * Requests an OTP for email verification
+ * @param {string} email - User's email address
+ * @param {boolean} forgotPassword - If true, OTP is for password reset
+ * @returns {Promise<Object>} Success response from server
+ * @throws {Object} Validation errors or server error response
+ */
 export const requestOTP = async (email, forgotPassword) => {
     if (!emailRegex.test(email))
         throw { message: "Please enter a valid email address.", status: 400 };
@@ -24,6 +36,14 @@ export const requestOTP = async (email, forgotPassword) => {
     return data;
 };
 
+/**
+ * Verifies an OTP sent to user's email
+ * @param {Object} params - Verification parameters
+ * @param {string} params.email - User's email address
+ * @param {string|number} params.otp - OTP to verify
+ * @returns {Promise<Object>} Success response from server
+ * @throws {Object} Validation errors or server error response
+ */
 export const verifyOTP = async ({ email, otp }) => {
     if (!otp)
         throw { message: "Please enter your verificaton code.", status: 400 };
@@ -50,6 +70,16 @@ export const verifyOTP = async ({ email, otp }) => {
     return data;
 };
 
+/**
+ * Registers a new user
+ * @param {string} email - User's email address
+ * @param {string|number} otp - Verified OTP
+ * @param {string} password - User's password
+ * @param {string} confirmPass - Password confirmation
+ * @param {string} name - User's name
+ * @returns {Promise<Object>} User data and authentication token
+ * @throws {Object} Validation errors or server error response
+ */
 export const registerUser = async (email, otp, password, confirmPass, name) => {
     const error = { status: 400 };
     let errorOccured = false;
@@ -85,6 +115,13 @@ export const registerUser = async (email, otp, password, confirmPass, name) => {
     return data;
 };
 
+/**
+ * Authenticates a user with email and password
+ * @param {string} email - User's email address
+ * @param {string} password - User's password
+ * @returns {Promise<Object>} User data and authentication token
+ * @throws {Object} Validation errors or server error response
+ */
 export const login = async (email, password) => {
     const error = { status: 400 };
     let errorOccured = false;
@@ -114,6 +151,12 @@ export const login = async (email, password) => {
     return { success: true, ...data };
 };
 
+/**
+ * Fetches currently logged in user's data
+ * @param {string} token - Authentication token
+ * @returns {Promise<Object>} Current user data
+ * @throws {Object} Authentication error or server error response
+ */
 export const getCurrentLoggedInUser = async (token) => {
     const response = await fetch(`${backendURL}/api/user/current-user`, {
         method: "GET",
@@ -129,6 +172,15 @@ export const getCurrentLoggedInUser = async (token) => {
     return data;
 };
 
+/**
+ * Resets user's password
+ * @param {string} email - User's email address
+ * @param {string|number} otp - Verified OTP
+ * @param {string} password - New password
+ * @param {string} confirmPass - New password confirmation
+ * @returns {Promise<Object>} Success response from server
+ * @throws {Object} Validation errors or server error response
+ */
 export const resetPassword = async (email, otp, password, confirmPass) => {
     const error = { status: 400 };
     let errorOccured = false;
@@ -159,6 +211,12 @@ export const resetPassword = async (email, otp, password, confirmPass) => {
     return data;
 };
 
+/**
+ * Authenticates user with Google OAuth
+ * @param {string} accessToken - Google OAuth access token
+ * @returns {Promise<Object>} User data and authentication token
+ * @throws {Object} Authentication error or server error response
+ */
 export const googleOauthLogin = async (accessToken) => {
     const error = {
         message: "Failed to sign up or login with google. Please, try again.",

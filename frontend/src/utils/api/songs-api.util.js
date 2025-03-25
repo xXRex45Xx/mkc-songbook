@@ -1,5 +1,20 @@
 import backendURL from "../../config/backend-url.config";
 
+/**
+ * @fileoverview Songs API utility functions
+ * Contains functions for interacting with the song endpoints
+ */
+
+/**
+ * Fetches all songs or searches songs based on query parameters
+ * @param {Object|null} searchQuery - Search parameters
+ * @param {string} [searchQuery.q] - Search text
+ * @param {string} [searchQuery.type] - Search type
+ * @param {string} [searchQuery.sortBy] - Sort criteria
+ * @param {number} page - Page number for pagination
+ * @returns {Promise<Object>} Song data from the server
+ * @throws {Object} Error with message and status if request fails
+ */
 export const getAllOrSearchSongs = async (searchQuery = null, page = 1) => {
     const response = await fetch(
         `${backendURL}/api/song?page=${page}${
@@ -14,6 +29,12 @@ export const getAllOrSearchSongs = async (searchQuery = null, page = 1) => {
     return data;
 };
 
+/**
+ * Fetches a single song by ID
+ * @param {string} id - Song ID to fetch
+ * @returns {Promise<Object>} Song data
+ * @throws {Object} Error with message and status if request fails
+ */
 export const getSong = async (id) => {
     if (id.length === 0) {
         throw { message: "Song number is required.", status: 400 };
@@ -26,6 +47,15 @@ export const getSong = async (id) => {
     return data;
 };
 
+/**
+ * Creates or updates a song
+ * @param {FormData} formData - Form data containing song details
+ * @param {boolean} edit - If true, updates existing song; if false, creates new song
+ * @param {string|null} songId - ID of song to edit (required if edit is true)
+ * @param {string} token - Authentication token (defaults to token in localStorage)
+ * @returns {Promise<Object>} Created or updated song data
+ * @throws {Object} Validation errors or server error response
+ */
 export const addOrEditSong = async (
     formData,
     edit = false,
@@ -93,6 +123,13 @@ export const addOrEditSong = async (
     return data;
 };
 
+/**
+ * Deletes a song by ID
+ * @param {string} songId - ID of song to delete
+ * @param {string} token - Authentication token (defaults to token in localStorage)
+ * @returns {Promise<void>}
+ * @throws {Object} Error with message and status if deletion fails
+ */
 export const deleteSong = async (
     songId,
     token = localStorage.getItem("_s")
