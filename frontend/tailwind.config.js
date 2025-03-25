@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Tailwind CSS configuration
+ * Defines custom theme colors and integrates Flowbite components
+ */
+
 const flowbite = require("flowbite-react/tailwind");
 
 /** @type {import('tailwindcss').Config} */

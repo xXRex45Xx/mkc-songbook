@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Application entry point
+ * Sets up React Router, Redux store, and renders the root component
+ */
+
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App, { loader as mainLoader } from "./App.jsx";
@@ -47,6 +52,12 @@ import ProtectedRoute from "./components/protected-route.component.jsx";
 import ErrorPage from "./pages/error.page.jsx";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 
+/**
+ * Router configuration
+ * Defines all application routes and their corresponding components
+ * Includes protected routes for admin functionality
+ * @type {import('react-router-dom').RouteObject[]}
+ */
 const router = createBrowserRouter([
     {
         path: "/",
