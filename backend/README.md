@@ -63,13 +63,11 @@ Create a `.env` file in the backend directory with the following variables:
 ```env
 # Server Configuration
 PORT=5000
-MONGODB_URI=your_mongodb_uri
+DB_URI=your_mongodb_uri
 JWT_SECRET=your_jwt_secret
 
 # Google OAuth
 GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
-GOOGLE_CALLBACK_URL=http://localhost:5000/api/user/google/callback
 
 # SMTP Configuration
 SMTP_HOST=smtp.gmail.com
