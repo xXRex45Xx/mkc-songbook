@@ -10,9 +10,13 @@ import { wrapAsync } from "../utils/error.util.js";
 import {
     addAlbum,
     getAllOrSearchAlbums,
+    getAlbum,
 } from "../controllers/album.controller.js";
 import { albumImageUpload } from "../middlewares/file-upload.middleware.js";
-import { validateCreateAlbum } from "../middlewares/album-validation.middleware.js";
+import {
+    validateCreateAlbum,
+    validateGetAlbum,
+} from "../middlewares/album-validation.middleware.js";
 import {
     checkAlbumExists,
     checkSongExists,
@@ -66,5 +70,11 @@ albumRouter
         wrapAsync(checkSongExists),
         wrapAsync(addAlbum)
     );
+
+albumRouter
+    .route("/:id")
+    .get(wrapAsync(validateGetAlbum), wrapAsync(getAlbum))
+    .put()
+    .delete();
 
 export default albumRouter;

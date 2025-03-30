@@ -10,6 +10,7 @@
  */
 
 import AlbumModel from "../models/album.model.js";
+import { NotFoundError } from "../utils/error.util.js";
 
 /**
  * Get all albums with optional name-only projection
@@ -53,4 +54,16 @@ export const addAlbum = async (req, res) => {
     }
 
     res.status(201).json({ insertedId: insertedAlbum._id });
+};
+
+export const getAlbum = async (req, res) => {
+    const { id } = req.params;
+    const album = await AlbumModel.findById(id);
+
+    if (!album) throw new NotFoundError("Album not found");
+
+    res.status(200).json({
+        ...album._doc,
+        photo: undefined,
+    });
 };
