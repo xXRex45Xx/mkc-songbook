@@ -10,6 +10,7 @@
  */
 
 import AlbumModel from "../models/album.model.js";
+import SongModel from "../models/song.model.js";
 import { NotFoundError } from "../utils/error.util.js";
 
 /**
@@ -58,12 +59,88 @@ export const addAlbum = async (req, res) => {
 
 export const getAlbum = async (req, res) => {
     const { id } = req.params;
-    const album = await AlbumModel.findById(id);
+    const album = await AlbumModel.findById(id).populate("songs");
 
     if (!album) throw new NotFoundError("Album not found");
 
     res.status(200).json({
         ...album._doc,
+        songs: album.songs.map((song) => ({
+            ...song._doc,
+            hasAudio: song.songFilePath ? true : false,
+            songFilePath: undefined,
+        })),
         photo: undefined,
     });
+};
+
+export const updateAlbum = async (req, res) => {
+    const { id } = req.params;
+    const album = req.body;
+
+    let albumInDb = await AlbumModel.findById(id).populate("songs");
+    if (req.file) {
+        if (albumInDb.photo)
+            fs.unlink(
+                albumInDb.photo,
+                (err) => (req.error.fileDeleteError = err)
+            );
+        albumInDb.photo = req.file.path;
+    }
+
+    const albumInDbSongIds = albumInDb.songs.map((song) => song._id);
+    const albumInBodySongIds = album.songs.map((song) => song._id);
+
+    const removedSongIds = albumInDb.songs
+        .filter((song) => !albumInBodySongIds.includes(song._id))
+        .map((song) => song._id);
+    const addedSongIds = album.songs
+        .filter((song) => !albumInDbSongIds.includes(song._id))
+        .map((song) => song._id);
+
+    albumInDb.name = album.title;
+    albumInDb.songs = album.songs;
+
+    if (id != album.id) {
+        await AlbumModel.findByIdAndDelete(albumInDb._id);
+
+        await AlbumModel.create({
+            _id: album.id,
+            name: album.title,
+            photo: req.file ? req.file.path : albumInDb.photo,
+            songs: album.songs,
+        });
+    } else await albumInDb.save();
+
+    if (removedSongIds.length > 0 || addedSongIds.length > 0) {
+        const songUpdatePromises = [
+            SongModel.updateMany(
+                { _id: { $in: removedSongIds } },
+                { $pull: { albums: id } }
+            ),
+            SongModel.updateMany(
+                { _id: { $in: addedSongIds } },
+                { $push: { albums: album.id } }
+            ),
+        ];
+
+        await Promise.all(songUpdatePromises);
+    }
+
+    if (id != album.id) {
+        const remainingSongIds = albumInBodySongIds.filter(
+            (songId) => !addedSongIds.includes(songId)
+        );
+
+        await SongModel.updateMany(
+            { _id: { $in: remainingSongIds } },
+            { $pull: { albums: id } }
+        );
+        await SongModel.updateMany(
+            { _id: { $in: remainingSongIds } },
+            { $push: { albums: album.id } }
+        );
+    }
+
+    res.status(200).json({ updated: true });
 };

@@ -14,7 +14,14 @@ import { addOrEditSong } from "../utils/api/songs-api.util";
  * @param {Function} props.onClear - Callback function to clear form
  * @returns {JSX.Element} New album song form component
  */
-const NewAlbumSong = ({ song, onSave, onSearch, onRemove, onClear }) => {
+const NewAlbumSong = ({
+    song,
+    onSave,
+    onSearch,
+    onRemove,
+    onClear,
+    onInputChange,
+}) => {
     const [songNumber, setSongNumber] = useState(song?._id ? song?._id : "");
 
     const [videoLink, setVideoLink] = useState(
@@ -106,6 +113,7 @@ const NewAlbumSong = ({ song, onSave, onSearch, onRemove, onClear }) => {
      * @param {Event} e - File input change event
      */
     const handleAudioFileChange = (e) => {
+        onInputChange();
         if (
             e.target.files &&
             e.target.files[0] &&
@@ -204,7 +212,10 @@ const NewAlbumSong = ({ song, onSave, onSearch, onRemove, onClear }) => {
                                         : undefined
                                 }
                                 value={videoLink}
-                                onChange={(e) => setVideoLink(e.target.value)}
+                                onChange={(e) => {
+                                    setVideoLink(e.target.value);
+                                    onInputChange();
+                                }}
                             />
                         </div>
                     </>

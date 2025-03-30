@@ -28,3 +28,8 @@ export const validateGetAlbum = async (req, _res, next) => {
     await validateSchema(req.params, getAlbumParamsSchema);
     next();
 };
+
+export const validateUpdateAlbum = async (req, _res, next) => {
+    await validateSchema(req.body, createAlbumBodyValidationSchema);
+    next();
+};

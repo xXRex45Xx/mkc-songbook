@@ -1,12 +1,19 @@
 import { Accordion, Button, FileInput, Label, TextInput } from "flowbite-react";
-import { Form, useActionData, useNavigate, useSubmit } from "react-router-dom";
+import {
+    Form,
+    useActionData,
+    useNavigate,
+    useSubmit,
+    useNavigation,
+} from "react-router-dom";
 
 import addIcon from "../assets/add-small.svg";
 import greenTickIcon from "../assets/green.svg";
 import { useRef, useState } from "react";
 import NewAlbumSong from "./new-album-song.component";
 import { getSong } from "../utils/api/songs-api.util";
-
+import { useEffect } from "react";
+import CustomTailSpin from "./custom-tail-spin.component";
 /**
  * Album Form Component
  *
@@ -22,17 +29,20 @@ import { getSong } from "../utils/api/songs-api.util";
  */
 const AlbumForm = ({ method, action, album }) => {
     const navigate = useNavigate();
+    const navigation = useNavigation();
     const submit = useSubmit();
     const titleRef = useRef();
     const playlistRef = useRef();
     const idRef = useRef();
-
     /**
      * State for managing the list of songs in the album
      * Each song has a 'final' flag indicating if it's been confirmed
      */
-    const [songList, setSongList] = useState(album?.songs ? album?.songs : []);
-
+    const [songList, setSongList] = useState([]);
+    useEffect(() => {
+        if (!album?.songs) return;
+        setSongList(album?.songs.map((song) => ({ final: true, song })));
+    }, [album]);
     /**
      * States for error handling and file upload
      */
@@ -178,6 +188,16 @@ const AlbumForm = ({ method, action, album }) => {
 
         submit(formData, { action, method });
     };
+
+    const handleSongInputChange = (idx) => {
+        setSongList((prev) => {
+            prev[idx] = {
+                ...prev[idx],
+                final: false,
+            };
+            return [...prev];
+        });
+    };
     return (
         <Form
             className="flex-1 self-stretch flex flex-col py-3.5 px-5 gap-10 items-stretch"
@@ -210,7 +230,7 @@ const AlbumForm = ({ method, action, album }) => {
                         name="title"
                         type="text"
                         ref={titleRef}
-                        defaultValue={album?.title}
+                        defaultValue={album?.name}
                         color={error?.titleMessage ? "failure" : undefined}
                         helperText={
                             <span className="text-sm">
@@ -282,10 +302,15 @@ const AlbumForm = ({ method, action, album }) => {
                             <Accordion.Content>
                                 <NewAlbumSong
                                     song={song}
+                                    idx={idx}
                                     onRemove={handleRemoveSong.bind(null, idx)}
                                     onSave={handleChooseSong.bind(null, idx)}
                                     onSearch={(id) => handleSongSearch(id, idx)}
                                     onClear={handleClearSong.bind(null, idx)}
+                                    onInputChange={handleSongInputChange.bind(
+                                        null,
+                                        idx
+                                    )}
                                 />
                             </Accordion.Content>
                         </Accordion.Panel>
@@ -317,6 +342,8 @@ const AlbumForm = ({ method, action, album }) => {
                         color="failure"
                         className="text-nowrap focus:ring-0 h-full text-lg px-7"
                         type="submit"
+                        isProcessing={navigation.state === "submitting"}
+                        processingSpinner={<CustomTailSpin small white />}
                     >
                         {location.pathname.includes("edit")
                             ? "Update"

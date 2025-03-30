@@ -49,7 +49,10 @@ import HomePage from "./pages/home.page.jsx";
 import ProtectedRoute from "./components/protected-route.component.jsx";
 import ErrorPage from "./pages/error.page.jsx";
 import { GoogleOAuthProvider } from "@react-oauth/google";
-
+import EditAlbumPage, {
+    loader as editAlbumLoader,
+    action as editAlbumAction,
+} from "./pages/edit-album.page.jsx";
 /**
  * Router configuration
  * Defines all application routes and their corresponding components
@@ -118,11 +121,11 @@ const router = createBrowserRouter([
                 path: "albums/:albumId/edit",
                 element: (
                     <ProtectedRoute roles={"admin"}>
-                        <MainBodyContainer
-                            title={"Under Construction"}
-                        ></MainBodyContainer>
+                        <EditAlbumPage />
                     </ProtectedRoute>
                 ),
+                loader: editAlbumLoader,
+                action: editAlbumAction,
             },
             {
                 path: "playlists",

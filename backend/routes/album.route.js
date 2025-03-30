@@ -11,14 +11,17 @@ import {
     addAlbum,
     getAllOrSearchAlbums,
     getAlbum,
+    updateAlbum,
 } from "../controllers/album.controller.js";
 import { albumImageUpload } from "../middlewares/file-upload.middleware.js";
 import {
     validateCreateAlbum,
     validateGetAlbum,
+    validateUpdateAlbum,
 } from "../middlewares/album-validation.middleware.js";
 import {
     checkAlbumExists,
+    checkAlbumExistsForUpdate,
     checkSongExists,
 } from "../middlewares/pre-add-album.middleware.js";
 import passport from "passport";
@@ -74,7 +77,15 @@ albumRouter
 albumRouter
     .route("/:id")
     .get(wrapAsync(validateGetAlbum), wrapAsync(getAlbum))
-    .put()
+    .put(
+        passport.authenticate("jwt", { session: false }),
+        wrapAsync(roleBasedAuthorization(["admin"])),
+        albumImageUpload.single("cover"),
+        wrapAsync(validateUpdateAlbum),
+        wrapAsync(checkAlbumExistsForUpdate),
+        wrapAsync(checkSongExists),
+        wrapAsync(updateAlbum)
+    )
     .delete();
 
 export default albumRouter;

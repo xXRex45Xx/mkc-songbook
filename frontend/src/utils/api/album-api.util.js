@@ -82,3 +82,14 @@ export const addOrEditAlbum = async (
 
     return data;
 };
+
+export const getAlbum = async (id) => {
+    if (id.length === 0)
+        throw { message: "Album number is required.", status: 400 };
+    const response = await fetch(`${backendURL}/api/album/${id}`);
+    const data = await response.json();
+
+    if (!response.ok) throw { message: data.message, status: response.status };
+
+    return data;
+};
