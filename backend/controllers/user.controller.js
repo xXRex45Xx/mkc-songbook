@@ -15,7 +15,11 @@ import generateOtp from "../utils/otp.util.js";
 import bcrypt from "bcrypt";
 import UserModel from "../models/user.model.js";
 import jwt from "jsonwebtoken";
-import { ClientFaultError, UnauthorizedError } from "../utils/error.util.js";
+import {
+    ClientFaultError,
+    NotFoundError,
+    UnauthorizedError,
+} from "../utils/error.util.js";
 
 /**
  * Generate and send OTP for user registration
@@ -251,6 +255,13 @@ export const getAllOrSearchUsers = async (req, res) => {
 export const updateUserRole = async (req, res) => {
     const { id } = req.params;
     const { role } = req.body;
-    await UserModel.findByIdAndUpdate(id, { role });
+    const user = await UserModel.findById(id);
+    if (!user) throw new NotFoundError("User not found");
+    if (user.role === "super-admin")
+        throw new ClientFaultError("Super admin role cannot be changed");
+    if (req.user.role !== "super-admin" && user.role === "admin")
+        throw new ForbiddenError("You are not authorized to change this role");
+    user.role = role;
+    await user.save();
     res.status(200).json({ updated: true });
 };

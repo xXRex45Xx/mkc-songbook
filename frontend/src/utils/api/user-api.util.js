@@ -258,3 +258,25 @@ export const getAllOrSearchUsers = async (
 
     return data;
 };
+
+export const updateUserRole = async (
+    id,
+    role,
+    token = localStorage.getItem("_s")
+) => {
+    const response = await fetch(`${backendURL}/api/user/${id}`, {
+        method: "PATCH",
+        headers: {
+            Authorization: `bearer ${token}`,
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            role,
+        }),
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw { message: data.message, status: response.status };
+
+    return data;
+};
