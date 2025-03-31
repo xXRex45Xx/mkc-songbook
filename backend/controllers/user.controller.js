@@ -7,7 +7,7 @@
  * 3. Password management
  * 4. User profile retrieval
  *
- * @module userController
+ * @module user.controller
  */
 
 import OTPModel from "../models/otp.model.js";
@@ -180,4 +180,70 @@ export const resetPassword = async (req, res) => {
     await UserModel.findOneAndUpdate({ email }, { password: hashedPassword });
     res.status(200).json({ success: true });
     await OTPModel.deleteOne({ email });
+};
+
+export const getAllOrSearchUsers = async (req, res) => {
+    const { q, page = 1, type } = req.query;
+    let users, totalPages;
+    if (!q) {
+        users = await UserModel.find(
+            {},
+            { name: true, email: true, role: true }
+        )
+            .sort("name")
+            .skip((page - 1) * 100)
+            .limit(100);
+        const totalDocuments = await UserModel.find({}).countDocuments();
+        totalPages = Math.floor(totalDocuments / 100) + 1;
+    } else {
+        if (type === "name") {
+            users = await UserModel.find(
+                { name: { $regex: q, $options: "i" } },
+                { name: true, email: true, role: true }
+            )
+                .sort("name")
+                .skip((page - 1) * 100)
+                .limit(100);
+            const totalDocuments = await UserModel.find({
+                name: { $regex: q, $options: "i" },
+            }).countDocuments();
+            totalPages = Math.floor(totalDocuments / 100) + 1;
+        } else if (type === "email") {
+            users = await UserModel.find(
+                { email: { $regex: q, $options: "i" } },
+                { name: true, email: true, role: true }
+            )
+                .sort("email")
+                .skip((page - 1) * 100)
+                .limit(100);
+            const totalDocuments = await UserModel.find({
+                email: { $regex: q, $options: "i" },
+            }).countDocuments();
+            totalPages = Math.floor(totalDocuments / 100) + 1;
+        } else {
+            users = await UserModel.find(
+                {
+                    $or: [
+                        { name: { $regex: q, $options: "i" } },
+                        { email: { $regex: q, $options: "i" } },
+                    ],
+                },
+                { name: true, email: true, role: true }
+            )
+                .sort("name")
+                .skip((page - 1) * 100)
+                .limit(100);
+            const totalDocuments = await UserModel.find({
+                $or: [
+                    { name: { $regex: q, $options: "i" } },
+                    { email: { $regex: q, $options: "i" } },
+                ],
+            }).countDocuments();
+            totalPages = Math.floor(totalDocuments / 100) + 1;
+        }
+    }
+    res.status(200).json({
+        users,
+        totalPages,
+    });
 };

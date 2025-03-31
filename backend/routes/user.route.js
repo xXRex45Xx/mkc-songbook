@@ -14,7 +14,8 @@ import {
     registerUser,
     resetPassword,
     verifyOTP,
-} from "../controllers/userController.js";
+    getAllOrSearchUsers,
+} from "../controllers/user.controller.js";
 import localAuth from "../middlewares/local-auth.middleware.js";
 import {
     validateLogin,
@@ -22,9 +23,11 @@ import {
     validateRegisterUser,
     validateResetPassword,
     validateVerifyOTP,
+    validateGetAllUsers,
 } from "../middlewares/user-validation.middleware.js";
 import checkUserExists from "../middlewares/check-user-exists.middleware.js";
 import passport from "passport";
+import roleBasedAuthorization from "../middlewares/authorization.middleware.js";
 
 /**
  * Express router instance for user routes.
@@ -45,12 +48,19 @@ const userRouter = Router();
  * @body {string} body.password - User's password
  * @body {number} body.otp - Verification code
  */
-userRouter.post(
-    "/",
-    wrapAsync(validateRegisterUser),
-    wrapAsync(validateOtp),
-    wrapAsync(registerUser)
-);
+userRouter
+    .route("/")
+    .get(
+        passport.authenticate("jwt", { session: false }),
+        wrapAsync(roleBasedAuthorization(["admin"])),
+        wrapAsync(validateGetAllUsers),
+        wrapAsync(getAllOrSearchUsers)
+    )
+    .post(
+        wrapAsync(validateRegisterUser),
+        wrapAsync(validateOtp),
+        wrapAsync(registerUser)
+    );
 
 /**
  * POST /api/user/otp

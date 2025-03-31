@@ -134,3 +134,11 @@ export const resetPasswordBodySchema = Joi.object({
 export const googleOAuthBodySchema = Joi.object({
     accessToken: Joi.string().min(1).required(),
 }).required();
+
+export const getAllUsersQuerySchema = Joi.object({
+    q: Joi.string().max(100).optional(),
+    page: Joi.number().integer().min(1).optional(),
+    type: Joi.string().allow("all", "name", "email").only().optional(),
+})
+    .and("q", "type")
+    .required();

@@ -11,6 +11,7 @@ import {
     registerUserBodySchema,
     resetPasswordBodySchema,
     verifyOTPBodySchema,
+    getAllUsersQuerySchema,
 } from "../models/validation-schemas/user.validaton-schema.js";
 import validateSchema from "../utils/validator.util.js";
 
@@ -78,5 +79,10 @@ export const validateResetPassword = async (req, _res, next) => {
  */
 export const validateGoogleOAuthLogin = async (req, _res, next) => {
     await validateSchema(req.body, googleOAuthBodySchema);
+    next();
+};
+
+export const validateGetAllUsers = async (req, _res, next) => {
+    await validateSchema(req.query, getAllUsersQuerySchema);
     next();
 };
