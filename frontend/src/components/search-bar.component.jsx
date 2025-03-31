@@ -6,7 +6,12 @@ import {
 } from "../config/forms-theme.config";
 
 import searchIcon from "../assets/search.svg";
-import { Form, useSearchParams, useSubmit } from "react-router-dom";
+import {
+    Form,
+    useSearchParams,
+    useSubmit,
+    useLocation,
+} from "react-router-dom";
 import { useState } from "react";
 
 /**
@@ -24,7 +29,7 @@ import { useState } from "react";
 const SearchBar = ({ action, searchValue = "", selectValue = "all" }) => {
     const submit = useSubmit();
     const [searchParams, _setSearchParams] = useSearchParams();
-
+    const { pathname } = useLocation();
     /**
      * State for category selection value
      */
@@ -69,9 +74,19 @@ const SearchBar = ({ action, searchValue = "", selectValue = "all" }) => {
                     onChange={handleSelectInpValue}
                 >
                     <option value="all">All Categories</option>
-                    <option value="id">Song Number</option>
-                    <option value="title">Title</option>
-                    <option value="lyrics">Lyrics</option>
+                    {pathname.startsWith("/songs") && (
+                        <>
+                            <option value="id">Song Number</option>
+                            <option value="title">Title</option>
+                            <option value="lyrics">Lyrics</option>
+                        </>
+                    )}
+                    {pathname.startsWith("/users") && (
+                        <>
+                            <option value="name">Name</option>
+                            <option value="email">Email</option>
+                        </>
+                    )}
                 </Select>
                 <div className="w-full flex flex-nowrap">
                     <TextInput

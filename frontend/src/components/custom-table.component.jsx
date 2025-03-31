@@ -58,12 +58,13 @@ const CustomTable = forwardRef(
                 </Table.Head>
                 <Table.Body className="divide-y">{children}</Table.Body>
             </Table>
-            {pagination && (
+            {pagination && totalPages > 1 && (
                 <Pagination
-                    className="self-end"
+                    className="self-end mr-4"
                     currentPage={parseInt(currentPage)}
                     totalPages={totalPages}
                     onPageChange={onPageChange}
+                    layout="navigation"
                 />
             )}
         </div>

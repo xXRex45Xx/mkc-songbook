@@ -32,7 +32,12 @@ export default {
                 200: "#15B097",
                 300: "#0B7B69",
             },
-            warning: "#F4C790",
+            warning: {
+                DEFAULT: "#F4C790",
+                100: "#FFFAEC",
+                200: "#EDA145",
+                300: "#CC7914",
+            },
             error: "#E4626F",
             neutrals: {
                 100: "#e4ecf5",

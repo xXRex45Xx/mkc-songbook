@@ -61,6 +61,11 @@ const Header = () => {
         return user.role;
     }, [user]);
 
+    const searchPath = useMemo(() => {
+        if (pathname.startsWith("/users")) return "/users";
+        return "/songs";
+    }, [pathname]);
+
     /**
      * Handles user logout by clearing Redux store and local storage
      */
@@ -229,7 +234,7 @@ const Header = () => {
                 } `}
             >
                 <SearchBar
-                    action="/songs"
+                    action={searchPath}
                     searchValue={searchParams.get("q")}
                     selectValue={searchParams.get("type")}
                 />

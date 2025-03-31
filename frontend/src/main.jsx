@@ -53,6 +53,7 @@ import EditAlbumPage, {
     loader as editAlbumLoader,
     action as editAlbumAction,
 } from "./pages/edit-album.page.jsx";
+import UsersPage from "./pages/users.page.jsx";
 /**
  * Router configuration
  * Defines all application routes and their corresponding components
@@ -147,9 +148,7 @@ const router = createBrowserRouter([
                 path: "users",
                 element: (
                     <ProtectedRoute roles={"admin"}>
-                        <MainBodyContainer
-                            title={"Under Construction"}
-                        ></MainBodyContainer>
+                        <UsersPage />
                     </ProtectedRoute>
                 ),
             },
