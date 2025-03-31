@@ -82,7 +82,7 @@ songRouter
      */
     .post(
         passport.authenticate("jwt", { session: false }),
-        wrapAsync(roleBasedAuthorization(["admin"])),
+        wrapAsync(roleBasedAuthorization(["admin", "super-admin"])),
         audioUpload.single("audio-file"),
         wrapAsync(validateCreateSong),
         wrapAsync(checkSongNumberExists),
@@ -120,7 +120,7 @@ songRouter
      */
     .put(
         passport.authenticate("jwt", { session: false }),
-        wrapAsync(roleBasedAuthorization(["admin"])),
+        wrapAsync(roleBasedAuthorization(["admin", "super-admin"])),
         audioUpload.single("audio-file"),
         wrapAsync(validateCreateSong),
         wrapAsync(checkSongNumberConflict),

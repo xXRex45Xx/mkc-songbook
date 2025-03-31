@@ -237,3 +237,24 @@ export const googleOauthLogin = async (accessToken) => {
     const data = await response.json();
     return data;
 };
+
+export const getAllOrSearchUsers = async (
+    searchQuery = null,
+    page = 1,
+    token = localStorage.getItem("_s")
+) => {
+    const response = await fetch(
+        `${backendURL}/api/user?page=${page}${
+            searchQuery.q ? "&q=" + searchQuery.q : ""
+        }${searchQuery.type ? "&type=" + searchQuery.type : ""}`,
+        {
+            headers: {
+                Authorization: `bearer ${token}`,
+            },
+        }
+    );
+    const data = await response.json();
+    if (!response.ok) throw { message: data.message, status: response.status };
+
+    return data;
+};

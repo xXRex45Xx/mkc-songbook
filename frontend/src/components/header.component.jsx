@@ -169,7 +169,7 @@ const Header = () => {
             </Navbar>
             <Navbar fluid border theme={navbarTheme}>
                 <Navbar.Collapse>
-                    {role !== "admin" && (
+                    {!["admin", "super-admin"].includes(user?.role) && (
                         <Navbar.Link as={Link} to="/" active={pathname === "/"}>
                             Home
                         </Navbar.Link>
@@ -188,7 +188,7 @@ const Header = () => {
                     >
                         Albums
                     </Navbar.Link>
-                    {role !== "admin" && (
+                    {!["admin", "super-admin"].includes(user?.role) && (
                         <Navbar.Link
                             as={Link}
                             to="/playlists"
@@ -206,7 +206,7 @@ const Header = () => {
                             Schedule
                         </Navbar.Link>
                     )}
-                    {role === "admin" && (
+                    {["admin", "super-admin"].includes(user?.role) && (
                         <Navbar.Link
                             as={Link}
                             to="/users"
@@ -215,7 +215,9 @@ const Header = () => {
                             Users
                         </Navbar.Link>
                     )}
-                    {role === "admin" && (
+                    {["admin", "super-admin", "member"].includes(
+                        user?.role
+                    ) && (
                         <Navbar.Link
                             as={Link}
                             to="/announcements"

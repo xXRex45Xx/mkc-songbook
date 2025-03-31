@@ -23,12 +23,15 @@ import { useSelector } from "react-redux";
 function App() {
     const data = useLoaderData();
     const user = useSelector((state) => state.user.currentUser);
+
     return (
         <Suspense fallback={<CustomTailSpin />}>
             <Await resolve={data?.user}>
                 <Header />
                 <Outlet />
-                {user?.role !== "admin" && <AudioPlayer />}
+                {!["admin", "super-admin"].includes(user?.role) && (
+                    <AudioPlayer />
+                )}
             </Await>
         </Suspense>
     );

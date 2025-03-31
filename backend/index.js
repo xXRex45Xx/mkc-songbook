@@ -87,6 +87,7 @@ app.use(async (err, req, res, _next) => {
  * and starts the Express server.
  */
 connect(process.env.DB_URI).then(async () => {
+    console.log("Connected to MongoDB");
     await initDb({
         email: process.env.DEFAULT_ADMIN_EMAIL,
         name: process.env.DEFAULT_ADMIN_NAME,

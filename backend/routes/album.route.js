@@ -66,7 +66,7 @@ albumRouter
      */
     .post(
         passport.authenticate("jwt", { session: false }),
-        wrapAsync(roleBasedAuthorization(["admin"])),
+        wrapAsync(roleBasedAuthorization(["admin", "super-admin"])),
         albumImageUpload.single("cover"),
         wrapAsync(validateCreateAlbum),
         wrapAsync(checkAlbumExists),
@@ -79,7 +79,7 @@ albumRouter
     .get(wrapAsync(validateGetAlbum), wrapAsync(getAlbum))
     .put(
         passport.authenticate("jwt", { session: false }),
-        wrapAsync(roleBasedAuthorization(["admin"])),
+        wrapAsync(roleBasedAuthorization(["admin", "super-admin"])),
         albumImageUpload.single("cover"),
         wrapAsync(validateUpdateAlbum),
         wrapAsync(checkAlbumExistsForUpdate),

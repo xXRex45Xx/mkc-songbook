@@ -20,7 +20,7 @@ import fs from "fs";
  */
 const initDb = async (defAdminUser) => {
     const numOfSongs = await SongModel.countDocuments({});
-    const numOfAdmins = await UserModel.countDocuments({ role: "admin" });
+    const numOfAdmins = await UserModel.countDocuments({ role: "super-admin" });
     if (numOfSongs === 0) {
         const songs = JSON.parse(
             fs.readFileSync(path.join(import.meta.dirname, "final_songs.json"))
@@ -45,10 +45,10 @@ const initDb = async (defAdminUser) => {
     }
     if (numOfAdmins === 0) {
         const admin = await UserModel.create({
-            email: defAdminUser.email,
             name: defAdminUser.name,
+            email: defAdminUser.email,
             photo: defAdminUser.photo,
-            role: "admin",
+            role: "super-admin",
         });
         if (!admin) throw new Error("Falied to create default admin user.");
     }

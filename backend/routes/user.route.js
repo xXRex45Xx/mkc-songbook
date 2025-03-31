@@ -52,7 +52,7 @@ userRouter
     .route("/")
     .get(
         passport.authenticate("jwt", { session: false }),
-        wrapAsync(roleBasedAuthorization(["admin"])),
+        wrapAsync(roleBasedAuthorization(["admin", "super-admin"])),
         wrapAsync(validateGetAllUsers),
         wrapAsync(getAllOrSearchUsers)
     )

@@ -47,17 +47,18 @@ const SongTools = ({ songId }) => {
             onClick={(e) => e.stopPropagation()}
             className="flex gap-7 items-center w-fit"
         >
-            {windowWidth >= 768 && user?.role !== "admin" && (
-                <>
-                    <div>
-                        <HeartSvg className="first:stroke-baseblack first:fill-basewhite hover:first:fill-primary-400 active:first:fill-primary-700 cursor-pointer" />
-                    </div>
-                    <div>
-                        <DownloadSvg className="hover:first:fill-success-200 active:first:fill-success-300 cursor-pointer" />
-                    </div>
-                </>
-            )}
-            {user?.role === "admin" ? (
+            {windowWidth >= 768 &&
+                !["admin", "super-admin"].includes(user?.role) && (
+                    <>
+                        <div>
+                            <HeartSvg className="first:stroke-baseblack first:fill-basewhite hover:first:fill-primary-400 active:first:fill-primary-700 cursor-pointer" />
+                        </div>
+                        <div>
+                            <DownloadSvg className="hover:first:fill-success-200 active:first:fill-success-300 cursor-pointer" />
+                        </div>
+                    </>
+                )}
+            {["admin", "super-admin"].includes(user?.role) ? (
                 <>
                     <Link
                         to={`/songs/${songId}/edit`}

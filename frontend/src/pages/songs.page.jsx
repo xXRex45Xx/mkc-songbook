@@ -22,7 +22,7 @@ const SongsPage = () => {
             title={"Songs"}
             titleHelper={
                 <div className="flex items-center gap-7">
-                    {user?.role === "admin" && (
+                    {["admin", "super-admin"].includes(user?.role) && (
                         <>
                             <Button
                                 color="failure"

@@ -53,7 +53,7 @@ import EditAlbumPage, {
     loader as editAlbumLoader,
     action as editAlbumAction,
 } from "./pages/edit-album.page.jsx";
-import UsersPage from "./pages/users.page.jsx";
+import UsersPage, { loader as usersLoader } from "./pages/users.page.jsx";
 /**
  * Router configuration
  * Defines all application routes and their corresponding components
@@ -84,7 +84,7 @@ const router = createBrowserRouter([
             {
                 path: "songs/:songId/edit",
                 element: (
-                    <ProtectedRoute roles={["admin"]}>
+                    <ProtectedRoute roles={["admin", "super-admin"]}>
                         <EditSongPage />
                     </ProtectedRoute>
                 ),
@@ -94,7 +94,7 @@ const router = createBrowserRouter([
             {
                 path: "songs/new",
                 element: (
-                    <ProtectedRoute roles={["admin"]}>
+                    <ProtectedRoute roles={["admin", "super-admin"]}>
                         <UploadSongPage />
                     </ProtectedRoute>
                 ),
@@ -112,7 +112,7 @@ const router = createBrowserRouter([
             {
                 path: "albums/new",
                 element: (
-                    <ProtectedRoute roles={"admin"}>
+                    <ProtectedRoute roles={["admin", "super-admin"]}>
                         <UploadAlbumPage />
                     </ProtectedRoute>
                 ),
@@ -121,7 +121,7 @@ const router = createBrowserRouter([
             {
                 path: "albums/:albumId/edit",
                 element: (
-                    <ProtectedRoute roles={"admin"}>
+                    <ProtectedRoute roles={["admin", "super-admin"]}>
                         <EditAlbumPage />
                     </ProtectedRoute>
                 ),
@@ -147,10 +147,11 @@ const router = createBrowserRouter([
             {
                 path: "users",
                 element: (
-                    <ProtectedRoute roles={"admin"}>
+                    <ProtectedRoute roles={["admin", "super-admin"]}>
                         <UsersPage />
                     </ProtectedRoute>
                 ),
+                loader: usersLoader,
             },
             {
                 path: "announcements",
@@ -181,7 +182,13 @@ const router = createBrowserRouter([
             },
             {
                 path: "signup",
-                element: <SignUpForm />,
+                element: (
+                    <GoogleOAuthProvider
+                        clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}
+                    >
+                        <SignUpForm />
+                    </GoogleOAuthProvider>
+                ),
                 action: signUpAction,
             },
             {
