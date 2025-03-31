@@ -247,3 +247,10 @@ export const getAllOrSearchUsers = async (req, res) => {
         totalPages,
     });
 };
+
+export const updateUserRole = async (req, res) => {
+    const { id } = req.params;
+    const { role } = req.body;
+    await UserModel.findByIdAndUpdate(id, { role });
+    res.status(200).json({ updated: true });
+};

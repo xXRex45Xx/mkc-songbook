@@ -142,3 +142,11 @@ export const getAllUsersQuerySchema = Joi.object({
 })
     .and("q", "type")
     .required();
+
+export const updateUserRoleParamsSchema = Joi.object({
+    id: Joi.string().required(),
+}).required();
+
+export const updateUserRoleBodySchema = Joi.object({
+    role: Joi.string().allow("admin", "member", "public").required(),
+}).required();

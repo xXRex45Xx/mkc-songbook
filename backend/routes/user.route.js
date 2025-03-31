@@ -15,6 +15,7 @@ import {
     resetPassword,
     verifyOTP,
     getAllOrSearchUsers,
+    updateUserRole,
 } from "../controllers/user.controller.js";
 import localAuth from "../middlewares/local-auth.middleware.js";
 import {
@@ -24,6 +25,7 @@ import {
     validateResetPassword,
     validateVerifyOTP,
     validateGetAllUsers,
+    validateUpdateUserRole,
 } from "../middlewares/user-validation.middleware.js";
 import checkUserExists from "../middlewares/check-user-exists.middleware.js";
 import passport from "passport";
@@ -62,6 +64,13 @@ userRouter
         wrapAsync(registerUser)
     );
 
+userRouter.patch(
+    "/:id",
+    passport.authenticate("jwt", { session: false }),
+    wrapAsync(roleBasedAuthorization(["admin", "super-admin"])),
+    wrapAsync(validateUpdateUserRole),
+    wrapAsync(updateUserRole)
+);
 /**
  * POST /api/user/otp
  * Request OTP for registration or password reset.
