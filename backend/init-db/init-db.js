@@ -36,7 +36,7 @@ const initDb = async (defAdminUser) => {
                     musicElements: {
                         chord: song.chord,
                         tempo: song.tempo,
-                        rythm: song.rythm,
+                        rythm: song.rhythm,
                     },
                 })
             );
