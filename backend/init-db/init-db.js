@@ -44,13 +44,16 @@ const initDb = async (defAdminUser) => {
         await SongModel.insertMany(songModels);
     }
     if (numOfAdmins === 0) {
-        const admin = await UserModel.create({
-            name: defAdminUser.name,
-            email: defAdminUser.email,
-            photo: defAdminUser.photo,
-            role: "super-admin",
-        });
-        if (!admin) throw new Error("Falied to create default admin user.");
+        await UserModel.updateOne(
+            { email: defAdminUser.email },
+            {
+                name: defAdminUser.name,
+                photo: defAdminUser.photo,
+                role: "super-admin",
+                email: defAdminUser.email,
+            },
+            { upsert: true }
+        );
     }
 };
 

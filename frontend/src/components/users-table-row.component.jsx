@@ -21,7 +21,7 @@ const UsersTableRow = ({ user }) => {
             setError(null);
             const data = await updateUserRole(id, role);
             if (!data || !data.updated)
-                throw new Error("An unexpected error occurred");
+                throw new Error("An unexpected error occurred.");
             navigate(0);
         } catch (error) {
             setError(error.message);

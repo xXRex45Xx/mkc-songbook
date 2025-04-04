@@ -44,89 +44,69 @@ export const getAllOrSearchSongs = async (req, res) => {
         totalPages = Math.floor(totalDocuments / 100) + 1;
     } else {
         const regex = new RegExp(regexBuilder(q), "i");
-        if (type === "title") {
-            songs = await SongModel.find({ title: regex }, { title: true })
-                .sort(sortBy)
-                .collation({
-                    locale: "en_US",
-                    numericOrdering: sortBy === "_id",
-                })
-                .populate("albums", "name")
-                .skip((page - 1) * 100)
-                .limit(100);
-            const totalDocuments = await SongModel.find({
-                title: regex,
-            }).countDocuments();
-            totalPages = Math.floor(totalDocuments / 100) + 1;
-        } else if (type === "lyrics") {
-            songs = await SongModel.find({ lyrics: regex }, { title: true })
-                .sort(sortBy)
-                .collation({
-                    locale: "en_US",
-                    numericOrdering: sortBy === "_id",
-                })
-                .populate("albums", "name")
-                .skip((page - 1) * 100)
-                .limit(100);
-            const totalDocuments = await SongModel.find({
-                lyrics: regex,
-            }).countDocuments();
-            totalPages = Math.floor(totalDocuments / 100) + 1;
-        } else if (type === "id") {
-            songs = await SongModel.find({ _id: q }, { title: true })
-                .sort(sortBy)
-                .collation({
-                    locale: "en_US",
-                    numericOrdering: sortBy === "_id",
-                })
-                .populate("albums", "name")
-                .skip((page - 1) * 100)
-                .limit(100);
-            const totalDocuments = await SongModel.find({
-                _id: q,
-            }).countDocuments();
-            totalPages = Math.floor(totalDocuments / 100) + 1;
-        } else {
-            songs = {
-                titleMatch: await SongModel.find(
-                    { title: regex },
-                    { title: true }
-                )
-                    .sort(sortBy)
-                    .collation({
-                        locale: "en_US",
-                        numericOrdering: sortBy === "_id",
-                    })
-                    .populate("albums", "name")
-                    .skip((page - 1) * 100)
-                    .limit(100),
-                lyricsMatch: await SongModel.find(
-                    { lyrics: regex },
-                    { title: true }
-                )
-                    .sort(sortBy)
-                    .collation({
-                        locale: "en_US",
-                        numericOrdering: sortBy === "_id",
-                    })
-                    .populate("albums", "name")
-                    .skip((page - 1) * 100)
-                    .limit(100),
-            };
-            const titleTotalDocuments = await SongModel.find({
-                title: regex,
-            }).countDocuments();
-            const lyricsTotalDocuments = await SongModel.find({
-                lyrics: regex,
-            }).countDocuments();
+        let query = {};
 
+        if (type === "title") query = { title: { $regex: regex } };
+        else if (type === "lyrics") query = { lyrics: { $regex: regex } };
+        else if (type === "id") query = { _id: q };
+        else {
+            const queryPromises = [
+                SongModel.find({ title: regex }, { title: true })
+                    .sort(sortBy)
+                    .collation({
+                        locale: "en_US",
+                        numericOrdering: sortBy === "_id",
+                    })
+                    .populate("albums", "name")
+                    .skip((page - 1) * 100)
+                    .limit(100),
+                SongModel.find({ title: regex }).countDocuments(),
+                SongModel.find({ lyrics: regex }, { title: true })
+                    .sort(sortBy)
+                    .collation({
+                        locale: "en_US",
+                        numericOrdering: sortBy === "_id",
+                    })
+                    .populate("albums", "name")
+                    .skip((page - 1) * 100)
+                    .limit(100),
+                SongModel.find({ lyrics: regex }).countDocuments(),
+            ];
+            const [
+                titleMatch,
+                titleTotalDocuments,
+                lyricsMatch,
+                lyricsTotalDocuments,
+            ] = await Promise.all(queryPromises);
             totalPages =
                 Math.floor(
                     titleTotalDocuments > lyricsTotalDocuments
                         ? titleTotalDocuments / 100
                         : lyricsTotalDocuments / 100
                 ) + 1;
+            songs = {
+                titleMatch,
+                lyricsMatch,
+            };
+
+            return res.status(200).json({ songs, totalPages });
         }
+
+        const queryPromises = [
+            SongModel.find(query, { title: true })
+                .sort(sortBy)
+                .collation({
+                    locale: "en_US",
+                    numericOrdering: sortBy === "_id",
+                })
+                .populate("albums", "name")
+                .skip((page - 1) * 100)
+                .limit(100),
+            SongModel.find(query).countDocuments(),
+        ];
+        const [songsFromDb, totalDocuments] = await Promise.all(queryPromises);
+        totalPages = Math.floor(totalDocuments / 100) + 1;
+        songs = songsFromDb;
     }
     res.status(200).json({ songs, totalPages });
 };

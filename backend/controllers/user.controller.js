@@ -200,51 +200,32 @@ export const getAllOrSearchUsers = async (req, res) => {
         const totalDocuments = await UserModel.find({}).countDocuments();
         totalPages = Math.floor(totalDocuments / 100) + 1;
     } else {
-        if (type === "name") {
-            users = await UserModel.find(
-                { name: { $regex: q, $options: "i" } },
-                { name: true, email: true, role: true }
-            )
-                .sort("name")
-                .skip((page - 1) * 100)
-                .limit(100);
-            const totalDocuments = await UserModel.find({
-                name: { $regex: q, $options: "i" },
-            }).countDocuments();
-            totalPages = Math.floor(totalDocuments / 100) + 1;
-        } else if (type === "email") {
-            users = await UserModel.find(
-                { email: { $regex: q, $options: "i" } },
-                { name: true, email: true, role: true }
-            )
-                .sort("email")
-                .skip((page - 1) * 100)
-                .limit(100);
-            const totalDocuments = await UserModel.find({
-                email: { $regex: q, $options: "i" },
-            }).countDocuments();
-            totalPages = Math.floor(totalDocuments / 100) + 1;
-        } else {
-            users = await UserModel.find(
-                {
-                    $or: [
-                        { name: { $regex: q, $options: "i" } },
-                        { email: { $regex: q, $options: "i" } },
-                    ],
-                },
-                { name: true, email: true, role: true }
-            )
-                .sort("name")
-                .skip((page - 1) * 100)
-                .limit(100);
-            const totalDocuments = await UserModel.find({
+        let query = {};
+        if (type === "name") query = { name: { $regex: q, $options: "i" } };
+        else if (type === "email")
+            query = { email: { $regex: q, $options: "i" } };
+        else
+            query = {
                 $or: [
                     { name: { $regex: q, $options: "i" } },
                     { email: { $regex: q, $options: "i" } },
                 ],
-            }).countDocuments();
-            totalPages = Math.floor(totalDocuments / 100) + 1;
-        }
+            };
+
+        const queryPromises = [
+            UserModel.find(query, {
+                name: true,
+                email: true,
+                role: true,
+            })
+                .sort("name")
+                .skip((page - 1) * 100)
+                .limit(100),
+            UserModel.find(query).countDocuments(),
+        ];
+        const [usersFromDb, totalDocuments] = await Promise.all(queryPromises);
+        totalPages = Math.floor(totalDocuments / 100) + 1;
+        users = usersFromDb;
     }
     res.status(200).json({
         users,
