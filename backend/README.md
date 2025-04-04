@@ -8,9 +8,13 @@ This is the backend server for the MKC Choir Song Book, built with Node.js, Expr
 -   **Express.js** - Web framework
 -   **MongoDB** - Database
 -   **Mongoose** - MongoDB ODM
--   **Passport.js** - Authentication middleware
+-   **Passport.js** - Authentication middleware (JWT and Local strategies)
 -   **JWT** - JSON Web Tokens for authentication
 -   **Joi** - Data validation
+-   **Multer** - File upload handling
+-   **Nodemailer** - Email notifications
+-   **Helmet** - Security headers
+-   **Morgan** - HTTP request logging
 
 ## Project Structure
 
@@ -22,7 +26,8 @@ backend/
 ├── models/          # Database models
 ├── routes/          # API routes
 ├── utils/           # Utility functions
-└── server.js        # Application entry point
+├── uploads/         # File upload directory
+└── index.js         # Application entry point
 ```
 
 ## API Endpoints
@@ -30,31 +35,53 @@ backend/
 ### Authentication
 
 -   `POST /api/user/login` - Email/password login
+    -   Requires: email, password
 -   `POST /api/user/google/callback` - Google OAuth login
--   `POST /api/user/register` - User registration
--   `POST /api/user/verify` - Email verification
--   `POST /api/user/reset-password` - Password reset
+    -   Requires: Google access token
+-   `POST /api/user/otp` - Request OTP for registration or password reset
+    -   Requires: email
+-   `POST /api/user/verify-otp` - Verify OTP code
+    -   Requires: email, OTP
+-   `PUT /api/user/reset-password` - Reset password with OTP
+    -   Requires: email, new password, OTP
 
 ### User Management
 
--   `GET /api/user/me` - Get current user profile
--   `PUT /api/user/profile` - Update user profile
+-   `POST /api/user` - Register a new user with email verification
+    -   Requires: email, name, password, OTP
+-   `GET /api/user/current-user` - Get current user profile
+    -   Requires: JWT authentication
+-   `GET /api/user` - Get all users or search users (admin only)
+    -   Requires: JWT authentication, admin role
+-   `PATCH /api/user/:id` - Update user role (admin only)
+    -   Requires: JWT authentication, admin role
 
 ### Songs
 
--   `GET /api/songs` - Get all songs
--   `POST /api/songs` - Create new song
--   `GET /api/songs/:id` - Get song by ID
--   `PUT /api/songs/:id` - Update song
--   `DELETE /api/songs/:id` - Delete song
+-   `GET /api/song` - Get all songs or search songs
+    -   Query params: q (search), page, type, all, sortBy
+-   `POST /api/song` - Create new song (admin only)
+    -   Requires: JWT authentication, admin role
+    -   Body: id, title, lyrics, chord, tempo, rhythm, albums, audio-file
+-   `GET /api/song/:id` - Get song by ID
+-   `PUT /api/song/:id` - Update song (admin only)
+    -   Requires: JWT authentication, admin role
+    -   Body: same as POST
+-   `DELETE /api/song/:id` - Delete song (admin only)
+    -   Requires: JWT authentication, admin role
 
 ### Albums
 
--   `GET /api/albums` - Get all albums
--   `POST /api/albums` - Create new album
--   `GET /api/albums/:id` - Get album by ID
--   `PUT /api/albums/:id` - Update album
--   `DELETE /api/albums/:id` - Delete album
+-   `GET /api/album` - Get all albums or search albums
+-   `POST /api/album` - Create new album (admin only)
+    -   Requires: JWT authentication, admin role
+    -   Body: id, title, songs, cover (image file)
+-   `GET /api/album/:id` - Get album by ID
+-   `PUT /api/album/:id` - Update album (admin only)
+    -   Requires: JWT authentication, admin role
+    -   Body: same as POST
+-   `DELETE /api/album/:id` - Delete album (admin only)
+    -   Requires: JWT authentication, admin role
 
 ## Environment Variables
 
@@ -169,16 +196,10 @@ The application uses a centralized error handling system:
 npm install
 ```
 
-2. Start the development server:
+2. Start the server:
 
 ```bash
-npm run dev
-```
-
-3. Start the production server:
-
-```bash
-npm start
+node index.js
 ```
 
 ## Contributing
