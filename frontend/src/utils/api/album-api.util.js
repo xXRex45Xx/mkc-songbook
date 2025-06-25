@@ -11,14 +11,15 @@ import backendURL from "../../config/backend-url.config";
  * @returns {Promise<Object>} Album data from the server
  * @throws {Object} Error with message and status if request fails
  */
-export const getAllAlbums = async (namesOnly = false) => {
-    const response = await fetch(
-        `${backendURL}/api/album${namesOnly ? "?names=true" : ""}`
-    );
-    const data = await response.json();
-    if (!response.ok) throw { message: data.message, status: response.status };
-
-    return data;
+export const getAllAlbums = async (namesOnly = false, searchQuery = null) => {
+	const response = await fetch(
+		`${backendURL}/api/album${namesOnly ? "?names=true" : ""}${
+			searchQuery?.q ? "q=" + searchQuery.q : ""
+		}`
+	);
+	const data = await response.json();
+	if (!response.ok) throw { message: data.message, status: response.status };
+	return data;
 };
 
 /**
@@ -31,65 +32,81 @@ export const getAllAlbums = async (namesOnly = false) => {
  * @throws {Object} Validation errors or server error response
  */
 export const addOrEditAlbum = async (
-    formData,
-    edit = false,
-    albumId = null,
-    token = localStorage.getItem("_s")
+	formData,
+	edit = false,
+	albumId = null,
+	token = localStorage.getItem("_s")
 ) => {
-    const error = { status: 400 };
-    let errorOccured = false;
+	const error = { status: 400 };
+	let errorOccured = false;
 
-    if (!formData.get("id") || formData.get("id").trim().length === 0) {
-        errorOccured = true;
-        error.idMessage = "Album number is required.";
-    }
+	if (!formData.get("id") || formData.get("id").trim().length === 0) {
+		errorOccured = true;
+		error.idMessage = "Album number is required.";
+	}
 
-    if (!formData.get("title") || formData.get("title").trim().length === 0) {
-        errorOccured = true;
-        error.titleMessage = "Title is required.";
-    }
+	if (!formData.get("title") || formData.get("title").trim().length === 0) {
+		errorOccured = true;
+		error.titleMessage = "Title is required.";
+	}
 
-    if (
-        formData.get("playlist-link") &&
-        !(
-            formData.get("playlist-link").includes("youtu.be") ||
-            formData.get("playlist-link").includes("youtube.com")
-        )
-    ) {
-        errorOccured = true;
-        error.playlistLinkMessage = "Please enter a valid youtube link.";
-    }
-    if (formData.getAll("songs").length === 0) {
-        errorOccured = true;
-        error.trackMessage =
-            "An empty album is not allowed. Please add one or more tracks.";
-    }
+	if (
+		formData.get("playlist-link") &&
+		!(
+			formData.get("playlist-link").includes("youtu.be") ||
+			formData.get("playlist-link").includes("youtube.com")
+		)
+	) {
+		errorOccured = true;
+		error.playlistLinkMessage = "Please enter a valid youtube link.";
+	}
+	if (formData.getAll("songs").length === 0) {
+		errorOccured = true;
+		error.trackMessage =
+			"An empty album is not allowed. Please add one or more tracks.";
+	}
 
-    if (errorOccured) throw error;
+	if (errorOccured) throw error;
 
-    const response = await fetch(
-        `${backendURL}/api/album${edit ? "/" + albumId : ""}`,
-        {
-            method: edit ? "PUT" : "POST",
-            body: formData,
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        }
-    );
-    const data = await response.json();
-    if (!response.ok) throw { message: data.message, status: response.status };
+	const response = await fetch(
+		`${backendURL}/api/album${edit ? "/" + albumId : ""}`,
+		{
+			method: edit ? "PUT" : "POST",
+			body: formData,
+			headers: {
+				Authorization: `Bearer ${token}`,
+			},
+		}
+	);
+	const data = await response.json();
+	if (!response.ok) throw { message: data.message, status: response.status };
 
-    return data;
+	return data;
 };
 
 export const getAlbum = async (id) => {
-    if (id.length === 0)
-        throw { message: "Album number is required.", status: 400 };
-    const response = await fetch(`${backendURL}/api/album/${id}`);
-    const data = await response.json();
+	if (id.length === 0)
+		throw { message: "Album number is required.", status: 400 };
+	const response = await fetch(`${backendURL}/api/album/${id}`);
+	const data = await response.json();
 
-    if (!response.ok) throw { message: data.message, status: response.status };
+	if (!response.ok) throw { message: data.message, status: response.status };
 
-    return data;
+	return data;
+};
+
+export const deleteAlbum = async (id, token = localStorage.getItem("_s")) => {
+	if (id.length === 0)
+		throw { message: "Album number is required.", status: 400 };
+	const response = await fetch(`${backendURL}/api/album/${id}`, {
+		method: "DELETE",
+		headers: {
+			Authorization: `Bearer ${token}`,
+		},
+	});
+
+	const data = await response.json();
+	if (!response.ok)
+		throw { message: "An unexpected error occurred.", status: response.status };
+	if (!data.deleted) throw { message: "An unexpected error occurred." };
 };

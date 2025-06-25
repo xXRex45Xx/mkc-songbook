@@ -4,8 +4,9 @@
  */
 
 import {
-    createAlbumBodyValidationSchema,
-    getAlbumParamsSchema,
+	createAlbumBodyValidationSchema,
+	getAlbumParamsSchema,
+	getAllAlbumsQuerySchema,
 } from "../models/validation-schemas/album.validation-schema.js";
 import validateSchema from "../utils/validator.util.js";
 
@@ -19,17 +20,22 @@ import validateSchema from "../utils/validator.util.js";
  * @param {Function} next - Express next middleware function
  */
 export const validateCreateAlbum = async (req, _res, next) => {
-    if (typeof req.body.songs === "string") req.body.songs = [req.body.songs];
-    await validateSchema(req.body, createAlbumBodyValidationSchema);
-    next();
+	if (typeof req.body.songs === "string") req.body.songs = [req.body.songs];
+	await validateSchema(req.body, createAlbumBodyValidationSchema);
+	next();
 };
 
 export const validateGetAlbum = async (req, _res, next) => {
-    await validateSchema(req.params, getAlbumParamsSchema);
-    next();
+	await validateSchema(req.params, getAlbumParamsSchema);
+	next();
 };
 
 export const validateUpdateAlbum = async (req, _res, next) => {
-    await validateSchema(req.body, createAlbumBodyValidationSchema);
-    next();
+	await validateSchema(req.body, createAlbumBodyValidationSchema);
+	next();
+};
+
+export const validateGetAllAlbums = async (req, _res, next) => {
+	await validateSchema(req.query, getAllAlbumsQuerySchema);
+	next();
 };

@@ -4,9 +4,9 @@
  */
 
 import {
-    createSongBodyValidationSchema,
-    getAllSongsQuerySchema,
-    getSongParamsSchema,
+	createSongBodyValidationSchema,
+	getAllSongsQuerySchema,
+	getSongParamsSchema,
 } from "../models/validation-schemas/song.validation-shcema.js";
 import validateSchema from "../utils/validator.util.js";
 
@@ -17,8 +17,8 @@ import validateSchema from "../utils/validator.util.js";
  * @param {Function} next - Express next middleware function
  */
 export const validateGetAllSongs = async (req, _res, next) => {
-    await validateSchema(req.query, getAllSongsQuerySchema);
-    next();
+	await validateSchema(req.query, getAllSongsQuerySchema);
+	next();
 };
 
 /**
@@ -28,8 +28,8 @@ export const validateGetAllSongs = async (req, _res, next) => {
  * @param {Function} next - Express next middleware function
  */
 export const validateGetSong = async (req, _res, next) => {
-    await validateSchema(req.params, getSongParamsSchema);
-    next();
+	await validateSchema(req.params, getSongParamsSchema);
+	next();
 };
 
 /**
@@ -39,6 +39,6 @@ export const validateGetSong = async (req, _res, next) => {
  * @param {Function} next - Express next middleware function
  */
 export const validateCreateSong = async (req, _res, next) => {
-    await validateSchema(req.body, createSongBodyValidationSchema);
-    next();
+	await validateSchema(req.body, createSongBodyValidationSchema);
+	next();
 };

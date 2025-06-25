@@ -17,6 +17,8 @@ import fs from "fs";
 import helmet from "helmet";
 import morgan from "morgan";
 import initDb from "./init-db/init-db.js";
+import path from "path";
+import { wrapAsync } from "./utils/error.util.js";
 
 if (config().error) throw config().error;
 
@@ -39,16 +41,31 @@ morgan.token("fileerror", (req) => req.fileDeleteError?.message || "");
  */
 app.use(helmet());
 app.use(
-    morgan(
-        ":method :url :status :res[content-length] - :response-time ms :error :fileerror"
-    )
+	morgan(
+		":method :url :status :res[content-length] - :response-time ms :error :fileerror"
+	)
 );
+
 app.use(
-    cors({
-        origin: process.env.ALLOWED_ORIGINS.split(","),
-    })
+	cors({
+		origin: process.env.ALLOWED_ORIGINS.split(","),
+	})
+);
+
+app.use(
+	"/static/albums/images",
+	wrapAsync(async (req, res, next) => {
+		res.header(
+			"Access-Control-Allow-Origin",
+			process.env.ALLOWED_ORIGINS.split(",")
+		);
+		res.header("Cross-Origin-Resource-Policy", "cross-origin");
+		next();
+	}),
+	express.static(path.join("uploads", "images", "albums"))
 );
 app.use(express.json());
+
 app.use("/api", apiRouter);
 
 /**
@@ -66,19 +83,19 @@ app.use("/api", apiRouter);
  * @param {NextFunction} _next - Express next function
  */
 app.use(async (err, req, res, _next) => {
-    if (req.file)
-        fs.unlink(req.file.path, (err) => {
-            if (err) req.fileDeleteError = err;
-        });
-    let { message, statusCode = 500 } = err;
-    if (err instanceof MulterError && err.code === "LIMIT_FILE_SIZE")
-        statusCode = 400;
-    if (statusCode === 500) {
-        if (err.internalError) req.error = err.internalError;
-        else req.error = err;
-        message = "An unexpected error occurred.";
-    }
-    res.status(statusCode).json({ message });
+	if (req.file)
+		fs.unlink(req.file.path, (err) => {
+			if (err) req.fileDeleteError = err;
+		});
+	let { message, statusCode = 500 } = err;
+	if (err instanceof MulterError && err.code === "LIMIT_FILE_SIZE")
+		statusCode = 400;
+	if (statusCode === 500) {
+		if (err.internalError) req.error = err.internalError;
+		else req.error = err;
+		message = "An unexpected error occurred.";
+	}
+	res.status(statusCode).json({ message });
 });
 
 /**
@@ -87,13 +104,13 @@ app.use(async (err, req, res, _next) => {
  * and starts the Express server.
  */
 connect(process.env.DB_URI).then(async () => {
-    console.log("Connected to MongoDB");
-    await initDb({
-        email: process.env.DEFAULT_ADMIN_EMAIL,
-        name: process.env.DEFAULT_ADMIN_NAME,
-        photoLink: process.env.DEFAULT_ADMIN_PHOTO_LINK,
-    });
-    app.listen(process.env.PORT, () =>
-        console.log("Server started on port: ", process.env.PORT)
-    );
+	console.log("Connected to MongoDB");
+	await initDb({
+		email: process.env.DEFAULT_ADMIN_EMAIL,
+		name: process.env.DEFAULT_ADMIN_NAME,
+		photoLink: process.env.DEFAULT_ADMIN_PHOTO_LINK,
+	});
+	app.listen(process.env.PORT, () =>
+		console.log("Server started on port: ", process.env.PORT)
+	);
 });
