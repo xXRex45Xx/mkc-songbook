@@ -7,7 +7,7 @@ const HomePage = () => {
     const navigate = useNavigate();
     const user = useSelector((state) => state.user.currentUser);
     useEffect(() => {
-        if (user?.role === "admin") navigate("/songs");
+        if (["admin", "super-admin"].includes(user?.role)) navigate("/songs");
     }, [user]);
     return <MainBodyContainer title={"Under Construction"}></MainBodyContainer>;
 };

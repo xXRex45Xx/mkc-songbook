@@ -6,7 +6,7 @@
  */
 
 import SongModel from "../models/song.model.js";
-import { ClientFaultError } from "../utils/error.util.js";
+import { ClientFaultError, NotFoundError } from "../utils/error.util.js";
 import AlbumModel from "../models/album.model.js";
 
 /**
@@ -62,5 +62,19 @@ export const checkAlbumExists = async (req, _res, next) => {
         throw new ClientFaultError(
             `Album with id ${album._id} already exists.`
         );
+    next();
+};
+
+export const checkAlbumExistsForUpdate = async (req, _res, next) => {
+    const { id } = req.params;
+    const album = await AlbumModel.findById(id);
+    if (!album) throw new NotFoundError(`Album with id ${id} does not exist.`);
+    if (req.body.id !== id) {
+        const albumWithNewId = await AlbumModel.findById(req.body.id);
+        if (albumWithNewId)
+            throw new ClientFaultError(
+                `Album with id ${req.body.id} already exists.`
+            );
+    }
     next();
 };

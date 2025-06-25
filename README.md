@@ -35,14 +35,18 @@ A comprehensive web application for managing choir songs, lyrics, and related me
 -   Flowbite React for UI components
 -   Tailwind CSS for styling
 -   @react-oauth/google for Google authentication
+-   React Loader Spinner for loading states
 
 ### Backend
 
 -   Node.js with Express
 -   MongoDB with Mongoose
--   Passport.js for authentication
--   JWT for token-based auth
+-   Passport.js for authentication (JWT and Local strategies)
 -   Joi for validation
+-   Multer for file uploads
+-   Nodemailer for email notifications
+-   Helmet for security headers
+-   Morgan for logging
 
 ## Getting Started
 
@@ -57,8 +61,8 @@ A comprehensive web application for managing choir songs, lyrics, and related me
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/xXRex45Xx/mkc-choir.git
-cd mkc-choir
+git clone https://github.com/xXRex45Xx/mkc-songbook.git
+cd mkc-songbook
 ```
 
 2. Install backend dependencies:
@@ -95,7 +99,7 @@ SMTP_USER=your_email@gmail.com
 SMTP_PASS=your_app_specific_password
 SMTP_FROM=your_email@gmail.com
 
-# Client URLs (for CORS)=
+# Client URLs (for CORS)
 ALLOWED_ORIGINS=http://localhost:5173,https://your-production-domain.com
 
 # Media Storage
@@ -140,7 +144,7 @@ Backend:
 
 ```bash
 cd backend
-npm run dev
+node index.js
 ```
 
 Frontend:
@@ -153,7 +157,7 @@ npm run dev
 ## Project Structure
 
 ```
-mkc-choir/
+mkc-songbook/
 ├── frontend/           # React frontend application
 │   ├── src/
 │   │   ├── assets/    # Static assets
@@ -170,7 +174,9 @@ mkc-choir/
     ├── middlewares/  # Custom middleware
     ├── models/      # Database models
     ├── routes/      # API routes
-    └── utils/       # Utility functions
+    ├── utils/       # Utility functions
+    ├── uploads/     # File upload directory
+    └── index.js     # Application entry point
 ```
 
 ## API Documentation

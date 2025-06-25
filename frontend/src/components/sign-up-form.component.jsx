@@ -5,6 +5,7 @@ import {
     redirect,
     useActionData,
     useNavigation,
+    useSearchParams,
 } from "react-router-dom";
 import { formButtonTheme } from "../config/button-theme.config";
 import nextIcon from "../assets/next-filled.svg";
@@ -14,7 +15,7 @@ import { useSelector } from "react-redux";
 import { setAuthEmail } from "../store/slices/user.slice";
 import store from "../store/store";
 import CustomTailSpin from "./custom-tail-spin.component";
-
+import { useState } from "react";
 /**
  * Form component for initiating user signup process
  * Represents step 1 of the signup flow
@@ -25,7 +26,8 @@ const SignUpForm = () => {
     const error = useActionData();
     const navigation = useNavigation();
     const email = useSelector((store) => store.user.authEmail);
-
+    const [googleLoginError, setGoogleLoginError] = useState("");
+    const [searchParams, _setSearchParams] = useSearchParams();
     return (
         <Form
             className="flex-1 flex flex-col gap-7 justify-center text-baseblack overflow-auto"
@@ -51,6 +53,9 @@ const SignUpForm = () => {
                         }
                     />
                 </div>
+                <span className="text-sm text-secondary text-center">
+                    {error?.message || googleLoginError}
+                </span>
                 <div className="flex flex-col gap-2.5">
                     <Button
                         theme={formButtonTheme}
@@ -64,7 +69,12 @@ const SignUpForm = () => {
                         <img className="ml-2.5" src={nextIcon} alt="" />
                     </Button>
                     <span className="text-center">or</span>
-                    <GoogleLink>Sign up with Google</GoogleLink>
+                    <GoogleLink
+                        redirectOnSuccess={searchParams.get("redirect")}
+                        setErrorMessage={setGoogleLoginError}
+                    >
+                        Sign up with Google
+                    </GoogleLink>
                 </div>
                 <span className="text-center">
                     Already have an account?{" "}

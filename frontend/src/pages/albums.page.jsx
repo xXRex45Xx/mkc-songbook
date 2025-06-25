@@ -1,155 +1,49 @@
 import MainBodyContainer from "../components/main-body-container.component";
-import image3 from "../assets/image3.svg";
-import { Card } from "flowbite-react";
-// const AlbumsPage = () => {
-// 	return (
-// 		<MainBodyContainer title={"Recent Albums"}>
-// 			<div className="flex gap-6">
-// 				<Card>
-// 					<h2 className="text-lg font-bold">#23</h2>
-// 					<img src={image3} alt="Album cover" className="w-full h-auto" />
-// 					<h3 className="text-base-black text-[16px] font-inter font-semibold leading-[120%]">
-// 						Album Name
-// 					</h3>
-// 					<p className="text-neutrals-800 text-[12px] font-inter leading-[120%]">
-// 						2024 - 16 songs
-// 					</p>
-// 				</Card>
-// 				<Card>
-// 					<h2 className="text-lg font-bold">#24</h2>
-// 					<img src={image3} alt="Album cover" className="w-full h-auto" />
-// 					<h3 className="text-base-black text-[16px] font-inter font-semibold leading-[120%]">
-// 						Album Name
-// 					</h3>
-// 					<p className="text-neutrals-800 text-[12px] font-inter leading-[120%]">
-// 						2024 - 16 songs
-// 					</p>
-// 				</Card>
-// 				<Card>
-// 					<h2 className="text-lg font-bold">#24</h2>
-// 					<img src={image3} alt="Album cover" className="w-full h-auto" />
-// 					<h3 className="text-base-black text-[16px] font-inter font-semibold leading-[120%]">
-// 						Album Name
-// 					</h3>
-// 					<p className="text-neutrals-800 text-[12px] font-inter leading-[120%]">
-// 						2024 - 16 songs
-// 					</p>
-// 				</Card>
-// 				<Card>
-// 					<h2 className="text-lg font-bold">#24</h2>
-// 					<img src={image3} alt="Album cover" className="w-full h-auto" />
-// 					<h3 className="text-base-black text-[16px] font-inter font-semibold leading-[120%]">
-// 						Album Name
-// 					</h3>
-// 					<p className="text-neutrals-800 text-[12px] font-inter leading-[120%]">
-// 						2024 - 16 songs
-// 					</p>
-// 				</Card>
-// 				<Card>
-// 					<h2 className="text-lg font-bold">#24</h2>
-// 					<img src={image3} alt="Album cover" className="w-full h-auto" />
-// 					<h3 className="text-base-black text-[16px] font-inter font-semibold leading-[120%]">
-// 						Album Name
-// 					</h3>
-// 					<p className="text-neutrals-800 text-[12px] font-inter leading-[120%]">
-// 						2024 - 16 songs
-// 					</p>
-// 				</Card>
-// 				<Card>
-// 					<h2 className="text-lg font-bold">#24</h2>
-// 					<img src={image3} alt="Album cover" className="w-full h-auto" />
-// 					<h3 className="text-base-black text-[16px] font-inter font-semibold leading-[120%]">
-// 						Album Name
-// 					</h3>
-// 					<p className="text-neutrals-800 text-[12px] font-inter leading-[120%]">
-// 						2024 - 16 songs
-// 					</p>
-// 				</Card>
-// 			</div>
-// 			<h1 className="text-baseblack text-3xl font-bold leading-9">
-// 				All Albums
-// 			</h1>
+import AlbumCard from "../components/album-card.component";
+import { Await, defer, useLoaderData } from "react-router-dom";
+import { getAllAlbums } from "../utils/api/album-api.util";
+import { Suspense } from "react";
+import CustomTailSpin from "../components/custom-tail-spin.component";
+import backendURL from "../config/backend-url.config";
+import AdminHelper from "../components/admin-helper.component";
 
 const AlbumsPage = () => {
-	return (
-		<MainBodyContainer title={"Recent Albums"}>
-			<div className="flex gap-6">
-				<Card>
-					<h2 className="text-lg font-bold">#23</h2>
-					<img src={image3} alt="Album cover" className="w-full h-auto" />
-					<h3 className="text-base-black text-[16px] font-inter font-semibold leading-[120%]">
-						Album Name
-					</h3>
-					<p className="text-neutrals-800 text-[12px] font-inter leading-[120%]">
-						2024 - 16 songs
-					</p>
-				</Card>
-				<Card>
-					<h2 className="text-lg font-bold">#24</h2>
-					<img src={image3} alt="Album cover" className="w-full h-auto" />
-					<h3 className="text-base-black text-[16px] font-inter font-semibold leading-[120%]">
-						Album Name
-					</h3>
-					<p className="text-neutrals-800 text-[12px] font-inter leading-[120%]">
-						2024 - 16 songs
-					</p>
-				</Card>
-				<Card>
-					<h2 className="text-lg font-bold">#24</h2>
-					<img src={image3} alt="Album cover" className="w-full h-auto" />
-					<h3 className="text-base-black text-[16px] font-inter font-semibold leading-[120%]">
-						Album Name
-					</h3>
-					<p className="text-neutrals-800 text-[12px] font-inter leading-[120%]">
-						2024 - 16 songs
-					</p>
-				</Card>
-				<Card>
-					<h2 className="text-lg font-bold">#24</h2>
-					<img src={image3} alt="Album cover" className="w-full h-auto" />
-					<h3 className="text-base-black text-[16px] font-inter font-semibold leading-[120%]">
-						Album Name
-					</h3>
-					<p className="text-neutrals-800 text-[12px] font-inter leading-[120%]">
-						2024 - 16 songs
-					</p>
-				</Card>
-				<Card>
-					<h2 className="text-lg font-bold">#24</h2>
-					<img src={image3} alt="Album cover" className="w-full h-auto" />
-					<h3 className="text-base-black text-[16px] font-inter font-semibold leading-[120%]">
-						Album Name
-					</h3>
-					<p className="text-neutrals-800 text-[12px] font-inter leading-[120%]">
-						2024 - 16 songs
-					</p>
-				</Card>
-				<Card>
-					<h2 className="text-lg font-bold">#24</h2>
-					<img src={image3} alt="Album cover" className="w-full h-auto" />
-					<h3 className="text-base-black text-[16px] font-inter font-semibold leading-[120%]">
-						Album Name
-					</h3>
-					<p className="text-neutrals-800 text-[12px] font-inter leading-[120%]">
-						2024 - 16 songs
-					</p>
-				</Card>
-			</div>
-			<h1 className="text-baseblack text-3xl font-bold leading-9">
-				All Albums
-			</h1>
+	const loaderData = useLoaderData();
 
-			<Card>
-				<h2 className="text-lg font-bold">#24</h2>
-				<img src={image3} alt="Album cover" className="w-full h-auto" />
-				<h3 className="text-base-black text-[16px] font-inter font-semibold leading-[120%]">
-					Album Name
-				</h3>
-				<p className="text-neutrals-800 text-[12px] font-inter leading-[120%]">
-					2024 - 16 songs
-				</p>
-			</Card>
+	return (
+		<MainBodyContainer
+			title={"Albums"}
+			titleHelper={
+				<div className="flex items-center gap-7">
+					<AdminHelper />
+				</div>
+			}
+		>
+			<Suspense fallback={<CustomTailSpin />}>
+				<Await resolve={loaderData.albumData}>
+					{(albums) => (
+						<div className="flex gap-6">
+							{albums.map((album) => (
+								<AlbumCard
+									key={album._id}
+									number={album._id}
+									title={album.name}
+									imgSrc={backendURL + album.photoLink}
+									numOfSongs={album.numOfSongs}
+									year={album.createdAt}
+								/>
+							))}
+						</div>
+					)}
+				</Await>
+			</Suspense>
 		</MainBodyContainer>
 	);
 };
 export default AlbumsPage;
+
+export const loader = ({ request }) => {
+	const searchParams = new URL(request.url).searchParams;
+	const searchQuery = { q: searchParams.get("q") };
+	return defer({ albumData: getAllAlbums(false, searchQuery) });
+};

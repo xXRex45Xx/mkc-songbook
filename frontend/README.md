@@ -10,6 +10,7 @@ This is the frontend application for the MKC Choir Song Book, built with React a
 -   **Flowbite React** - UI components
 -   **Tailwind CSS** - Styling
 -   **@react-oauth/google** - Google OAuth integration
+-   **React Loader Spinner** - Loading states
 
 ## Project Structure
 

@@ -20,7 +20,7 @@ import fs from "fs";
  */
 const initDb = async (defAdminUser) => {
     const numOfSongs = await SongModel.countDocuments({});
-    const numOfAdmins = await UserModel.countDocuments({ role: "admin" });
+    const numOfAdmins = await UserModel.countDocuments({ role: "super-admin" });
     if (numOfSongs === 0) {
         const songs = JSON.parse(
             fs.readFileSync(path.join(import.meta.dirname, "final_songs.json"))
@@ -36,7 +36,7 @@ const initDb = async (defAdminUser) => {
                     musicElements: {
                         chord: song.chord,
                         tempo: song.tempo,
-                        rythm: song.rythm,
+                        rythm: song.rhythm,
                     },
                 })
             );
@@ -44,13 +44,16 @@ const initDb = async (defAdminUser) => {
         await SongModel.insertMany(songModels);
     }
     if (numOfAdmins === 0) {
-        const admin = await UserModel.create({
-            email: defAdminUser.email,
-            name: defAdminUser.name,
-            photo: defAdminUser.photo,
-            role: "admin",
-        });
-        if (!admin) throw new Error("Falied to create default admin user.");
+        await UserModel.updateOne(
+            { email: defAdminUser.email },
+            {
+                name: defAdminUser.name,
+                photo: defAdminUser.photo,
+                role: "super-admin",
+                email: defAdminUser.email,
+            },
+            { upsert: true }
+        );
     }
 };
 

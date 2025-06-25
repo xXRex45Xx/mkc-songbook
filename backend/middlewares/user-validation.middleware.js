@@ -11,6 +11,9 @@ import {
     registerUserBodySchema,
     resetPasswordBodySchema,
     verifyOTPBodySchema,
+    getAllUsersQuerySchema,
+    updateUserRoleParamsSchema,
+    updateUserRoleBodySchema,
 } from "../models/validation-schemas/user.validaton-schema.js";
 import validateSchema from "../utils/validator.util.js";
 
@@ -78,5 +81,16 @@ export const validateResetPassword = async (req, _res, next) => {
  */
 export const validateGoogleOAuthLogin = async (req, _res, next) => {
     await validateSchema(req.body, googleOAuthBodySchema);
+    next();
+};
+
+export const validateGetAllUsers = async (req, _res, next) => {
+    await validateSchema(req.query, getAllUsersQuerySchema);
+    next();
+};
+
+export const validateUpdateUserRole = async (req, _res, next) => {
+    await validateSchema(req.params, updateUserRoleParamsSchema);
+    await validateSchema(req.body, updateUserRoleBodySchema);
     next();
 };

@@ -237,3 +237,46 @@ export const googleOauthLogin = async (accessToken) => {
     const data = await response.json();
     return data;
 };
+
+export const getAllOrSearchUsers = async (
+    searchQuery = null,
+    page = 1,
+    token = localStorage.getItem("_s")
+) => {
+    const response = await fetch(
+        `${backendURL}/api/user?page=${page}${
+            searchQuery.q ? "&q=" + searchQuery.q : ""
+        }${searchQuery.type ? "&type=" + searchQuery.type : ""}`,
+        {
+            headers: {
+                Authorization: `bearer ${token}`,
+            },
+        }
+    );
+    const data = await response.json();
+    if (!response.ok) throw { message: data.message, status: response.status };
+
+    return data;
+};
+
+export const updateUserRole = async (
+    id,
+    role,
+    token = localStorage.getItem("_s")
+) => {
+    const response = await fetch(`${backendURL}/api/user/${id}`, {
+        method: "PATCH",
+        headers: {
+            Authorization: `bearer ${token}`,
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            role,
+        }),
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw { message: data.message, status: response.status };
+
+    return data;
+};

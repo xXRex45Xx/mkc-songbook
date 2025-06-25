@@ -22,41 +22,41 @@ import SongTools from "./song-tools.component";
  * @param {boolean} props.highlight - Whether to include search term in navigation
  */
 const SongsTableRow = ({ song, highlight }) => {
-    const navigate = useNavigate();
-    const [searchParams, _setSearchParams] = useSearchParams();
+	const navigate = useNavigate();
+	const [searchParams, _setSearchParams] = useSearchParams();
 
-    /**
-     * Window width from Redux store for responsive layout decisions
-     */
-    const windowWidth = useSelector((state) => state.configs.windowWidth);
+	/**
+	 * Window width from Redux store for responsive layout decisions
+	 */
+	const windowWidth = useSelector((state) => state.configs.windowWidth);
 
-    return (
-        <Table.Row
-            onClick={() =>
-                navigate({
-                    pathname: song._id.toString(),
-                    search: highlight ? `?q=${searchParams.get("q")}` : null,
-                })
-            }
-            key={song._id}
-        >
-            <Table.Cell>{song._id}</Table.Cell>
-            <Table.Cell>
-                {song.title}
-                {windowWidth < 768 && <br />}
-                {windowWidth < 768 &&
-                    song.albums.map((song) => song.name).join(", ")}
-            </Table.Cell>
-            {windowWidth >= 768 && (
-                <Table.Cell>
-                    {song.albums.map((song) => song.name).join(", ")}
-                </Table.Cell>
-            )}
-            <Table.Cell className="text-end flex justify-end">
-                <SongTools songId={song._id} />
-            </Table.Cell>
-        </Table.Row>
-    );
+	return (
+		<Table.Row
+			onClick={() =>
+				navigate({
+					pathname: `/songs/${song._id.toString()}`,
+					search: highlight ? `?q=${searchParams.get("q")}` : null,
+				})
+			}
+			key={song._id}
+			className="cursor-pointer"
+		>
+			<Table.Cell>{song._id}</Table.Cell>
+			<Table.Cell>
+				{song.title}
+				{windowWidth < 768 && <br />}
+				{windowWidth < 768 && song.albums.map((song) => song.name).join(", ")}
+			</Table.Cell>
+			{windowWidth >= 768 && (
+				<Table.Cell>
+					{song.albums.map((song) => song.name).join(", ")}
+				</Table.Cell>
+			)}
+			<Table.Cell className="text-end flex justify-end">
+				<SongTools songId={song._id} />
+			</Table.Cell>
+		</Table.Row>
+	);
 };
 
 export default SongsTableRow;

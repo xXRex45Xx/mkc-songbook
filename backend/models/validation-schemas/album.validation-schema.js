@@ -15,14 +15,23 @@ import Joi from "joi";
  * @property {string[]} songs - Array of song IDs to include in the album
  */
 export const createAlbumBodyValidationSchema = Joi.object({
-    id: Joi.string().min(1).required(),
-    title: Joi.string().min(2).max(100).required(),
-    playlistLink: Joi.string()
-        .uri()
-        .regex(
-            /^(?:https?:\/\/)?(?:m\.|www\.)?(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))((\w|-){11})(?:\S+)?$/
-        )
-        .allow("")
-        .optional(),
-    songs: Joi.array().items(Joi.string().min(1)).min(1).required(),
+	id: Joi.string().min(1).required(),
+	title: Joi.string().min(2).max(100).required(),
+	playlistLink: Joi.string()
+		.uri()
+		.regex(
+			/^(?:https?:\/\/)?(?:m\.|www\.)?(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))((\w|-){11})(?:\S+)?$/
+		)
+		.allow("")
+		.optional(),
+	songs: Joi.array().items(Joi.string().min(1)).min(1).required(),
+}).required();
+
+export const getAlbumParamsSchema = Joi.object({
+	id: Joi.string().min(1).required(),
+}).required();
+
+export const getAllAlbumsQuerySchema = Joi.object({
+	q: Joi.string().max(100).optional(),
+	names: Joi.bool().optional(),
 }).required();

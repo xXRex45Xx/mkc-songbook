@@ -19,16 +19,17 @@ import { Schema, model } from "mongoose";
  * @property {string[]} songs - Array of song IDs included in this album (references Song model)
  */
 const albumSchema = new Schema({
-    _id: { type: String, minLength: 1, required: true },
-    name: { type: String, minLength: 1, required: true },
-    createdAt: {
-        type: String,
-        default: () => new Date().getFullYear().toString(),
-        minLength: 4,
-        required: true,
-    },
-    photo: { type: String },
-    songs: [{ type: String, ref: "Song" }],
+	_id: { type: String, minLength: 1, required: true },
+	name: { type: String, minLength: 1, required: true },
+	createdAt: {
+		type: String,
+		default: () => new Date().getFullYear().toString(),
+		minLength: 4,
+		required: true,
+	},
+	photoPath: { type: String },
+	photoLink: { type: String },
+	songs: [{ type: String, ref: "Song" }],
 });
 
 const AlbumModel = model("Album", albumSchema);

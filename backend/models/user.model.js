@@ -34,7 +34,7 @@ const userSchema = new Schema({
     photo: { type: String },
     role: {
         type: String,
-        enum: ["public", "member", "admin"],
+        enum: ["public", "member", "admin", "super-admin"],
         default: "public",
     },
 });

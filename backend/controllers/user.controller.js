@@ -7,7 +7,7 @@
  * 3. Password management
  * 4. User profile retrieval
  *
- * @module userController
+ * @module user.controller
  */
 
 import OTPModel from "../models/otp.model.js";
@@ -15,7 +15,11 @@ import generateOtp from "../utils/otp.util.js";
 import bcrypt from "bcrypt";
 import UserModel from "../models/user.model.js";
 import jwt from "jsonwebtoken";
-import { ClientFaultError, UnauthorizedError } from "../utils/error.util.js";
+import {
+    ClientFaultError,
+    NotFoundError,
+    UnauthorizedError,
+} from "../utils/error.util.js";
 
 /**
  * Generate and send OTP for user registration
@@ -180,4 +184,65 @@ export const resetPassword = async (req, res) => {
     await UserModel.findOneAndUpdate({ email }, { password: hashedPassword });
     res.status(200).json({ success: true });
     await OTPModel.deleteOne({ email });
+};
+
+export const getAllOrSearchUsers = async (req, res) => {
+    const { q, page = 1, type } = req.query;
+    let users, totalPages;
+    if (!q) {
+        users = await UserModel.find(
+            {},
+            { name: true, email: true, role: true }
+        )
+            .sort("name")
+            .skip((page - 1) * 100)
+            .limit(100);
+        const totalDocuments = await UserModel.find({}).countDocuments();
+        totalPages = Math.floor(totalDocuments / 100) + 1;
+    } else {
+        let query = {};
+        if (type === "name") query = { name: { $regex: q, $options: "i" } };
+        else if (type === "email")
+            query = { email: { $regex: q, $options: "i" } };
+        else
+            query = {
+                $or: [
+                    { name: { $regex: q, $options: "i" } },
+                    { email: { $regex: q, $options: "i" } },
+                ],
+            };
+
+        const queryPromises = [
+            UserModel.find(query, {
+                name: true,
+                email: true,
+                role: true,
+            })
+                .sort("name")
+                .skip((page - 1) * 100)
+                .limit(100),
+            UserModel.find(query).countDocuments(),
+        ];
+        const [usersFromDb, totalDocuments] = await Promise.all(queryPromises);
+        totalPages = Math.floor(totalDocuments / 100) + 1;
+        users = usersFromDb;
+    }
+    res.status(200).json({
+        users,
+        totalPages,
+    });
+};
+
+export const updateUserRole = async (req, res) => {
+    const { id } = req.params;
+    const { role } = req.body;
+    const user = await UserModel.findById(id);
+    if (!user) throw new NotFoundError("User not found");
+    if (user.role === "super-admin")
+        throw new ClientFaultError("Super admin role cannot be changed");
+    if (req.user.role !== "super-admin" && user.role === "admin")
+        throw new ForbiddenError("You are not authorized to change this role");
+    user.role = role;
+    await user.save();
+    res.status(200).json({ updated: true });
 };
