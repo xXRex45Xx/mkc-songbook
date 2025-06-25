@@ -23,7 +23,7 @@ const SchedulePage = () => {
 						<span className="font-bold mr-5">16</span>
 						<span className="mr-5">Aug, Friday</span>8 - 10am
 					</Table.Cell>
-					<Table.Cell>Hiwot Berhan Church</Table.Cell>
+					<Table.Cell className="font-semibold">Hiwot Berhan Church</Table.Cell>
 					<Table.Cell></Table.Cell>
 				</Table.Row>
 				<Table.Row>
@@ -39,7 +39,7 @@ const SchedulePage = () => {
 						<span className="font-bold mr-5">16</span>
 						<span className="mr-5"> Aug, Friday</span>8 - 10am
 					</Table.Cell>
-					<Table.Cell>Hiwot Berhan Church</Table.Cell>
+					<Table.Cell className="font-semibold">Hiwot Berhan Church</Table.Cell>
 					<Table.Cell className="text-green-400 flex">
 						<img src={green} />
 						Recently Added
@@ -50,7 +50,7 @@ const SchedulePage = () => {
 						<span className="font-bold mr-5">16</span>
 						<span className="mr-5"> Aug, Friday</span>8 - 10am
 					</Table.Cell>
-					<Table.Cell>Hiwot Berhan Church</Table.Cell>
+					<Table.Cell className="font-semibold">Hiwot Berhan Church</Table.Cell>
 					<Table.Cell className="text-orange-300 flex">
 						<img src={orange} alt="" />
 						Recently Changed
@@ -61,7 +61,9 @@ const SchedulePage = () => {
 						<span className="font-bold mr-5">16</span>
 						<span className="mr-5"> Aug, Friday</span>8 - 10am
 					</Table.Cell>
-					<Table.Cell>Hiwot Berhan Church</Table.Cell>
+					<Table.Cell className="font-semibold text-error-300 line-through">
+						Hiwot Berhan Church
+					</Table.Cell>
 					<Table.Cell className="text-red-600 flex">
 						<img src={red} />
 						Cancelled
@@ -72,7 +74,7 @@ const SchedulePage = () => {
 						<span className="font-bold mr-5">16</span>
 						<span className="mr-5"> Aug, Friday</span>8 - 10am
 					</Table.Cell>
-					<Table.Cell>Hiwot Berhan Church</Table.Cell>
+					<Table.Cell className="font-semibold">Hiwot Berhan Church</Table.Cell>
 					<Table.Cell></Table.Cell>
 				</Table.Row>
 			</CustomTable>

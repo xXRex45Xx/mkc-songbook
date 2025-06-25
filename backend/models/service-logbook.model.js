@@ -14,9 +14,11 @@ import { Schema, model } from "mongoose";
  * @property {string[]} songList - Array of song IDs used in the service
  */
 const logBookSchema = Schema({
-    churchName: { type: String, required: true },
-    serviceDate: { type: Date, required: true },
-    songList: [{ type: String, required: true, ref: "Song" }],
+	churchName: { type: String, required: true },
+	serviceDate: { type: Date, required: true },
+	songList: [{ type: String, required: true, ref: "Song" }],
+	updatedAt: { type: Date, default: Date.now },
+	cancelled: { type: Boolean, default: false },
 });
 
 const LogBookModel = model("LogBook", logBookSchema);
