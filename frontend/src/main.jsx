@@ -141,7 +141,11 @@ const router = createBrowserRouter([
 			},
 			{
 				path: "schedule",
-				element: <SchedulePage />,
+				element: (
+					<ProtectedRoute roles={["member", "admin", "super-admin"]}>
+						<SchedulePage />
+					</ProtectedRoute>
+				),
 			},
 			{
 				path: "users",
