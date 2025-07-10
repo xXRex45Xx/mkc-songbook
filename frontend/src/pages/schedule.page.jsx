@@ -9,10 +9,21 @@ import scheduleIcon from "../assets/schedule.svg";
 import { useSelector } from "react-redux";
 import editIcon from "../assets/edit.svg";
 import deleteIcon from "../assets/delete.svg";
-import { Link } from "react-router-dom";
+import {
+	Await,
+	defer,
+	Link,
+	useLoaderData,
+	useSearchParams,
+} from "react-router-dom";
+import { getAllOrSearchLogBook } from "../utils/api/logbook-api.util";
+import { Suspense } from "react";
+import CustomTailSpin from "../components/custom-tail-spin.component";
 
 const SchedulePage = () => {
+	const loaderData = useLoaderData();
 	const user = useSelector((state) => state.user.currentUser);
+	const [searchParams, setSearchParams] = useSearchParams();
 
 	const tableHeaders =
 		user?.role == "member"
@@ -45,150 +56,104 @@ const SchedulePage = () => {
 				)
 			}
 		>
-			<p className="self-stretch font-normal text-lg text-neutrals-900">
-				View your choir presentation schedule here. It updates automatically
-				with the latest changes.
-			</p>
-			<CustomTable headers={tableHeaders}>
-				<Table.Row className="text-secondary">
-					<Table.Cell>
-						<span className="font-bold mr-5">16</span>
-						<span className="mr-5">Aug, Friday</span>8 - 10am
-					</Table.Cell>
-					<Table.Cell className="font-semibold">Hiwot Berhan Church</Table.Cell>
-					<Table.Cell />
-					{["admin", "super-admin"].includes(user?.role) ? (
-						<Table.Cell className="text-end flex justify-end gap-7">
-							<Link className="cursor-pointer">
-								<img src={editIcon} alt="edit" />
-							</Link>
-							<button className="cursor-pointer">
-								<img src={deleteIcon} alt="delete" />
-							</button>
-						</Table.Cell>
-					) : (
-						<></>
+			<Suspense fallback={<CustomTailSpin />}>
+				<Await resolve={loaderData.scheduleData}>
+					{({ logBook, totalPages }) => (
+						<>
+							<p className="self-stretch font-normal text-lg text-neutrals-900">
+								View your choir presentation schedule here. It updates
+								automatically with the latest changes.
+							</p>
+							<CustomTable
+								headers={tableHeaders}
+								pagination
+								totalPages={totalPages}
+								onPageChange={(p) => {
+									setSearchParams((prev) => {
+										prev.set("page", p);
+										return prev;
+									});
+								}}
+								currentPage={
+									searchParams.get("page")
+										? parseInt(searchParams.get("page"))
+										: 1
+								}
+							>
+								{logBook.map((log) => (
+									<Table.Row key={log._id}>
+										<Table.Cell>
+											<span className="font-bold mr-5">
+												{log.serviceDate.getDate()}
+											</span>
+											<span className="mr-5">
+												{log.serviceDate.toLocaleDateString("en-US", {
+													month: "short",
+												})}
+												,{" "}
+												{log.serviceDate.toLocaleDateString("en-US", {
+													weekday: "long",
+												})}
+											</span>
+											{log.serviceDate.toLocaleTimeString("en-US", {
+												hour: "numeric",
+											})}
+										</Table.Cell>
+										<Table.Cell
+											className={`font-semibold ${
+												log.cancelled ? "text-error-300 line-through" : ""
+											}`}
+										>
+											{log.churchName}
+										</Table.Cell>
+										<Table.Cell>
+											{log.cancelled ? (
+												<div className="flex gap-1.5 items-center text-red-600">
+													<img src={red} />
+													Cancelled
+												</div>
+											) : log.recentlyAdded ? (
+												<div className="flex gap-1.5 items-center text-green-400">
+													<img src={green} />
+													Recently Added
+												</div>
+											) : log.recentlyUpdated ? (
+												<div className="flex gap-1.5 items-center text-orange-300">
+													<img src={orange} alt="" />
+													Recently Changed
+												</div>
+											) : (
+												<></>
+											)}
+										</Table.Cell>
+										{["admin", "super-admin"].includes(user?.role) ? (
+											<Table.Cell className="text-end flex justify-end gap-7">
+												<Link className="cursor-pointer">
+													<img src={editIcon} alt="edit" />
+												</Link>
+												<button className="cursor-pointer">
+													<img src={deleteIcon} alt="delete" />
+												</button>
+											</Table.Cell>
+										) : (
+											<></>
+										)}
+									</Table.Row>
+								))}
+							</CustomTable>
+						</>
 					)}
-				</Table.Row>
-				<Table.Row>
-					<Table.Cell>
-						<span className="font-bold mr-5">16</span>
-						<span className="mr-5"> Aug, Friday</span>8 - 10am
-					</Table.Cell>
-					<Table.Cell>Hiwot Berhan Church</Table.Cell>
-					<Table.Cell />
-					{["admin", "super-admin"].includes(user?.role) ? (
-						<Table.Cell className="text-end flex justify-end gap-7">
-							<Link className="cursor-pointer">
-								<img src={editIcon} alt="edit" />
-							</Link>
-							<button className="cursor-pointer">
-								<img src={deleteIcon} alt="delete" />
-							</button>
-						</Table.Cell>
-					) : (
-						<></>
-					)}
-				</Table.Row>
-				<Table.Row>
-					<Table.Cell>
-						<span className="font-bold mr-5">16</span>
-						<span className="mr-5"> Aug, Friday</span>8 - 10am
-					</Table.Cell>
-					<Table.Cell className="font-semibold">Hiwot Berhan Church</Table.Cell>
-					<Table.Cell className="text-green-400">
-						<div className="flex gap-1.5 items-center">
-							<img src={green} />
-							Recently Added
-						</div>
-					</Table.Cell>
-					{["admin", "super-admin"].includes(user?.role) ? (
-						<Table.Cell className="text-end flex justify-end gap-7">
-							<Link className="cursor-pointer">
-								<img src={editIcon} alt="edit" />
-							</Link>
-							<button className="cursor-pointer">
-								<img src={deleteIcon} alt="delete" />
-							</button>
-						</Table.Cell>
-					) : (
-						<></>
-					)}
-				</Table.Row>
-				<Table.Row>
-					<Table.Cell>
-						<span className="font-bold mr-5">16</span>
-						<span className="mr-5"> Aug, Friday</span>8 - 10am
-					</Table.Cell>
-					<Table.Cell className="font-semibold">Hiwot Berhan Church</Table.Cell>
-					<Table.Cell className="text-orange-300">
-						<div className="flex gap-1.5 items-center">
-							<img src={orange} alt="" />
-							Recently Changed
-						</div>
-					</Table.Cell>
-					{["admin", "super-admin"].includes(user?.role) ? (
-						<Table.Cell className="text-end flex justify-end gap-7">
-							<Link className="cursor-pointer">
-								<img src={editIcon} alt="edit" />
-							</Link>
-							<button className="cursor-pointer">
-								<img src={deleteIcon} alt="delete" />
-							</button>
-						</Table.Cell>
-					) : (
-						<></>
-					)}
-				</Table.Row>
-				<Table.Row>
-					<Table.Cell>
-						<span className="font-bold mr-5">16</span>
-						<span className="mr-5"> Aug, Friday</span>8 - 10am
-					</Table.Cell>
-					<Table.Cell className="font-semibold text-error-300 line-through">
-						Hiwot Berhan Church
-					</Table.Cell>
-					<Table.Cell className="text-red-600">
-						<div className="flex gap-1.5 items-center">
-							<img src={red} />
-							Cancelled
-						</div>
-					</Table.Cell>
-					{["admin", "super-admin"].includes(user?.role) ? (
-						<Table.Cell className="text-end flex justify-end gap-7">
-							<Link className="cursor-pointer">
-								<img src={editIcon} alt="edit" />
-							</Link>
-							<button className="cursor-pointer">
-								<img src={deleteIcon} alt="delete" />
-							</button>
-						</Table.Cell>
-					) : (
-						<></>
-					)}
-				</Table.Row>
-				<Table.Row>
-					<Table.Cell>
-						<span className="font-bold mr-5">16</span>
-						<span className="mr-5"> Aug, Friday</span>8 - 10am
-					</Table.Cell>
-					<Table.Cell className="font-semibold">Hiwot Berhan Church</Table.Cell>
-					<Table.Cell />
-					{["admin", "super-admin"].includes(user?.role) ? (
-						<Table.Cell className="text-end flex justify-end gap-7">
-							<Link className="cursor-pointer">
-								<img src={editIcon} alt="edit" />
-							</Link>
-							<button className="cursor-pointer">
-								<img src={deleteIcon} alt="delete" />
-							</button>
-						</Table.Cell>
-					) : (
-						<></>
-					)}
-				</Table.Row>
-			</CustomTable>
+				</Await>
+			</Suspense>
 		</MainBodyContainer>
 	);
 };
 export default SchedulePage;
+
+export const loader = ({ request }) => {
+	const searchParams = new URL(request.url).searchParams;
+	const page = searchParams.get("page");
+	return defer({
+		scheduleData: getAllOrSearchLogBook(page ? page : 1),
+	});
+};

@@ -56,7 +56,9 @@ import EditAlbumPage, {
 import UsersPage, { loader as usersLoader } from "./pages/users.page.jsx";
 import AlbumsPage, { loader as albumsLoader } from "./pages/albums.page.jsx";
 import AlbumPage, { loader as albumLoader } from "./pages/album.page.jsx";
-import SchedulePage from "./pages/schedule.page.jsx";
+import SchedulePage, {
+	loader as logbookLoader,
+} from "./pages/schedule.page.jsx";
 /**
  * Router configuration
  * Defines all application routes and their corresponding components
@@ -146,6 +148,7 @@ const router = createBrowserRouter([
 						<SchedulePage />
 					</ProtectedRoute>
 				),
+				loader: logbookLoader,
 			},
 			{
 				path: "users",
