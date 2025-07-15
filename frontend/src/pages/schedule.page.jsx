@@ -14,6 +14,7 @@ import {
 	defer,
 	Link,
 	useLoaderData,
+	useNavigate,
 	useSearchParams,
 } from "react-router-dom";
 import { getAllOrSearchLogBook } from "../utils/api/logbook-api.util";
@@ -21,6 +22,7 @@ import { Suspense } from "react";
 import CustomTailSpin from "../components/custom-tail-spin.component";
 
 const SchedulePage = () => {
+	const navigate = useNavigate();
 	const loaderData = useLoaderData();
 	const user = useSelector((state) => state.user.currentUser);
 	const [searchParams, setSearchParams] = useSearchParams();
@@ -47,6 +49,7 @@ const SchedulePage = () => {
 						className="text-nowrap focus:ring-0 h-full"
 						theme={uploadButtonTheme}
 						size="xs"
+						onClick={() => navigate("/schedule/new")}
 					>
 						New Schedule
 						<img src={scheduleIcon} alt="" />

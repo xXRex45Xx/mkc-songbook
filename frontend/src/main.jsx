@@ -59,6 +59,7 @@ import AlbumPage, { loader as albumLoader } from "./pages/album.page.jsx";
 import SchedulePage, {
 	loader as logbookLoader,
 } from "./pages/schedule.page.jsx";
+import NewSchedule from "./pages/new-schedule.page.jsx";
 /**
  * Router configuration
  * Defines all application routes and their corresponding components
@@ -149,6 +150,14 @@ const router = createBrowserRouter([
 					</ProtectedRoute>
 				),
 				loader: logbookLoader,
+			},
+			{
+				path: "schedule/new",
+				element: (
+					<ProtectedRoute roles={["admin", "super-admin"]}>
+						<NewSchedule />
+					</ProtectedRoute>
+				),
 			},
 			{
 				path: "users",

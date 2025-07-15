@@ -22,6 +22,7 @@ export default {
 			},
 			secondary: {
 				DEFAULT: "#C9184A",
+				400: "#EE6E92",
 				600: "#e5255b",
 				700: "#ab143f",
 				900: "#700d29",
