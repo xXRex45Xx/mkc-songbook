@@ -9,20 +9,20 @@
  * @type {Object}
  */
 export const selectTheme = {
-    field: {
-        select: {
-            base: "border-none focus:ring-0 bg-basewhite",
-            colors: {
-                gray: "text-baseblack bg-neutrals-100 focus:outline-none",
-            },
-            withAddon: {
-                off: "rounded-l-lg",
-            },
-            sizes: {
-                md: "py-2.5 px-5",
-            },
-        },
-    },
+	field: {
+		select: {
+			base: "border-none focus:ring-0 bg-basewhite",
+			colors: {
+				gray: "text-baseblack bg-neutrals-100 focus:outline-none",
+			},
+			withAddon: {
+				off: "rounded-l-lg",
+			},
+			sizes: {
+				md: "py-2.5 px-5",
+			},
+		},
+	},
 };
 
 /**
@@ -31,21 +31,21 @@ export const selectTheme = {
  * @type {Object}
  */
 export const searchInputTheme = {
-    base: "flex flex-1",
-    field: {
-        input: {
-            base: "block border-x-0 min-h-full [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
-            colors: {
-                gray: "border-y-neutrals-200 text-baseblack",
-            },
-            withAddon: {
-                off: "rounded-none",
-            },
-            sizes: {
-                md: "py-2.5 text-sm w-64 min-w-28",
-            },
-        },
-    },
+	base: "flex flex-1",
+	field: {
+		input: {
+			base: "block border-x-0 min-h-full [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
+			colors: {
+				gray: "border-y-neutrals-200 text-baseblack",
+			},
+			withAddon: {
+				off: "rounded-none",
+			},
+			sizes: {
+				md: "py-2.5 text-sm w-64 min-w-28",
+			},
+		},
+	},
 };
 
 /**
@@ -54,15 +54,15 @@ export const searchInputTheme = {
  * @type {Object}
  */
 export const rangeSliderTheme = {
-    root: {
-        base: "flex",
-    },
-    field: {
-        base: "relative w-full",
-        input: {
-            base: "-translate-y-1/2 absolute z-10 [&::-moz-range-progress]:h-0 w-full cursor-pointer appearance-none rounded-lg bg-transparent",
-        },
-    },
+	root: {
+		base: "flex",
+	},
+	field: {
+		base: "relative w-full",
+		input: {
+			base: "-translate-y-1/2 absolute z-10 [&::-moz-range-progress]:h-0 w-full cursor-pointer appearance-none rounded-lg bg-transparent",
+		},
+	},
 };
 
 /**
@@ -71,12 +71,12 @@ export const rangeSliderTheme = {
  * @type {Object}
  */
 export const numberInputTheme = {
-    field: {
-        base: "relative",
-        input: {
-            base: "inline text-center w-11 text-base font-bold border disabled:cursor-not-allowed disabled:opacity-50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
-        },
-    },
+	field: {
+		base: "relative",
+		input: {
+			base: "inline text-center w-11 text-base font-bold border disabled:cursor-not-allowed disabled:opacity-50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
+		},
+	},
 };
 
 /**
@@ -85,9 +85,9 @@ export const numberInputTheme = {
  * @type {Object}
  */
 export const passwordInputTheme = {
-    field: {
-        rightIcon: {
-            base: "absolute inset-y-0 right-0 flex items-center pr-3",
-        },
-    },
+	field: {
+		rightIcon: {
+			base: "absolute inset-y-0 right-0 flex items-center pr-3",
+		},
+	},
 };
