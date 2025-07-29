@@ -48,7 +48,11 @@ const LyricViewer = ({ song }) => {
 
 	useEffect(() => {
 		dispatch(setHiddenHeader(true));
-		return () => dispatch(setHiddenHeader(false));
+		document.documentElement.requestFullscreen();
+		return () => {
+			dispatch(setHiddenHeader(false));
+			document.exitFullscreen();
+		};
 	}, []);
 
 	/**
@@ -66,6 +70,13 @@ const LyricViewer = ({ song }) => {
 			return new RegExp(regexBuilder(`(${searchParams.get("q")})`), "gi");
 		return null;
 	}, [searchParams]);
+
+	const handleToggleFullscreen = () => {
+		dispatch(toggleHiddenHeader());
+		if (!document.fullscreenElement)
+			document.documentElement.requestFullscreen();
+		else document.exitFullscreen();
+	};
 
 	return (
 		<>
@@ -141,7 +152,7 @@ const LyricViewer = ({ song }) => {
 							className="focus:ring-0"
 							theme={buttonTheme}
 							size="xxs"
-							onClick={() => dispatch(toggleHiddenHeader())}
+							onClick={handleToggleFullscreen}
 						>
 							{hiddenHeader ? (
 								<ExitFullscreenSvg className="fill-baseblack hover:fill-neutrals-1000 active:fill-baseblack" />
