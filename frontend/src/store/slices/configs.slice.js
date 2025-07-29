@@ -36,7 +36,9 @@ export const configsSlice = createSlice({
 		setHiddenHeader: (state, action) => {
 			state.hiddenHeader = action.payload;
 		},
-		toggleHiddenHeader: (state) => {
+		toggleFullscreen: (state) => {
+			if (state.hiddenHeader) document.exitFullscreen();
+			else document.documentElement.requestFullscreen();
 			state.hiddenHeader = !state.hiddenHeader;
 		},
 	},
@@ -46,6 +48,6 @@ export const {
 	setLyricsFontSize,
 	setWindowInnerWidth,
 	setHiddenHeader,
-	toggleHiddenHeader,
+	toggleFullscreen,
 } = configsSlice.actions;
 export default configsSlice.reducer;

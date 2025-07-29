@@ -11,7 +11,7 @@ import { regexBuilder } from "../utils/amharic-map.util";
 import {
 	setHiddenHeader,
 	setLyricsFontSize,
-	toggleHiddenHeader,
+	toggleFullscreen,
 } from "../store/slices/configs.slice";
 
 import CustomSlider from "./custom-slider.component";
@@ -72,10 +72,7 @@ const LyricViewer = ({ song }) => {
 	}, [searchParams]);
 
 	const handleToggleFullscreen = () => {
-		dispatch(toggleHiddenHeader());
-		if (!document.fullscreenElement)
-			document.documentElement.requestFullscreen();
-		else document.exitFullscreen();
+		dispatch(toggleFullscreen());
 	};
 
 	return (
