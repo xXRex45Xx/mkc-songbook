@@ -10,6 +10,7 @@ import songRouter from "./song.route.js";
 import userRouter from "./user.route.js";
 import albumRouter from "./album.route.js";
 import logBookRouter from "./service-logbook.route.js";
+import playlistRouter from "./playlist.route.js";
 
 /**
  * Express router instance for all API routes.
@@ -25,5 +26,6 @@ apiRouter.use("/song", songRouter);
 apiRouter.use("/user", userRouter);
 apiRouter.use("/album", albumRouter);
 apiRouter.use("/logbook", logBookRouter);
+apiRouter.use("/playlist", playlistRouter);
 
 export default apiRouter;
