@@ -25,13 +25,13 @@ config();
  * @returns {Object} Configured nodemailer transport
  */
 const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: process.env.SMTP_PORT,
-    secure: false, // true for 465, false for other ports like 587
-    auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-    },
+	host: process.env.SMTP_HOST,
+	port: process.env.SMTP_PORT,
+	secure: true, // true for 465, false for other ports like 587
+	auth: {
+		user: process.env.SMTP_USER,
+		pass: process.env.SMTP_PASS,
+	},
 });
 
 /**
@@ -43,12 +43,12 @@ const transporter = nodemailer.createTransport({
  * @returns {Promise<void>} Resolves when email is sent
  */
 const sendEmail = async (email, title, body) => {
-    await transporter.sendMail({
-        from: process.env.SMTP_USER,
-        to: email,
-        subject: title,
-        text: body,
-    });
+	await transporter.sendMail({
+		from: process.env.SMTP_USER,
+		to: email,
+		subject: title,
+		text: body,
+	});
 };
 
 export default sendEmail;

@@ -20,7 +20,9 @@ import initDb from "./init-db/init-db.js";
 import path from "path";
 import { wrapAsync } from "./utils/error.util.js";
 
-if (config().error) throw config().error;
+const configError = config().error;
+
+if (configError) throw configError;
 
 const app = express();
 

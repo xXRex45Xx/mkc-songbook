@@ -15,7 +15,7 @@ import passport from "passport";
  */
 const roleBasedAuthorization = (roles) => {
 	return async (req, _res, next) => {
-		if (!req.isAuthenticated())
+		if (!req.user)
 			throw new UnauthorizedError(
 				"You must be logged in to access this resource."
 			);

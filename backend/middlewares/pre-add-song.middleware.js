@@ -15,13 +15,11 @@ import { ClientFaultError } from "../utils/error.util.js";
  * @throws {ClientFaultError} If a song with the provided ID already exists
  */
 export const checkSongNumberExists = async (req, _res, next) => {
-    const { id } = req.body;
-    const song = await SongModel.findById(id);
-    if (song)
-        throw new ClientFaultError(
-            "A song exists with the provided song number"
-        );
-    next();
+	const { id } = req.body;
+	const song = await SongModel.findById(id);
+	if (song)
+		throw new ClientFaultError("A song exists with the provided song number");
+	next();
 };
 
 /**
@@ -34,25 +32,25 @@ export const checkSongNumberExists = async (req, _res, next) => {
  * @throws {ClientFaultError} If any of the provided album IDs don't exist
  */
 export const checkAlbumExists = async (req, _res, next) => {
-    const { albums: albumIds } = req.body;
-    if (!albumIds) return next();
-    const albumIdsList = albumIds.split(",");
+	const { albums: albumIds } = req.body;
+	if (!albumIds) return next();
+	const albumIdsList = albumIds.split(",");
 
-    const existingAlbums = await AlbumModel.find({
-        _id: { $in: albumIdsList },
-    });
+	const existingAlbums = await AlbumModel.find({
+		_id: { $in: albumIdsList },
+	});
 
-    const foundAlbums = new Map(
-        existingAlbums.map((album) => [album._id, album])
-    );
+	const foundAlbums = new Map(
+		existingAlbums.map((album) => [album._id, album])
+	);
 
-    const missingAlbumIds = albumIdsList.filter((id) => !foundAlbums.has(id));
+	const missingAlbumIds = albumIdsList.filter((id) => !foundAlbums.has(id));
 
-    if (missingAlbumIds > 0)
-        throw new ClientFaultError(
-            `The following albums don't exist: ${missingAlbumIds.join(", ")}`
-        );
+	if (missingAlbumIds.length > 0)
+		throw new ClientFaultError(
+			`The following albums don't exist: ${missingAlbumIds.join(", ")}`
+		);
 
-    req.body.albums = albumIdsList.map((id) => foundAlbums.get(id));
-    next();
+	req.body.albums = albumIdsList.map((id) => foundAlbums.get(id));
+	next();
 };
