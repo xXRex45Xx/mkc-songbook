@@ -122,6 +122,7 @@ songRouter
 		passport.authenticate("jwt", { session: false }),
 		wrapAsync(roleBasedAuthorization(["admin", "super-admin"])),
 		audioUpload.single("audio-file"),
+		wrapAsync(validateGetSong),
 		wrapAsync(validateCreateSong),
 		wrapAsync(checkSongNumberConflict),
 		wrapAsync(checkAlbumExists),

@@ -4,6 +4,7 @@
  */
 
 import { ForbiddenError, UnauthorizedError } from "../utils/error.util.js";
+import passport from "passport";
 
 /**
  * Creates a middleware function that checks if the authenticated user has one of the required roles.
@@ -13,18 +14,25 @@ import { ForbiddenError, UnauthorizedError } from "../utils/error.util.js";
  * @throws {ForbiddenError} If user's role is not in the allowed roles list
  */
 const roleBasedAuthorization = (roles) => {
-    return async (req, _res, next) => {
-        if (!req.isAuthenticated())
-            throw new UnauthorizedError(
-                "You must be logged in to access this resource."
-            );
-        if (!roles.includes(req.user.role)) {
-            throw new ForbiddenError(
-                "You are not authorized to access this resource."
-            );
-        }
-        next();
-    };
+	return async (req, _res, next) => {
+		if (!req.isAuthenticated())
+			throw new UnauthorizedError(
+				"You must be logged in to access this resource."
+			);
+		if (!roles.includes(req.user.role)) {
+			throw new ForbiddenError(
+				"You are not authorized to access this resource."
+			);
+		}
+		next();
+	};
+};
+
+export const optionalAuth = async (req, _res, next) => {
+	passport.authenticate("jwt", { session: false }, (_err, user) => {
+		if (user) req.user = user;
+		next();
+	})(req, _res, next);
 };
 
 export default roleBasedAuthorization;
