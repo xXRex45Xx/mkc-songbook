@@ -10,7 +10,7 @@ import SongsTable from "./songs-table.component";
 
 const AlbumViewer = ({ album }) => {
 	const navigate = useNavigate();
-	console.log(album);
+
 	return (
 		<div className="flex flex-col gap-5 w-full">
 			<div className="flex gap-3.5">

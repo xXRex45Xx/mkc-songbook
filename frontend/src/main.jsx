@@ -60,6 +60,9 @@ import SchedulePage, {
 	loader as logbookLoader,
 } from "./pages/schedule.page.jsx";
 import NewSchedule from "./pages/new-schedule.page.jsx";
+import PlaylistsPage, {
+	loader as playlistsLoader,
+} from "./pages/playlists.page.jsx";
 /**
  * Router configuration
  * Defines all application routes and their corresponding components
@@ -138,9 +141,8 @@ const router = createBrowserRouter([
 			},
 			{
 				path: "playlists",
-				element: (
-					<MainBodyContainer title={"Under Construction"}></MainBodyContainer>
-				),
+				loader: playlistsLoader,
+				element: <PlaylistsPage />,
 			},
 			{
 				path: "schedule",
@@ -171,7 +173,9 @@ const router = createBrowserRouter([
 			{
 				path: "announcements",
 				element: (
-					<MainBodyContainer title={"Under Construction"}></MainBodyContainer>
+					<MainBodyContainer
+						title={"Under Construction"}
+					></MainBodyContainer>
 				),
 			},
 		],
@@ -185,7 +189,9 @@ const router = createBrowserRouter([
 			{
 				index: true,
 				element: (
-					<GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+					<GoogleOAuthProvider
+						clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}
+					>
 						<LoginForm />
 					</GoogleOAuthProvider>
 				),
@@ -194,7 +200,9 @@ const router = createBrowserRouter([
 			{
 				path: "signup",
 				element: (
-					<GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+					<GoogleOAuthProvider
+						clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}
+					>
 						<SignUpForm />
 					</GoogleOAuthProvider>
 				),

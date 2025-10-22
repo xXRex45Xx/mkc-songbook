@@ -33,7 +33,14 @@ export const getAllOrSearchPlaylists = async (req, res) => {
 	const totalDocuments = await PlaylistModel.find(selection).countDocuments();
 	const totalPages = Math.floor(totalDocuments / 30) + 1;
 
-	res.status(200).json({ playlists, totalPages });
+	res.status(200).json({
+		playlists: playlists.map((playlist) => ({
+			...playlist._doc,
+			numOfSongs: playlist.songs.length,
+			songs: undefined,
+		})),
+		totalPages,
+	});
 };
 
 export const createPlaylist = async (req, res) => {

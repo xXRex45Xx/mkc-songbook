@@ -37,7 +37,7 @@ const AlbumCard = ({ number, title, year, numOfSongs, imgSrc }) => {
 					alt="Album cover"
 					className="w-40 h-auto self-center"
 				/>
-				<h3 className="text-base-black text-[16px] font-inter font-semibold leading-[120%]">
+				<h3 className="text-baseblack text-[16px] font-inter font-semibold leading-[120%]">
 					{title}
 				</h3>
 				<p className="text-neutrals-800 text-[12px] font-inter leading-[120%]">
