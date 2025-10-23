@@ -11,7 +11,7 @@ export const getAllOrSearchPlaylists = async (req, res) => {
 			? {
 					$or: [
 						{ visibility: "public" },
-						{ visibility: "private", creater: req.user._id },
+						{ visibility: "private", creator: req.user._id },
 					],
 			  }
 			: { visibility: "public" };

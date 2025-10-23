@@ -8,7 +8,7 @@ export const getAllPlaylistsQuerySchema = Joi.object({
 export const createPlaylistBodySchema = Joi.object({
 	name: Joi.string().min(2).max(100).required(),
 	visibility: Joi.string().valid("private", "members", "public").optional(),
-	songs: Joi.array().items(Joi.string().min(1)).min(1).required(),
+	songs: Joi.array().items(Joi.string().min(1)).required(),
 }).required();
 
 export const updatePlaylistBodySchema = Joi.object({

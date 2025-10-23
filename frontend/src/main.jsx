@@ -63,6 +63,9 @@ import NewSchedule from "./pages/new-schedule.page.jsx";
 import PlaylistsPage, {
 	loader as playlistsLoader,
 } from "./pages/playlists.page.jsx";
+import NewPlaylistPage, {
+	action as newPlaylistAction,
+} from "./pages/new-playlist.page.jsx";
 /**
  * Router configuration
  * Defines all application routes and their corresponding components
@@ -143,6 +146,17 @@ const router = createBrowserRouter([
 				path: "playlists",
 				loader: playlistsLoader,
 				element: <PlaylistsPage />,
+			},
+			{
+				path: "playlists/new",
+				element: (
+					<ProtectedRoute
+						roles={["public", "member", "admin", "super-admin"]}
+					>
+						<NewPlaylistPage />
+					</ProtectedRoute>
+				),
+				action: newPlaylistAction,
 			},
 			{
 				path: "schedule",
