@@ -42,10 +42,7 @@ const PlaylistViewer = ({ playlist }) => {
 	};
 	return (
 		<div className="flex flex-col gap-5 w-full">
-			<SongCollectionTools
-				shareTitle={`${playlist.name} playlist by ${playlist.creator.name}`}
-				handleShare={handleShare}
-			/>
+			<SongCollectionTools handleShare={handleShare} />
 			<HorizontalPlaylistCard
 				name={playlist.name}
 				creator={playlist.creator.name}
