@@ -66,6 +66,9 @@ import PlaylistsPage, {
 import NewPlaylistPage, {
 	action as newPlaylistAction,
 } from "./pages/new-playlist.page.jsx";
+import PlaylistPage, {
+	loader as playlistLoader,
+} from "./pages/playlist.page.jsx";
 /**
  * Router configuration
  * Defines all application routes and their corresponding components
@@ -157,6 +160,11 @@ const router = createBrowserRouter([
 					</ProtectedRoute>
 				),
 				action: newPlaylistAction,
+			},
+			{
+				path: "playlists/:playlistId",
+				loader: playlistLoader,
+				element: <PlaylistPage />,
 			},
 			{
 				path: "schedule",

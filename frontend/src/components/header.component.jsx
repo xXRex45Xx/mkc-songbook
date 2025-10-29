@@ -95,7 +95,9 @@ const Header = () => {
 					>
 						<SearchToggleSvg
 							className={
-								showSearch ? "*:stroke-secondary-600" : "*:stroke-baseblack"
+								showSearch
+									? "*:stroke-secondary-600"
+									: "*:stroke-baseblack"
 							}
 						/>
 					</Button>
@@ -137,12 +139,17 @@ const Header = () => {
 									My Favorites
 								</Dropdown.Item>
 								<Dropdown.Divider />
-								<Dropdown.Item onClick={handleLogout}>Log Out</Dropdown.Item>
+								<Dropdown.Item onClick={handleLogout}>
+									Log Out
+								</Dropdown.Item>
 							</>
 						) : (
 							<>
 								<Dropdown.Item>
-									<Link to="/auth/signup" className="w-full text-start">
+									<Link
+										to="/auth/signup"
+										className="w-full text-start"
+									>
 										Create Account
 									</Link>
 								</Dropdown.Item>
@@ -158,11 +165,11 @@ const Header = () => {
 			</Navbar>
 			<Navbar fluid border theme={navbarTheme}>
 				<Navbar.Collapse>
-					{!["admin", "super-admin"].includes(user?.role) && (
+					{/* {!["admin", "super-admin"].includes(user?.role) && (
 						<Navbar.Link as={Link} to="/" active={pathname === "/"}>
 							Home
 						</Navbar.Link>
-					)}
+					)} */}
 					<Navbar.Link
 						as={Link}
 						to="/songs"
@@ -177,15 +184,13 @@ const Header = () => {
 					>
 						Albums
 					</Navbar.Link>
-					{!["admin", "super-admin"].includes(user?.role) && (
-						<Navbar.Link
-							as={Link}
-							to="/playlists"
-							active={pathname.startsWith("/playlists")}
-						>
-							Playlists
-						</Navbar.Link>
-					)}
+					<Navbar.Link
+						as={Link}
+						to="/playlists"
+						active={pathname.startsWith("/playlists")}
+					>
+						Playlists
+					</Navbar.Link>
 					{role !== "public" && (
 						<Navbar.Link
 							as={Link}

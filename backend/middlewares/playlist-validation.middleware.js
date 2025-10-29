@@ -3,6 +3,7 @@ import {
 	createPlaylistBodySchema,
 	updatePlaylistBodySchema,
 	getPlaylistParamsSchema,
+	updatePlaylistVisibilityBodySchema,
 } from "../models/validation-schemas/playlist.validation-schema.js";
 import validateSchema from "../utils/validator.util.js";
 
@@ -14,6 +15,11 @@ export const validateCreatePlaylist = async (req, res, next) => {
 
 export const validateUpdatePlaylist = async (req, res, next) => {
 	await validateSchema(req.body, updatePlaylistBodySchema);
+	next();
+};
+
+export const validateUpdatePlaylistVisibility = async (req, _res, next) => {
+	await validateSchema(req.body, updatePlaylistVisibilityBodySchema);
 	next();
 };
 

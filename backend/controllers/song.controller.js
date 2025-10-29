@@ -30,85 +30,85 @@ import fs from "fs";
  * @returns {Promise<void>} Sends JSON response with songs and total pages
  */
 export const getAllOrSearchSongs = async (req, res) => {
-    const { q, page = 1, all, type, sortBy } = req.query;
-    let songs, totalPages;
-    if (all) songs = await SongModel.find();
-    else if (!q) {
-        songs = await SongModel.find({}, { title: true })
-            .sort(sortBy)
-            .collation({ locale: "en_US", numericOrdering: sortBy === "_id" })
-            .populate("albums", "name")
-            .skip((page - 1) * 100)
-            .limit(100);
-        const totalDocuments = await SongModel.find({}).countDocuments();
-        totalPages = Math.floor(totalDocuments / 100) + 1;
-    } else {
-        const regex = new RegExp(regexBuilder(q), "i");
-        let query = {};
+	const { q, page = 1, all, type, sortBy } = req.query;
+	let songs, totalPages;
+	if (all) songs = await SongModel.find();
+	else if (!q) {
+		songs = await SongModel.find({}, { title: true })
+			.sort(sortBy)
+			.collation({ locale: "en_US", numericOrdering: sortBy === "_id" })
+			.populate("albums", "name")
+			.skip((page - 1) * 100)
+			.limit(100);
+		const totalDocuments = await SongModel.find({}).countDocuments();
+		totalPages = Math.floor(totalDocuments / 100) + 1;
+	} else {
+		const regex = new RegExp(regexBuilder(q), "i");
+		let query = {};
 
-        if (type === "title") query = { title: { $regex: regex } };
-        else if (type === "lyrics") query = { lyrics: { $regex: regex } };
-        else if (type === "id") query = { _id: q };
-        else {
-            const queryPromises = [
-                SongModel.find({ title: regex }, { title: true })
-                    .sort(sortBy)
-                    .collation({
-                        locale: "en_US",
-                        numericOrdering: sortBy === "_id",
-                    })
-                    .populate("albums", "name")
-                    .skip((page - 1) * 100)
-                    .limit(100),
-                SongModel.find({ title: regex }).countDocuments(),
-                SongModel.find({ lyrics: regex }, { title: true })
-                    .sort(sortBy)
-                    .collation({
-                        locale: "en_US",
-                        numericOrdering: sortBy === "_id",
-                    })
-                    .populate("albums", "name")
-                    .skip((page - 1) * 100)
-                    .limit(100),
-                SongModel.find({ lyrics: regex }).countDocuments(),
-            ];
-            const [
-                titleMatch,
-                titleTotalDocuments,
-                lyricsMatch,
-                lyricsTotalDocuments,
-            ] = await Promise.all(queryPromises);
-            totalPages =
-                Math.floor(
-                    titleTotalDocuments > lyricsTotalDocuments
-                        ? titleTotalDocuments / 100
-                        : lyricsTotalDocuments / 100
-                ) + 1;
-            songs = {
-                titleMatch,
-                lyricsMatch,
-            };
+		if (type === "title") query = { title: { $regex: regex } };
+		else if (type === "lyrics") query = { lyrics: { $regex: regex } };
+		else if (type === "id") query = { _id: q };
+		else {
+			const queryPromises = [
+				SongModel.find({ title: regex }, { title: true })
+					.sort(sortBy)
+					.collation({
+						locale: "en_US",
+						numericOrdering: sortBy === "_id",
+					})
+					.populate("albums", "name")
+					.skip((page - 1) * 100)
+					.limit(100),
+				SongModel.find({ title: regex }).countDocuments(),
+				SongModel.find({ lyrics: regex }, { title: true })
+					.sort(sortBy)
+					.collation({
+						locale: "en_US",
+						numericOrdering: sortBy === "_id",
+					})
+					.populate("albums", "name")
+					.skip((page - 1) * 100)
+					.limit(100),
+				SongModel.find({ lyrics: regex }).countDocuments(),
+			];
+			const [
+				titleMatch,
+				titleTotalDocuments,
+				lyricsMatch,
+				lyricsTotalDocuments,
+			] = await Promise.all(queryPromises);
+			totalPages =
+				Math.floor(
+					titleTotalDocuments > lyricsTotalDocuments
+						? titleTotalDocuments / 100
+						: lyricsTotalDocuments / 100
+				) + 1;
+			songs = {
+				titleMatch,
+				lyricsMatch,
+			};
 
-            return res.status(200).json({ songs, totalPages });
-        }
+			return res.status(200).json({ songs, totalPages });
+		}
 
-        const queryPromises = [
-            SongModel.find(query, { title: true })
-                .sort(sortBy)
-                .collation({
-                    locale: "en_US",
-                    numericOrdering: sortBy === "_id",
-                })
-                .populate("albums", "name")
-                .skip((page - 1) * 100)
-                .limit(100),
-            SongModel.find(query).countDocuments(),
-        ];
-        const [songsFromDb, totalDocuments] = await Promise.all(queryPromises);
-        totalPages = Math.floor(totalDocuments / 100) + 1;
-        songs = songsFromDb;
-    }
-    res.status(200).json({ songs, totalPages });
+		const queryPromises = [
+			SongModel.find(query, { title: true })
+				.sort(sortBy)
+				.collation({
+					locale: "en_US",
+					numericOrdering: sortBy === "_id",
+				})
+				.populate("albums", "name")
+				.skip((page - 1) * 100)
+				.limit(100),
+			SongModel.find(query).countDocuments(),
+		];
+		const [songsFromDb, totalDocuments] = await Promise.all(queryPromises);
+		totalPages = Math.floor(totalDocuments / 100) + 1;
+		songs = songsFromDb;
+	}
+	res.status(200).json({ songs, totalPages });
 };
 
 /**
@@ -127,28 +127,28 @@ export const getAllOrSearchSongs = async (req, res) => {
  * @returns {Promise<void>} Sends JSON response with inserted song ID
  */
 export const addSong = async (req, res) => {
-    const song = req.body;
-    const insertedSong = await SongModel.create({
-        _id: song.id,
-        title: song.title,
-        lyrics: song.lyrics,
-        musicElements: {
-            chord: song.chord,
-            tempo: song.tempo,
-            rythm: song.rythm,
-        },
-        songFilePath: req.file ? req.file.path : null,
-        youtubeLink: song["video-link"] ? song["video-link"] : null,
-        albums: song.albums ? song.albums : [],
-    });
+	const song = req.body;
+	const insertedSong = await SongModel.create({
+		_id: song.id,
+		title: song.title,
+		lyrics: song.lyrics,
+		musicElements: {
+			chord: song.chord,
+			tempo: song.tempo,
+			rythm: song.rythm,
+		},
+		songFilePath: req.file ? req.file.path : null,
+		youtubeLink: song["video-link"] ? song["video-link"] : null,
+		albums: song.albums ? song.albums : [],
+	});
 
-    if (song.albums) {
-        for (const album of song.albums) {
-            album.songs.push(insertedSong);
-            await album.save();
-        }
-    }
-    res.status(201).json({ insertedId: insertedSong._id });
+	if (song.albums) {
+		for (const album of song.albums) {
+			album.songs.push(insertedSong);
+			await album.save();
+		}
+	}
+	res.status(201).json({ insertedId: insertedSong._id });
 };
 
 /**
@@ -162,16 +162,16 @@ export const addSong = async (req, res) => {
  * @throws {NotFoundError} If song is not found
  */
 export const getSong = async (req, res) => {
-    const { id } = req.params;
-    const song = await SongModel.findById(id);
+	const { id } = req.params;
+	const song = await SongModel.findById(id);
 
-    if (!song) throw new NotFoundError("Song not found");
+	if (!song) throw new NotFoundError("Song not found");
 
-    res.status(200).json({
-        ...song._doc,
-        hasAudio: song.songFilePath ? true : false,
-        songFilePath: undefined,
-    });
+	res.status(200).json({
+		...song._doc,
+		hasAudio: song.songFilePath ? true : false,
+		songFilePath: undefined,
+	});
 };
 
 /**
@@ -186,55 +186,56 @@ export const getSong = async (req, res) => {
  * @returns {Promise<void>} Sends JSON response with update status
  */
 export const updateSong = async (req, res) => {
-    const { id } = req.params;
-    const song = req.body;
+	const { id } = req.params;
+	const song = req.body;
 
-    let songInDb = await SongModel.findById(id).populate("albums");
+	let songInDb = await SongModel.findById(id).populate("albums");
 
-    if (req.file) {
-        if (songInDb.songFilePath)
-            fs.unlink(
-                songInDb.songFilePath,
-                (err) => (req.error.fileDeleteError = err)
-            );
-        songInDb.songFilePath = req.file.path;
-    }
-    songInDb.youtubeLink = song["video-link"];
-    songInDb.title = song.title;
-    songInDb.lyrics = song.lyrics;
-    songInDb.musicElements = {
-        chord: song.chord,
-        tempo: song.tempo,
-        rythm: song.rythm,
-    };
+	if (req.file) {
+		if (songInDb.songFilePath)
+			if (fs.existsSync(songInDb.songFilePath))
+				fs.unlink(songInDb.songFilePath, (err) => {
+					if (!req.error) req.error = {};
+					req.error.fileDeleteError = err;
+				});
+		songInDb.songFilePath = req.file.path;
+	}
+	songInDb.youtubeLink = song["video-link"];
+	songInDb.title = song.title;
+	songInDb.lyrics = song.lyrics;
+	songInDb.musicElements = {
+		chord: song.chord,
+		tempo: song.tempo,
+		rythm: song.rythm,
+	};
 
-    if (song.albums) {
-        for (const album of songInDb.albums) {
-            album.songs = album.songs.filter((s) => s != id);
-            await album.save();
-        }
-        for (const album of song.albums) {
-            album.songs.push(song.id);
-            await album.save();
-        }
-        songInDb.albums = song.albums;
-    }
+	if (song.albums) {
+		for (const album of songInDb.albums) {
+			album.songs = album.songs.filter((s) => s != id);
+			await album.save();
+		}
+		for (const album of song.albums) {
+			album.songs.push(song.id);
+			await album.save();
+		}
+		songInDb.albums = song.albums;
+	}
 
-    if (song.id != id) {
-        await SongModel.findByIdAndDelete(songInDb._id);
+	if (song.id != id) {
+		await SongModel.findByIdAndDelete(songInDb._id);
 
-        await SongModel.create({
-            _id: song.id,
-            albums: song.albums,
-            createdAt: songInDb.createdAt,
-            lyrics: songInDb.lyrics,
-            mediaFiles: songInDb.mediaFiles,
-            musicElements: songInDb.musicElements,
-            title: songInDb.title,
-        });
-    } else await songInDb.save();
+		await SongModel.create({
+			_id: song.id,
+			albums: song.albums,
+			createdAt: songInDb.createdAt,
+			lyrics: songInDb.lyrics,
+			mediaFiles: songInDb.mediaFiles,
+			musicElements: songInDb.musicElements,
+			title: songInDb.title,
+		});
+	} else await songInDb.save();
 
-    res.status(200).json({ updated: true });
+	res.status(200).json({ updated: true });
 };
 
 /**
@@ -248,17 +249,17 @@ export const updateSong = async (req, res) => {
  * @throws {NotFoundError} If song is not found
  */
 export const deleteSong = async (req, res) => {
-    const { id } = req.params;
-    const song = await SongModel.findById(id);
-    if (!song) throw new NotFoundError("Song doesn't exist.");
-    for (const albumId of song.albums) {
-        const album = await AlbumModel.findById(albumId);
-        const songIdx = album.songs.indexOf(id);
-        album.songs.splice(songIdx, 1);
-        await album.save();
-    }
+	const { id } = req.params;
+	const song = await SongModel.findById(id);
+	if (!song) throw new NotFoundError("Song doesn't exist.");
+	for (const albumId of song.albums) {
+		const album = await AlbumModel.findById(albumId);
+		const songIdx = album.songs.indexOf(id);
+		album.songs.splice(songIdx, 1);
+		await album.save();
+	}
 
-    await SongModel.findByIdAndDelete(id);
+	await SongModel.findByIdAndDelete(id);
 
-    res.status(200).json({ deleted: true });
+	res.status(200).json({ deleted: true });
 };

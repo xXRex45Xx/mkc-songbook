@@ -58,3 +58,41 @@ export const addOrEditPlaylist = async (
 
 	return data;
 };
+
+export const editPlaylistVisibility = async (
+	visibility,
+	playlistId,
+	token = localStorage.getItem("_s")
+) => {
+	if (!visibility) throw { message: "Visibility is required.", status: 400 };
+
+	const response = await fetch(`${backendURL}/api/playlist/${playlistId}`, {
+		method: "PATCH",
+		body: JSON.stringify({ visibility }),
+		headers: {
+			Authorization: `Bearer ${token}`,
+			"Content-Type": "application/json",
+		},
+	});
+
+	const data = await response.json();
+	if (!response.ok) throw { message: data.message, status: response.status };
+	if (!data.updated) throw { message: "An unexpected error occurred." };
+};
+
+export const getPlaylist = async (id, token = localStorage.getItem("_s")) => {
+	if (id.length === 0)
+		throw new { message: "Playlist id is required.", status: 4000 }();
+	const response = await fetch(`${backendURL}/api/playlist/${id}`, {
+		headers: token
+			? {
+					Authorization: `Bearer ${token}`,
+			  }
+			: undefined,
+	});
+
+	const data = await response.json();
+	if (!response.ok) throw { message: data.message, status: response.status };
+
+	return data;
+};

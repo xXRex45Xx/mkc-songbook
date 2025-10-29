@@ -4,12 +4,11 @@ import { useSelector } from "react-redux";
 import { useEffect } from "react";
 
 const HomePage = () => {
-    const navigate = useNavigate();
-    const user = useSelector((state) => state.user.currentUser);
-    useEffect(() => {
-        if (["admin", "super-admin"].includes(user?.role)) navigate("/songs");
-    }, [user]);
-    return <MainBodyContainer title={"Under Construction"}></MainBodyContainer>;
+	const navigate = useNavigate();
+	useEffect(() => {
+		navigate("/songs");
+	}, []);
+	return <MainBodyContainer title={"Under Construction"}></MainBodyContainer>;
 };
 
 export default HomePage;

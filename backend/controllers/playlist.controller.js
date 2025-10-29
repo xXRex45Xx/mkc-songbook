@@ -46,6 +46,11 @@ export const getAllOrSearchPlaylists = async (req, res) => {
 export const createPlaylist = async (req, res) => {
 	const playlist = req.body;
 
+	if (playlist.visibility === "members" && req.user.role === "public")
+		throw new ForbiddenError(
+			"You have to be a choir member to create members only playlist."
+		);
+
 	const insertedPlaylist = await PlaylistModel.create({
 		name: playlist.name,
 		songs: playlist.songs,
@@ -58,11 +63,13 @@ export const createPlaylist = async (req, res) => {
 
 export const getPlaylist = async (req, res) => {
 	const { id } = req.params;
-	const playlist = await PlaylistModel.findById(id).populate({
-		path: "songs",
-		select: "title",
-		populate: { path: "albums", select: "name" },
-	});
+	const playlist = await PlaylistModel.findById(id)
+		.populate({
+			path: "songs",
+			select: "title",
+			populate: { path: "albums", select: "name" },
+		})
+		.populate("creator", "name");
 
 	if (!playlist) throw new NotFoundError("Playlist not found");
 
@@ -72,7 +79,7 @@ export const getPlaylist = async (req, res) => {
 	if (
 		req.user &&
 		playlist.visibility === "private" &&
-		req.user._id.toString() !== playlist.creator.toString()
+		req.user._id.toString() !== playlist.creator._id.toString()
 	)
 		throw new NotFoundError("Playlist not found");
 
@@ -101,6 +108,22 @@ export const updatePlaylist = async (req, res) => {
 	playlistInDb.visibility = playlist.visibility;
 	playlistInDb.songs = playlist.songs;
 	playlistInDb.updatedAt = Date.now();
+
+	await playlistInDb.save();
+	res.status(200).json({ updated: true });
+};
+
+export const updatePlaylistVisibility = async (req, res) => {
+	const { id } = req.params;
+	const { visibility } = req.body;
+
+	const playlistInDb = await PlaylistModel.findById(id);
+	if (!playlistInDb) throw new NotFoundError("Playlist not found");
+	if (playlistInDb.creator.toString() !== req.user._id.toString())
+		throw new ForbiddenError(
+			"You are not authorized to update this playlist"
+		);
+	playlistInDb.visibility = visibility;
 
 	await playlistInDb.save();
 	res.status(200).json({ updated: true });
