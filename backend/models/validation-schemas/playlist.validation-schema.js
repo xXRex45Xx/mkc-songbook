@@ -3,6 +3,7 @@ import Joi from "joi";
 export const getAllPlaylistsQuerySchema = Joi.object({
 	q: Joi.string().max(100).optional(),
 	page: Joi.number().integer().min(1).optional(),
+	myPlaylists: Joi.bool().optional(),
 }).required();
 
 export const createPlaylistBodySchema = Joi.object({

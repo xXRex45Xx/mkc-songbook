@@ -22,7 +22,7 @@ const AlbumsPage = () => {
 			<Suspense fallback={<CustomTailSpin />}>
 				<Await resolve={loaderData.albumData}>
 					{(albums) => (
-						<div className="flex gap-6">
+						<div className="flex flex-wrap gap-6">
 							{albums.map((album) => (
 								<AlbumCard
 									key={album._id}

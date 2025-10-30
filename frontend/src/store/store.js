@@ -13,5 +13,8 @@ import userReducer from "./slices/user.slice";
  * @type {import('@reduxjs/toolkit').EnhancedStore}
  */
 export default configureStore({
-    reducer: { configs: configsReducer, user: userReducer },
+	reducer: {
+		configs: configsReducer,
+		user: userReducer,
+	},
 });

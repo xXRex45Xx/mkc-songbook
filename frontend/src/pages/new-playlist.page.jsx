@@ -1,12 +1,29 @@
-import { redirect } from "react-router-dom";
+import { redirect, useSearchParams } from "react-router-dom";
 import MainBodyContainer from "../components/main-body-container.component";
 import PlaylistForm from "../components/playlist-form.component";
 import { addOrEditPlaylist } from "../utils/api/playlist-api.util";
 
 const NewPlaylistPage = () => {
+	const [searchParams, _setSearchParams] = useSearchParams();
+
 	return (
 		<MainBodyContainer title="Create Playlist">
-			<PlaylistForm method="POST" action="/playlists/new" />
+			<PlaylistForm
+				method="POST"
+				action="/playlists/new"
+				playlist={
+					searchParams.get("songId")
+						? {
+								songs: [
+									{
+										_id: searchParams.get("songId"),
+										title: searchParams.get("songTitle"),
+									},
+								],
+						  }
+						: undefined
+				}
+			/>
 		</MainBodyContainer>
 	);
 };

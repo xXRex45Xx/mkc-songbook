@@ -61,7 +61,7 @@ const SongsTableRow = ({
 			)}
 			<Table.Cell className="text-end flex justify-end">
 				<SongTools
-					songId={song._id}
+					song={song}
 					showDelete={showDelete}
 					deleteDescription={deleteDescription}
 					onDelete={onDelete}

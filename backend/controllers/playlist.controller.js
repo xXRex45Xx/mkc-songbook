@@ -3,7 +3,23 @@ import { regexBuilder } from "../utils/amharic-map.util.js";
 import { ForbiddenError, NotFoundError } from "../utils/error.util.js";
 
 export const getAllOrSearchPlaylists = async (req, res) => {
-	const { q, page = 1 } = req.query;
+	const { q, page = 1, myPlaylists } = req.query;
+
+	if (myPlaylists) {
+		if (!req.user) throw new ForbiddenError("You need to login first.");
+		const playlists = await PlaylistModel.find(
+			{ creator: req.user._id },
+			"name songs"
+		);
+		return res.status(200).json(
+			playlists.map((playlist) => ({
+				...playlist._doc,
+				numOfSongs: playlist.songs.length,
+				songs: undefined,
+			}))
+		);
+	}
+
 	const isMemberOrAdmin =
 		req.user && ["member", "admin", "super-admin"].includes(req.user.role);
 	let regex,

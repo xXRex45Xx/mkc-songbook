@@ -2,13 +2,13 @@ import { Card } from "flowbite-react";
 import { albumCardTheme } from "../config/card-theme.config";
 import { useNavigate } from "react-router-dom";
 
-const PlaylistCard = ({ id, title, numOfSongs, imgSrc }) => {
+const PlaylistCard = ({ id, title, numOfSongs, imgSrc, onClick }) => {
 	const navigate = useNavigate();
 	return (
 		<Card theme={albumCardTheme}>
 			<div
 				className="flex-1 flex flex-col justify-center gap-4 cursor-pointer"
-				onClick={() => navigate(`/playlists/${id}`)}
+				onClick={onClick ? onClick : () => navigate(`/playlists/${id}`)}
 			>
 				<img
 					src={imgSrc}

@@ -34,7 +34,7 @@ const PlaylistsPage = () => {
 				<Await resolve={loaderData.playlistData}>
 					{({ playlists, totalPages }) => {
 						return (
-							<div className="flex gap-6">
+							<div className="flex flex-wrap gap-6">
 								{playlists.map((playlist) => (
 									<PlaylistCard
 										key={playlist._id}
