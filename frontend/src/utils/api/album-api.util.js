@@ -107,6 +107,10 @@ export const deleteAlbum = async (id, token = localStorage.getItem("_s")) => {
 
 	const data = await response.json();
 	if (!response.ok)
-		throw { message: "An unexpected error occurred.", status: response.status };
-	if (!data.deleted) throw { message: "An unexpected error occurred." };
+		throw {
+			message: "An unexpected error occurred.",
+			status: response.status,
+		};
+	if (!data.deleted)
+		throw { message: "An unexpected error occurred.", statu: 500 };
 };

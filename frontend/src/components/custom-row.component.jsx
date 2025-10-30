@@ -21,7 +21,13 @@ import SongTools from "./song-tools.component";
  * @param {Array<{name: string}>} props.song.albums - List of albums the song belongs to
  * @param {boolean} props.highlight - Whether to include search term in navigation
  */
-const SongsTableRow = ({ song, highlight }) => {
+const SongsTableRow = ({
+	song,
+	highlight,
+	showDelete,
+	deleteDescription,
+	onDelete,
+}) => {
 	const navigate = useNavigate();
 	const [searchParams, _setSearchParams] = useSearchParams();
 
@@ -45,7 +51,8 @@ const SongsTableRow = ({ song, highlight }) => {
 			<Table.Cell>
 				{song.title}
 				{windowWidth < 768 && <br />}
-				{windowWidth < 768 && song.albums.map((song) => song.name).join(", ")}
+				{windowWidth < 768 &&
+					song.albums.map((song) => song.name).join(", ")}
 			</Table.Cell>
 			{windowWidth >= 768 && (
 				<Table.Cell>
@@ -53,7 +60,12 @@ const SongsTableRow = ({ song, highlight }) => {
 				</Table.Cell>
 			)}
 			<Table.Cell className="text-end flex justify-end">
-				<SongTools songId={song._id} />
+				<SongTools
+					songId={song._id}
+					showDelete={showDelete}
+					deleteDescription={deleteDescription}
+					onDelete={onDelete}
+				/>
 			</Table.Cell>
 		</Table.Row>
 	);

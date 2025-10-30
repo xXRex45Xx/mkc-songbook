@@ -113,17 +113,18 @@ export const updatePlaylist = async (req, res) => {
 	res.status(200).json({ updated: true });
 };
 
-export const updatePlaylistVisibility = async (req, res) => {
+export const patchPlaylist = async (req, res) => {
 	const { id } = req.params;
-	const { visibility } = req.body;
+	const { visibility, addSongs, removeSongs } = req.body;
 
-	const playlistInDb = await PlaylistModel.findById(id);
-	if (!playlistInDb) throw new NotFoundError("Playlist not found");
-	if (playlistInDb.creator.toString() !== req.user._id.toString())
-		throw new ForbiddenError(
-			"You are not authorized to update this playlist"
+	const playlistInDb = req.playlist;
+
+	if (visibility) playlistInDb.visibility = visibility;
+	if (addSongs) playlistInDb.songs = playlistInDb.songs.concat(addSongs);
+	if (removeSongs)
+		playlistInDb.songs = playlistInDb.songs.filter(
+			(songInDb) => !removeSongs.includes(songInDb)
 		);
-	playlistInDb.visibility = visibility;
 
 	await playlistInDb.save();
 	res.status(200).json({ updated: true });

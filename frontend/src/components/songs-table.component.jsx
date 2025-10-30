@@ -26,7 +26,14 @@ import CustomTailSpin from "./custom-tail-spin.component";
  * @param {Array<Object>} props.songs - Array of song objects to display
  * @param {number} props.totalPages - Total number of pages for pagination
  */
-const SongsTable = ({ songs, totalPages, showOverflow }) => {
+const SongsTable = ({
+	songs,
+	totalPages,
+	showOverflow,
+	showDelete,
+	deleteDescription,
+	onDelete,
+}) => {
 	/**
 	 * Refs for table scroll behavior
 	 */
@@ -79,7 +86,9 @@ const SongsTable = ({ songs, totalPages, showOverflow }) => {
 							});
 						}}
 						currentPage={
-							searchParams.get("page") ? parseInt(searchParams.get("page")) : 1
+							searchParams.get("page")
+								? parseInt(searchParams.get("page"))
+								: 1
 						}
 						ref={neutralTableRef}
 					>
@@ -88,6 +97,9 @@ const SongsTable = ({ songs, totalPages, showOverflow }) => {
 								key={song._id + song.title}
 								song={song}
 								highlight={searchParams.get("type") === "lyrics"}
+								showDelete={showDelete}
+								deleteDescription={deleteDescription}
+								onDelete={onDelete}
 							/>
 						))}
 					</CustomTable>

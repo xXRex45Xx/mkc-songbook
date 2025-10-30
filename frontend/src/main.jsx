@@ -69,6 +69,10 @@ import NewPlaylistPage, {
 import PlaylistPage, {
 	loader as playlistLoader,
 } from "./pages/playlist.page.jsx";
+import EditPlaylistPage, {
+	loader as editPlaylistLoader,
+	action as editPlaylistAction,
+} from "./pages/edit-playlist.page.jsx";
 /**
  * Router configuration
  * Defines all application routes and their corresponding components
@@ -165,6 +169,18 @@ const router = createBrowserRouter([
 				path: "playlists/:playlistId",
 				loader: playlistLoader,
 				element: <PlaylistPage />,
+			},
+			{
+				path: "playlists/:playlistId/edit",
+				element: (
+					<ProtectedRoute
+						roles={["public", "memeber", "admin", "super-admin"]}
+					>
+						<EditPlaylistPage />
+					</ProtectedRoute>
+				),
+				loader: editPlaylistLoader,
+				action: editPlaylistAction,
 			},
 			{
 				path: "schedule",

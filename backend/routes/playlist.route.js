@@ -7,7 +7,7 @@ import {
 	getAllOrSearchPlaylists,
 	getPlaylist,
 	updatePlaylist,
-	updatePlaylistVisibility,
+	patchPlaylist,
 } from "../controllers/playlist.controller.js";
 import { checkSongExists } from "../middlewares/pre-add-album.middleware.js";
 import {
@@ -15,7 +15,7 @@ import {
 	validateGetAllPlaylists,
 	validateGetPlaylist,
 	validateUpdatePlaylist,
-	validateUpdatePlaylistVisibility,
+	validatePatchPlaylist,
 } from "../middlewares/playlist-validation.middleware.js";
 import { optionalAuth } from "../middlewares/authorization.middleware.js";
 
@@ -51,8 +51,8 @@ playlistRouter
 	.patch(
 		passport.authenticate("jwt", { session: false }),
 		wrapAsync(validateGetPlaylist),
-		wrapAsync(validateUpdatePlaylistVisibility),
-		wrapAsync(updatePlaylistVisibility)
+		wrapAsync(validatePatchPlaylist),
+		wrapAsync(patchPlaylist)
 	)
 	.delete(
 		passport.authenticate("jwt", { session: false }),

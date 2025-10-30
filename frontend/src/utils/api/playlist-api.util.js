@@ -59,16 +59,23 @@ export const addOrEditPlaylist = async (
 	return data;
 };
 
-export const editPlaylistVisibility = async (
-	visibility,
+export const patchPlaylist = async (
 	playlistId,
+	visibility,
+	addSongs = null,
+	removeSongs = null,
 	token = localStorage.getItem("_s")
 ) => {
-	if (!visibility) throw { message: "Visibility is required.", status: 400 };
-
+	if (!visibility && !addSongs && !removeSongs)
+		throw { message: "Invalid request.", status: 400 };
+	if (typeof removeSongs === "string") removeSongs = [removeSongs];
 	const response = await fetch(`${backendURL}/api/playlist/${playlistId}`, {
 		method: "PATCH",
-		body: JSON.stringify({ visibility }),
+		body: JSON.stringify({
+			visibility: visibility ? visibility : undefined,
+			addSongs: addSongs ? addSongs : undefined,
+			removeSongs: removeSongs ? removeSongs : undefined,
+		}),
 		headers: {
 			Authorization: `Bearer ${token}`,
 			"Content-Type": "application/json",
@@ -95,4 +102,26 @@ export const getPlaylist = async (id, token = localStorage.getItem("_s")) => {
 	if (!response.ok) throw { message: data.message, status: response.status };
 
 	return data;
+};
+
+export const deletePlaylist = async (
+	id,
+	token = localStorage.getItem("_s")
+) => {
+	if (id.length === 0)
+		throw { message: "Playlist id is required.", status: 400 };
+	const response = await fetch(`${backendURL}/api/playlist/${id}`, {
+		method: "DELETE",
+		headers: {
+			Authorization: `Bearer ${token}`,
+		},
+	});
+	const data = await response.json();
+	if (!response.ok)
+		throw {
+			message: "An unexpected error occurred.",
+			status: response.status,
+		};
+	if (!data.deleted)
+		throw { message: "An unexpected error occurred.", status: 500 };
 };

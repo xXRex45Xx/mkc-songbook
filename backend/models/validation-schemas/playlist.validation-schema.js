@@ -17,9 +17,13 @@ export const updatePlaylistBodySchema = Joi.object({
 	songs: Joi.array().items(Joi.string().min(1)).min(1).required(),
 }).required();
 
-export const updatePlaylistVisibilityBodySchema = Joi.object({
-	visibility: Joi.string().valid("private", "members", "public").required(),
-}).required();
+export const patchPlaylistBodySchema = Joi.object({
+	visibility: Joi.string().valid("private", "members", "public").optional(),
+	addSongs: Joi.array().items(Joi.string().min(1)).optional(),
+	removeSongs: Joi.array().items(Joi.string().min(1)).optional(),
+})
+	.or("visibility", "addSongs", "removeSongs")
+	.required();
 
 export const getPlaylistParamsSchema = Joi.object({
 	id: Joi.string().min(1).required(),
