@@ -14,26 +14,26 @@ import { emailRegex } from "../regex.util";
  * @throws {Object} Validation errors or server error response
  */
 export const requestOTP = async (email, forgotPassword) => {
-    if (!emailRegex.test(email))
-        throw { message: "Please enter a valid email address.", status: 400 };
+	if (!emailRegex.test(email))
+		throw { message: "Please enter a valid email address.", status: 400 };
 
-    const response = await fetch(
-        `${backendURL}/api/user/otp${
-            forgotPassword ? "?forgotPassword=true" : ""
-        }`,
-        {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                email,
-            }),
-        }
-    );
-    const data = await response.json();
+	const response = await fetch(
+		`${backendURL}/api/user/otp${
+			forgotPassword ? "?forgotPassword=true" : ""
+		}`,
+		{
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({
+				email,
+			}),
+		}
+	);
+	const data = await response.json();
 
-    if (!response.ok) throw { message: data.message, status: response.status };
+	if (!response.ok) throw { message: data.message, status: response.status };
 
-    return data;
+	return data;
 };
 
 /**
@@ -45,29 +45,29 @@ export const requestOTP = async (email, forgotPassword) => {
  * @throws {Object} Validation errors or server error response
  */
 export const verifyOTP = async ({ email, otp }) => {
-    if (!otp)
-        throw { message: "Please enter your verificaton code.", status: 400 };
-    if (typeof otp === "string") otp = parseInt(otp);
-    if (isNaN(parseInt(otp)))
-        throw { message: "Only numbers are allowed.", status: 400 };
-    if (otp < 100000 || otp > 999999)
-        throw {
-            message: "Verification code is a 6 digit number.",
-            status: 400,
-        };
+	if (!otp)
+		throw { message: "Please enter your verificaton code.", status: 400 };
+	if (typeof otp === "string") otp = parseInt(otp);
+	if (isNaN(parseInt(otp)))
+		throw { message: "Only numbers are allowed.", status: 400 };
+	if (otp < 100000 || otp > 999999)
+		throw {
+			message: "Verification code is a 6 digit number.",
+			status: 400,
+		};
 
-    const response = await fetch(`${backendURL}/api/user/verify-otp`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            email,
-            otp,
-        }),
-    });
-    const data = await response.json();
-    if (!response.ok) throw { message: data.message, status: response.status };
+	const response = await fetch(`${backendURL}/api/user/verify-otp`, {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify({
+			email,
+			otp,
+		}),
+	});
+	const data = await response.json();
+	if (!response.ok) throw { message: data.message, status: response.status };
 
-    return data;
+	return data;
 };
 
 /**
@@ -81,38 +81,38 @@ export const verifyOTP = async ({ email, otp }) => {
  * @throws {Object} Validation errors or server error response
  */
 export const registerUser = async (email, otp, password, confirmPass, name) => {
-    const error = { status: 400 };
-    let errorOccured = false;
+	const error = { status: 400 };
+	let errorOccured = false;
 
-    if (!password || password.length < 8) {
-        errorOccured = true;
-        error.passwordMessage = "Password must be atleast 8 characters.";
-    }
-    if (!name) {
-        errorOccured = true;
-        error.nameMessage = "Name is required.";
-    }
-    if (password !== confirmPass) {
-        errorOccured = true;
-        error.confirmPassMessage = "Passwords don't match.";
-    }
-    if (errorOccured) throw error;
+	if (!password || password.length < 8) {
+		errorOccured = true;
+		error.passwordMessage = "Password must be atleast 8 characters.";
+	}
+	if (!name) {
+		errorOccured = true;
+		error.nameMessage = "Name is required.";
+	}
+	if (password !== confirmPass) {
+		errorOccured = true;
+		error.confirmPassMessage = "Passwords don't match.";
+	}
+	if (errorOccured) throw error;
 
-    const response = await fetch(`${backendURL}/api/user`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            email,
-            otp,
-            password,
-            name,
-        }),
-    });
+	const response = await fetch(`${backendURL}/api/user`, {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify({
+			email,
+			otp,
+			password,
+			name,
+		}),
+	});
 
-    const data = await response.json();
-    if (!response.ok) throw { message: data.message, status: response.status };
+	const data = await response.json();
+	if (!response.ok) throw { message: data.message, status: response.status };
 
-    return data;
+	return data;
 };
 
 /**
@@ -123,32 +123,32 @@ export const registerUser = async (email, otp, password, confirmPass, name) => {
  * @throws {Object} Validation errors or server error response
  */
 export const login = async (email, password) => {
-    const error = { status: 400 };
-    let errorOccured = false;
-    if (!emailRegex.test(email)) {
-        errorOccured = true;
-        error.emailMessage = "Please enter a valid email address.";
-    }
-    if (!password || password.length < 8) {
-        errorOccured = true;
-        error.passwordMessage = "Password must be atleast 8 characters";
-    }
-    if (errorOccured) throw error;
+	const error = { status: 400 };
+	let errorOccured = false;
+	if (!emailRegex.test(email)) {
+		errorOccured = true;
+		error.emailMessage = "Please enter a valid email address.";
+	}
+	if (!password || password.length < 8) {
+		errorOccured = true;
+		error.passwordMessage = "Password must be atleast 8 characters";
+	}
+	if (errorOccured) throw error;
 
-    const response = await fetch(`${backendURL}/api/user/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            email,
-            password,
-        }),
-    });
+	const response = await fetch(`${backendURL}/api/user/login`, {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify({
+			email,
+			password,
+		}),
+	});
 
-    const data = await response.json();
+	const data = await response.json();
 
-    if (!response.ok) throw { message: data.message, status: response.status };
+	if (!response.ok) throw { message: data.message, status: response.status };
 
-    return { success: true, ...data };
+	return { success: true, ...data };
 };
 
 /**
@@ -158,18 +158,18 @@ export const login = async (email, password) => {
  * @throws {Object} Authentication error or server error response
  */
 export const getCurrentLoggedInUser = async (token) => {
-    const response = await fetch(`${backendURL}/api/user/current-user`, {
-        method: "GET",
-        headers: {
-            Authorization: `bearer ${token}`,
-        },
-    });
-    if (response.status === 401) throw { status: response.status };
-    const data = await response.json();
+	const response = await fetch(`${backendURL}/api/user/current-user`, {
+		method: "GET",
+		headers: {
+			Authorization: `bearer ${token}`,
+		},
+	});
+	if (response.status === 401) throw { status: response.status };
+	const data = await response.json();
 
-    if (!response.ok) throw { message: data.message, status: response.status };
+	if (!response.ok) throw { message: data.message, status: response.status };
 
-    return data;
+	return data;
 };
 
 /**
@@ -182,33 +182,33 @@ export const getCurrentLoggedInUser = async (token) => {
  * @throws {Object} Validation errors or server error response
  */
 export const resetPassword = async (email, otp, password, confirmPass) => {
-    const error = { status: 400 };
-    let errorOccured = false;
+	const error = { status: 400 };
+	let errorOccured = false;
 
-    if (!password || password.length < 8) {
-        errorOccured = true;
-        error.passwordMessage = "Password must be atleast 8 characters.";
-    }
-    if (password !== confirmPass) {
-        errorOccured = true;
-        error.confirmPassMessage = "Passwords don't match.";
-    }
-    if (errorOccured) throw error;
+	if (!password || password.length < 8) {
+		errorOccured = true;
+		error.passwordMessage = "Password must be atleast 8 characters.";
+	}
+	if (password !== confirmPass) {
+		errorOccured = true;
+		error.confirmPassMessage = "Passwords don't match.";
+	}
+	if (errorOccured) throw error;
 
-    const response = await fetch(`${backendURL}/api/user/reset-password`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            email,
-            otp,
-            password,
-        }),
-    });
+	const response = await fetch(`${backendURL}/api/user/reset-password`, {
+		method: "PUT",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify({
+			email,
+			otp,
+			password,
+		}),
+	});
 
-    const data = await response.json();
-    if (!response.ok) throw { message: data.message, status: response.status };
+	const data = await response.json();
+	if (!response.ok) throw { message: data.message, status: response.status };
 
-    return data;
+	return data;
 };
 
 /**
@@ -218,65 +218,106 @@ export const resetPassword = async (email, otp, password, confirmPass) => {
  * @throws {Object} Authentication error or server error response
  */
 export const googleOauthLogin = async (accessToken) => {
-    const error = {
-        message: "Failed to sign up or login with google. Please, try again.",
-        status: 401,
-    };
-    if (!accessToken) throw error;
+	const error = {
+		message: "Failed to sign up or login with google. Please, try again.",
+		status: 401,
+	};
+	if (!accessToken) throw error;
 
-    const response = await fetch(`${backendURL}/api/user/google/callback`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            accessToken,
-        }),
-    });
+	const response = await fetch(`${backendURL}/api/user/google/callback`, {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify({
+			accessToken,
+		}),
+	});
 
-    if (!response.ok) throw error;
+	if (!response.ok) throw error;
 
-    const data = await response.json();
-    return data;
+	const data = await response.json();
+	return data;
 };
 
 export const getAllOrSearchUsers = async (
-    searchQuery = null,
-    page = 1,
-    token = localStorage.getItem("_s")
+	searchQuery = null,
+	page = 1,
+	token = localStorage.getItem("_s")
 ) => {
-    const response = await fetch(
-        `${backendURL}/api/user?page=${page}${
-            searchQuery.q ? "&q=" + searchQuery.q : ""
-        }${searchQuery.type ? "&type=" + searchQuery.type : ""}`,
-        {
-            headers: {
-                Authorization: `bearer ${token}`,
-            },
-        }
-    );
-    const data = await response.json();
-    if (!response.ok) throw { message: data.message, status: response.status };
+	const response = await fetch(
+		`${backendURL}/api/user?page=${page}${
+			searchQuery.q ? "&q=" + searchQuery.q : ""
+		}${searchQuery.type ? "&type=" + searchQuery.type : ""}`,
+		{
+			headers: {
+				Authorization: `bearer ${token}`,
+			},
+		}
+	);
+	const data = await response.json();
+	if (!response.ok) throw { message: data.message, status: response.status };
 
-    return data;
+	return data;
 };
 
 export const updateUserRole = async (
-    id,
-    role,
-    token = localStorage.getItem("_s")
+	id,
+	role,
+	token = localStorage.getItem("_s")
 ) => {
-    const response = await fetch(`${backendURL}/api/user/${id}`, {
-        method: "PATCH",
-        headers: {
-            Authorization: `bearer ${token}`,
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            role,
-        }),
-    });
+	const response = await fetch(`${backendURL}/api/user/${id}`, {
+		method: "PATCH",
+		headers: {
+			Authorization: `bearer ${token}`,
+			"Content-Type": "application/json",
+		},
+		body: JSON.stringify({
+			role,
+		}),
+	});
 
-    const data = await response.json();
-    if (!response.ok) throw { message: data.message, status: response.status };
+	const data = await response.json();
+	if (!response.ok) throw { message: data.message, status: response.status };
 
-    return data;
+	return data;
+};
+
+export const updateFavoriteSongs = async (
+	favorites,
+	addSongs = null,
+	removeSongs = null,
+	token = localStorage.getItem("_s")
+) => {
+	if (!favorites && !addSongs && !removeSongs)
+		throw { message: "Invalid request.", status: 400 };
+	if (typeof removeSongs === "string") removeSongs = [removeSongs];
+	if (typeof addSongs === "string") addSongs = [addSongs];
+	const response = await fetch(`${backendURL}/api/user/update-favorites`, {
+		method: "PATCH",
+		body: JSON.stringify({
+			favorites: favorites ? favorites : undefined,
+			addSongs: addSongs ? addSongs : undefined,
+			removeSongs: removeSongs ? removeSongs : undefined,
+		}),
+		headers: {
+			Authorization: `Bearer ${token}`,
+			"Content-Type": "application/json",
+		},
+	});
+
+	const data = await response.json();
+	if (!response.ok) throw { message: data.message, status: response.status };
+	if (!data.updated) throw { message: "An unexpected error occurred." };
+};
+
+export const getFavorites = async (token = localStorage.getItem("_s")) => {
+	const response = await fetch(`${backendURL}/api/user/favorites`, {
+		headers: {
+			Authorization: `Bearer ${token}`,
+		},
+	});
+
+	const data = await response.json();
+	if (!response.ok) throw { message: data.message, status: response.status };
+
+	return data;
 };

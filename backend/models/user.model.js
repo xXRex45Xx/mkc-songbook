@@ -18,25 +18,26 @@ import { Schema, model, Types } from "mongoose";
  * @property {('public'|'member'|'admin')} [role=public] - User's role in the system
  */
 const userSchema = new Schema({
-    email: {
-        type: String,
-        required: true,
-        trim: true,
-        lowercase: true,
-        unique: true,
-        match: /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
-    },
-    name: { type: String, required: true, trim: true },
-    password: { type: String },
-    searchHistory: [
-        { type: Types.ObjectId, required: true, ref: "SearchHistory" },
-    ],
-    photo: { type: String },
-    role: {
-        type: String,
-        enum: ["public", "member", "admin", "super-admin"],
-        default: "public",
-    },
+	email: {
+		type: String,
+		required: true,
+		trim: true,
+		lowercase: true,
+		unique: true,
+		match: /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
+	},
+	name: { type: String, required: true, trim: true },
+	password: { type: String },
+	searchHistory: [
+		{ type: Types.ObjectId, required: true, ref: "SearchHistory" },
+	],
+	favorites: [{ type: String, ref: "Song" }],
+	photo: { type: String },
+	role: {
+		type: String,
+		enum: ["public", "member", "admin", "super-admin"],
+		default: "public",
+	},
 });
 
 const UserModel = model("User", userSchema);

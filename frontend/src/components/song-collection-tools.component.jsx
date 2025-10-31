@@ -12,6 +12,7 @@ import deleteSmallIcon from "../assets/delete.svg";
 const SongCollectionTools = ({
 	handleShare,
 	allowModify,
+	allowShare,
 	handleEdit,
 	handleDelete,
 }) => {
@@ -27,14 +28,16 @@ const SongCollectionTools = ({
 			>
 				<BackSvg className="stroke-neutrals-700 hover:stroke-neutrals-500 active:stroke-neutrals-600" />
 			</Button>
-			<Button
-				className="w-8 border-none focus:ring-0"
-				theme={buttonTheme}
-				size="xxs"
-				onClick={handleShare}
-			>
-				<ShareSvg className="stroke-neutrals-700 hover:stroke-neutrals-500 active:stroke-neutrals-600" />
-			</Button>
+			{allowShare && (
+				<Button
+					className="w-8 border-none focus:ring-0"
+					theme={buttonTheme}
+					size="xxs"
+					onClick={handleShare}
+				>
+					<ShareSvg className="stroke-neutrals-700 hover:stroke-neutrals-500 active:stroke-neutrals-600" />
+				</Button>
+			)}
 			<Dropdown
 				arrowIcon={false}
 				inline

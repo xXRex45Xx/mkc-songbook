@@ -8,24 +8,27 @@ import { Router } from "express";
 import { wrapAsync } from "../utils/error.util.js";
 import validateOtp from "../middlewares/validate-otp.middleware.js";
 import {
-    googleOAuthLogin,
-    getCurrentUser,
-    registerOTP,
-    registerUser,
-    resetPassword,
-    verifyOTP,
-    getAllOrSearchUsers,
-    updateUserRole,
+	googleOAuthLogin,
+	getCurrentUser,
+	registerOTP,
+	registerUser,
+	resetPassword,
+	verifyOTP,
+	getAllOrSearchUsers,
+	updateUserRole,
+	updateFavorites,
+	getFavorites,
 } from "../controllers/user.controller.js";
 import localAuth from "../middlewares/local-auth.middleware.js";
 import {
-    validateLogin,
-    validateRegisterOTP,
-    validateRegisterUser,
-    validateResetPassword,
-    validateVerifyOTP,
-    validateGetAllUsers,
-    validateUpdateUserRole,
+	validateLogin,
+	validateRegisterOTP,
+	validateRegisterUser,
+	validateResetPassword,
+	validateVerifyOTP,
+	validateGetAllUsers,
+	validateUpdateUserRole,
+	validateUpdateFavorites,
 } from "../middlewares/user-validation.middleware.js";
 import checkUserExists from "../middlewares/check-user-exists.middleware.js";
 import passport from "passport";
@@ -51,25 +54,38 @@ const userRouter = Router();
  * @body {number} body.otp - Verification code
  */
 userRouter
-    .route("/")
-    .get(
-        passport.authenticate("jwt", { session: false }),
-        wrapAsync(roleBasedAuthorization(["admin", "super-admin"])),
-        wrapAsync(validateGetAllUsers),
-        wrapAsync(getAllOrSearchUsers)
-    )
-    .post(
-        wrapAsync(validateRegisterUser),
-        wrapAsync(validateOtp),
-        wrapAsync(registerUser)
-    );
+	.route("/")
+	.get(
+		passport.authenticate("jwt", { session: false }),
+		wrapAsync(roleBasedAuthorization(["admin", "super-admin"])),
+		wrapAsync(validateGetAllUsers),
+		wrapAsync(getAllOrSearchUsers)
+	)
+	.post(
+		wrapAsync(validateRegisterUser),
+		wrapAsync(validateOtp),
+		wrapAsync(registerUser)
+	);
+
+userRouter.get(
+	"/favorites",
+	passport.authenticate("jwt", { session: false }),
+	wrapAsync(getFavorites)
+);
 
 userRouter.patch(
-    "/:id",
-    passport.authenticate("jwt", { session: false }),
-    wrapAsync(roleBasedAuthorization(["admin", "super-admin"])),
-    wrapAsync(validateUpdateUserRole),
-    wrapAsync(updateUserRole)
+	"/update-favorites",
+	passport.authenticate("jwt", { session: false }),
+	wrapAsync(validateUpdateFavorites),
+	wrapAsync(updateFavorites)
+);
+
+userRouter.patch(
+	"/:id",
+	passport.authenticate("jwt", { session: false }),
+	wrapAsync(roleBasedAuthorization(["admin", "super-admin"])),
+	wrapAsync(validateUpdateUserRole),
+	wrapAsync(updateUserRole)
 );
 /**
  * POST /api/user/otp
@@ -82,10 +98,10 @@ userRouter.patch(
  * @query {boolean} [forgotPassword] - Whether this is a password reset request
  */
 userRouter.post(
-    "/otp",
-    wrapAsync(validateRegisterOTP),
-    wrapAsync(checkUserExists),
-    wrapAsync(registerOTP)
+	"/otp",
+	wrapAsync(validateRegisterOTP),
+	wrapAsync(checkUserExists),
+	wrapAsync(registerOTP)
 );
 
 /**
@@ -98,9 +114,9 @@ userRouter.post(
  * @body {number} body.otp - OTP code to verify
  */
 userRouter.post(
-    "/verify-otp",
-    wrapAsync(validateVerifyOTP),
-    wrapAsync(verifyOTP)
+	"/verify-otp",
+	wrapAsync(validateVerifyOTP),
+	wrapAsync(verifyOTP)
 );
 
 /**
@@ -122,9 +138,9 @@ userRouter.post("/login", wrapAsync(validateLogin), wrapAsync(localAuth));
  * @security JWT
  */
 userRouter.get(
-    "/current-user",
-    passport.authenticate("jwt", { session: false }),
-    wrapAsync(getCurrentUser)
+	"/current-user",
+	passport.authenticate("jwt", { session: false }),
+	wrapAsync(getCurrentUser)
 );
 
 /**
@@ -148,10 +164,10 @@ userRouter.post("/google/callback", wrapAsync(googleOAuthLogin));
  * @body {number} body.otp - Verification code
  */
 userRouter.put(
-    "/reset-password",
-    wrapAsync(validateResetPassword),
-    wrapAsync(validateOtp),
-    wrapAsync(resetPassword)
+	"/reset-password",
+	wrapAsync(validateResetPassword),
+	wrapAsync(validateOtp),
+	wrapAsync(resetPassword)
 );
 
 export default userRouter;

@@ -1,5 +1,8 @@
 import { Card } from "flowbite-react";
-import { horizontalCardTheme } from "../config/card-theme.config";
+import {
+	favoritesHorizontalCardTheme,
+	horizontalCardTheme,
+} from "../config/card-theme.config";
 
 const HorizontalPlaylistCard = ({
 	name,
@@ -7,8 +10,12 @@ const HorizontalPlaylistCard = ({
 	creator,
 	numOfSongs,
 	imgSrc,
+	favorites,
 }) => (
-	<Card className="text-baseblack" theme={horizontalCardTheme}>
+	<Card
+		className="text-baseblack"
+		theme={favorites ? favoritesHorizontalCardTheme : horizontalCardTheme}
+	>
 		<div className="flex-1 flex gap-5">
 			<img src={imgSrc} className="w-52 rounded-md" />
 			<div className="flex-1 flex flex-col py-5 px-4 justify-between">

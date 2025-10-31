@@ -2,14 +2,16 @@ import HorizontalPlaylistCard from "./horizontal-playlist-card.component";
 import SongCollectionTools from "./song-collection-tools.component";
 import SongsTable from "./songs-table.component";
 import playlistIcon from "../assets/playlist.png";
+import largeHeartIcon from "../assets/heart-large.svg";
 import { useCallback, useState } from "react";
 import { Button, Modal } from "flowbite-react";
 import CustomTailSpin from "./custom-tail-spin.component";
 import { useSelector } from "react-redux";
 import { deletePlaylist, patchPlaylist } from "../utils/api/playlist-api.util";
-import { useNavigate, useRevalidator } from "react-router-dom";
+import { useNavigate, useParams, useRevalidator } from "react-router-dom";
 
 const PlaylistViewer = ({ playlist }) => {
+	const { playlistId } = useParams();
 	const revalidator = useRevalidator();
 	const [openPreShareModal, setOpenPreShareModal] = useState(false);
 	const [preShareModalError, setPreShareModalError] = useState("");
@@ -81,7 +83,10 @@ const PlaylistViewer = ({ playlist }) => {
 		<div className="flex flex-col gap-5 w-full">
 			<SongCollectionTools
 				handleShare={handleShare}
-				allowModify={user?.id === playlist.creator._id}
+				allowModify={
+					user?.id === playlist.creator._id && playlistId !== "favorites"
+				}
+				allowShare={playlistId !== "favorites"}
 				handleEdit={() => navigate("edit")}
 				handleDelete={() => setOpenDeletePlaylistModal(true)}
 			/>
@@ -93,12 +98,15 @@ const PlaylistViewer = ({ playlist }) => {
 					playlist.visibility.charAt(0).toUpperCase() +
 					playlist.visibility.slice(1)
 				}
-				imgSrc={playlistIcon}
+				imgSrc={playlistId === "favorites" ? largeHeartIcon : playlistIcon}
+				favorites={playlistId === "favorites"}
 			/>
 			<SongsTable
 				songs={playlist.songs}
 				showOverflow
-				showDelete={user?.id === playlist.creator._id}
+				showDelete={
+					user?.id === playlist.creator._id && playlistId !== "favorites"
+				}
 				deleteDescription="Remove From Playlist"
 				onDelete={(songId) => {
 					setSongToBeRemoved(songId);

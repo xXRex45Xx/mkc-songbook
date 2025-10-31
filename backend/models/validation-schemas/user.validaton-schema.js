@@ -15,24 +15,24 @@ import Joi from "joi";
  * @property {number} otp - 6-digit verification code
  */
 export const registerUserBodySchema = Joi.object({
-    email: Joi.string()
-        .regex(
-            /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
-        )
-        .email()
-        .required(),
-    name: Joi.string().min(3).max(100).required(),
-    password: Joi.string().min(8).max(100).required(),
-    otp: Joi.number()
-        .integer()
-        .positive()
-        .min(100000)
-        .max(999999)
-        .required()
-        .messages({
-            "number.min": "The validation code must be a 6 digit number.",
-            "number.max": "The validation code must be a 6 digit number.",
-        }),
+	email: Joi.string()
+		.regex(
+			/^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+		)
+		.email()
+		.required(),
+	name: Joi.string().min(3).max(100).required(),
+	password: Joi.string().min(8).max(100).required(),
+	otp: Joi.number()
+		.integer()
+		.positive()
+		.min(100000)
+		.max(999999)
+		.required()
+		.messages({
+			"number.min": "The validation code must be a 6 digit number.",
+			"number.max": "The validation code must be a 6 digit number.",
+		}),
 }).required();
 
 /**
@@ -41,12 +41,12 @@ export const registerUserBodySchema = Joi.object({
  * @property {string} email - Valid email address
  */
 export const registerOTPBodySchema = Joi.object({
-    email: Joi.string()
-        .regex(
-            /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
-        )
-        .email()
-        .required(),
+	email: Joi.string()
+		.regex(
+			/^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+		)
+		.email()
+		.required(),
 }).required();
 
 /**
@@ -55,7 +55,7 @@ export const registerOTPBodySchema = Joi.object({
  * @property {boolean} [forgotPassword] - Whether this is a password reset request
  */
 export const registerOTPQuerySchema = Joi.object({
-    forgotPassword: Joi.boolean().optional(),
+	forgotPassword: Joi.boolean().optional(),
 }).required();
 
 /**
@@ -65,13 +65,13 @@ export const registerOTPQuerySchema = Joi.object({
  * @property {string} password - Password (8-100 characters)
  */
 export const loginBodySchema = Joi.object({
-    email: Joi.string()
-        .regex(
-            /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
-        )
-        .email()
-        .required(),
-    password: Joi.string().min(8).max(100).required(),
+	email: Joi.string()
+		.regex(
+			/^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+		)
+		.email()
+		.required(),
+	password: Joi.string().min(8).max(100).required(),
 }).required();
 
 /**
@@ -81,22 +81,22 @@ export const loginBodySchema = Joi.object({
  * @property {number} otp - 6-digit verification code
  */
 export const verifyOTPBodySchema = Joi.object({
-    email: Joi.string()
-        .regex(
-            /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
-        )
-        .email()
-        .required(),
-    otp: Joi.number()
-        .integer()
-        .positive()
-        .min(100000)
-        .max(999999)
-        .required()
-        .messages({
-            "number.min": "The verification code must be a 6 digit number.",
-            "number.max": "The verification code must be a 6 digit number.",
-        }),
+	email: Joi.string()
+		.regex(
+			/^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+		)
+		.email()
+		.required(),
+	otp: Joi.number()
+		.integer()
+		.positive()
+		.min(100000)
+		.max(999999)
+		.required()
+		.messages({
+			"number.min": "The verification code must be a 6 digit number.",
+			"number.max": "The verification code must be a 6 digit number.",
+		}),
 }).required();
 
 /**
@@ -107,23 +107,23 @@ export const verifyOTPBodySchema = Joi.object({
  * @property {number} otp - 6-digit verification code
  */
 export const resetPasswordBodySchema = Joi.object({
-    email: Joi.string()
-        .regex(
-            /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
-        )
-        .email()
-        .required(),
-    password: Joi.string().min(8).max(100).required(),
-    otp: Joi.number()
-        .integer()
-        .positive()
-        .min(100000)
-        .max(999999)
-        .required()
-        .messages({
-            "number.min": "The verification code must be a 6 digit number.",
-            "number.max": "The verification code must be a 6 digit number",
-        }),
+	email: Joi.string()
+		.regex(
+			/^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+		)
+		.email()
+		.required(),
+	password: Joi.string().min(8).max(100).required(),
+	otp: Joi.number()
+		.integer()
+		.positive()
+		.min(100000)
+		.max(999999)
+		.required()
+		.messages({
+			"number.min": "The verification code must be a 6 digit number.",
+			"number.max": "The verification code must be a 6 digit number",
+		}),
 }).required();
 
 /**
@@ -132,21 +132,29 @@ export const resetPasswordBodySchema = Joi.object({
  * @property {string} accessToken - Google OAuth access token
  */
 export const googleOAuthBodySchema = Joi.object({
-    accessToken: Joi.string().min(1).required(),
+	accessToken: Joi.string().min(1).required(),
 }).required();
 
 export const getAllUsersQuerySchema = Joi.object({
-    q: Joi.string().max(100).optional(),
-    page: Joi.number().integer().min(1).optional(),
-    type: Joi.string().allow("all", "name", "email").only().optional(),
+	q: Joi.string().max(100).optional(),
+	page: Joi.number().integer().min(1).optional(),
+	type: Joi.string().allow("all", "name", "email").only().optional(),
 })
-    .and("q", "type")
-    .required();
+	.and("q", "type")
+	.required();
 
 export const updateUserRoleParamsSchema = Joi.object({
-    id: Joi.string().required(),
+	id: Joi.string().required(),
 }).required();
 
 export const updateUserRoleBodySchema = Joi.object({
-    role: Joi.string().allow("admin", "member", "public").required(),
+	role: Joi.string().allow("admin", "member", "public").required(),
 }).required();
+
+export const updateFavoritesBodySchema = Joi.object({
+	favorites: Joi.array().items(Joi.string().min(1)).optional(),
+	addSongs: Joi.array().items(Joi.string().min(1)).optional(),
+	removeSongs: Joi.array().items(Joi.string().min(1)).optional(),
+})
+	.or("addSongs", "removeSongs", "favorites")
+	.required();

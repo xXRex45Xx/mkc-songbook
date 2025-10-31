@@ -72,6 +72,7 @@ passport.use(
 					email: true,
 					name: true,
 					role: true,
+					favorites: true,
 				});
 				if (!user) return done(null, false);
 				done(null, user);

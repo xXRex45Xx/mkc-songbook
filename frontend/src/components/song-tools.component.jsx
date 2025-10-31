@@ -20,12 +20,14 @@ import addSmallIcon from "../assets/add-small.svg";
 import editIcon from "../assets/edit.svg";
 import deleteIcon from "../assets/delete.svg";
 import addToPlaylistSmallIcon from "../assets/add-to-playlist.svg";
-import { useSelector } from "react-redux";
-import { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useMemo, useState } from "react";
 import CustomTailSpin from "./custom-tail-spin.component";
 import { deleteSong } from "../utils/api/songs-api.util";
 import PlaylistCard from "./playlist-card.component";
 import { getAllPlaylists, patchPlaylist } from "../utils/api/playlist-api.util";
+import { updateFavoriteSongs } from "../utils/api/user-api.util";
+import { setUserFavorites } from "../store/slices/user.slice";
 
 /**
  * Component for song interaction tools and options
@@ -37,6 +39,8 @@ import { getAllPlaylists, patchPlaylist } from "../utils/api/playlist-api.util";
  */
 const SongTools = ({ song, showDelete, deleteDescription, onDelete }) => {
 	const navigate = useNavigate();
+	const location = useLocation();
+	const dispatch = useDispatch();
 	const revalidator = useRevalidator();
 	const windowWidth = useSelector((state) => state.configs.windowWidth);
 	const user = useSelector((state) => state.user.currentUser);
@@ -48,6 +52,8 @@ const SongTools = ({ song, showDelete, deleteDescription, onDelete }) => {
 	const [addToPlaylistModalError, setAddToPlaylistModalError] = useState("");
 	const [myPlaylists, setMyPlaylists] = useState([]);
 	const [playlistModalLoading, setPlaylistModalLoading] = useState(false);
+
+	const [isAddingToFavorite, setIsAddingToFavorite] = useState(false);
 
 	const handleDeleteSong = async () => {
 		setIsDeleting(true);
@@ -73,6 +79,7 @@ const SongTools = ({ song, showDelete, deleteDescription, onDelete }) => {
 	};
 
 	const handleOpenAddToPlaylistModal = async () => {
+		if (!user) return navigate(`/auth?redirect=${location.pathname}`);
 		setOpenAddToPlaylistModal(true);
 		setPlaylistModalLoading(true);
 		setAddToPlaylistModalError("");
@@ -101,6 +108,39 @@ const SongTools = ({ song, showDelete, deleteDescription, onDelete }) => {
 			setPlaylistModalLoading(false);
 		}
 	};
+
+	const handleToggleFavorite = async () => {
+		if (!user) return navigate(`/auth?redirect=${location.pathname}`);
+		setIsAddingToFavorite(true);
+		try {
+			if (!user.favorites) user.favorites = [];
+			if (user.favorites.includes(song._id)) {
+				await updateFavoriteSongs(null, null, [song._id]);
+				dispatch(
+					setUserFavorites(
+						user.favorites.filter((favSong) => favSong !== song._id)
+					)
+				);
+			} else {
+				await updateFavoriteSongs(null, [song._id]);
+				dispatch(setUserFavorites(user.favorites.concat([song._id])));
+			}
+		} catch (error) {
+			alert(error.message);
+		} finally {
+			setIsAddingToFavorite(false);
+		}
+	};
+
+	const favoriteIconStyle = useMemo(() => {
+		let style =
+			"hover:first:fill-primary-400 active:first:fill-primary-700 cursor-pointer ";
+		if (user?.favorites.includes(song._id))
+			style += "first:stroke-basewhite first:fill-primary";
+		else style += "first:stroke-baseblack first:fill-basewhite";
+		return style;
+	}, [user]);
+
 	return (
 		<div
 			onClick={(e) => e.stopPropagation()}
@@ -109,9 +149,13 @@ const SongTools = ({ song, showDelete, deleteDescription, onDelete }) => {
 			{windowWidth >= 768 &&
 				!["admin", "super-admin"].includes(user?.role) && (
 					<>
-						<div>
-							<HeartSvg className="first:stroke-baseblack first:fill-basewhite hover:first:fill-primary-400 active:first:fill-primary-700 cursor-pointer" />
-						</div>
+						{isAddingToFavorite ? (
+							<CustomTailSpin xs />
+						) : (
+							<div onClick={handleToggleFavorite}>
+								<HeartSvg className={favoriteIconStyle} />
+							</div>
+						)}
 						{/* <div>
 							<DownloadSvg className="hover:first:fill-success-200 active:first:fill-success-300 cursor-pointer" />
 						</div> */}

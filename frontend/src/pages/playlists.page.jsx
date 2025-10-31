@@ -8,10 +8,12 @@ import { Await, defer, useLoaderData, useNavigate } from "react-router-dom";
 import { Suspense } from "react";
 import CustomTailSpin from "../components/custom-tail-spin.component";
 import { getAllPlaylists } from "../utils/api/playlist-api.util";
+import { useSelector } from "react-redux";
 
 const PlaylistsPage = () => {
 	const navigate = useNavigate();
 	const loaderData = useLoaderData();
+	const user = useSelector((state) => state.user.currentUser);
 	return (
 		<MainBodyContainer
 			title={"Playlists"}
@@ -35,6 +37,7 @@ const PlaylistsPage = () => {
 					{({ playlists, totalPages }) => {
 						return (
 							<div className="flex flex-wrap gap-6">
+								{user && <PlaylistCard favorite id="favorites" />}
 								{playlists.map((playlist) => (
 									<PlaylistCard
 										key={playlist._id}

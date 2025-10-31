@@ -6,7 +6,7 @@
 import { Await, Outlet, defer, useLoaderData } from "react-router-dom";
 import "./App.css";
 import Header from "./components/header.component";
-import AudioPlayer from "./components/audio-player.component";
+// import AudioPlayer from "./components/audio-player.component";
 import store from "./store/store";
 import { getCurrentLoggedInUser } from "./utils/api/user-api.util";
 import { setCurrentUser } from "./store/slices/user.slice";

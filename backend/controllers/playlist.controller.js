@@ -130,7 +130,6 @@ export const updatePlaylist = async (req, res) => {
 };
 
 export const patchPlaylist = async (req, res) => {
-	const { id } = req.params;
 	const { visibility, addSongs, removeSongs } = req.body;
 
 	const playlistInDb = req.playlist;

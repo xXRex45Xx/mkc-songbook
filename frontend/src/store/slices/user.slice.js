@@ -11,72 +11,79 @@ import { createSlice } from "@reduxjs/toolkit";
  * @type {import('@reduxjs/toolkit').Slice}
  */
 export const userSlice = createSlice({
-    name: "user",
-    initialState: {
-        authEmail: "",
-        authOtp: "",
-        forgotEmail: "",
-        currentUser: null,
-    },
-    reducers: {
-        /**
-         * Sets email for authentication flow
-         * @param {Object} state - Current state
-         * @param {Object} action - Action with email as payload
-         */
-        setAuthEmail: (state, action) => {
-            state.authEmail = action.payload;
-        },
-        /**
-         * Sets OTP for authentication flow
-         * @param {Object} state - Current state
-         * @param {Object} action - Action with OTP as payload
-         */
-        setAuthOtp: (state, action) => {
-            state.authOtp = action.payload;
-        },
-        /**
-         * Resets authentication state
-         * Clears email and OTP
-         * @param {Object} state - Current state
-         */
-        resetAuth: (state, _action) => {
-            state.authEmail = "";
-            state.authOtp = "";
-        },
-        /**
-         * Sets current user data
-         * @param {Object} state - Current state
-         * @param {Object} action - Action with user data as payload
-         */
-        setCurrentUser: (state, action) => {
-            state.currentUser = action.payload;
-        },
-        /**
-         * Resets current user data
-         * Used for logout
-         * @param {Object} state - Current state
-         */
-        resetCurrentUser: (state, _action) => {
-            state.currentUser = null;
-        },
-        /**
-         * Sets email for password reset flow
-         * @param {Object} state - Current state
-         * @param {Object} action - Action with email as payload
-         */
-        setForgotPassEmail: (state, action) => {
-            state.forgotEmail = action.payload;
-        },
-    },
+	name: "user",
+	initialState: {
+		authEmail: "",
+		authOtp: "",
+		forgotEmail: "",
+		currentUser: null,
+	},
+	reducers: {
+		/**
+		 * Sets email for authentication flow
+		 * @param {Object} state - Current state
+		 * @param {Object} action - Action with email as payload
+		 */
+		setAuthEmail: (state, action) => {
+			state.authEmail = action.payload;
+		},
+		/**
+		 * Sets OTP for authentication flow
+		 * @param {Object} state - Current state
+		 * @param {Object} action - Action with OTP as payload
+		 */
+		setAuthOtp: (state, action) => {
+			state.authOtp = action.payload;
+		},
+		/**
+		 * Resets authentication state
+		 * Clears email and OTP
+		 * @param {Object} state - Current state
+		 */
+		resetAuth: (state, _action) => {
+			state.authEmail = "";
+			state.authOtp = "";
+		},
+		/**
+		 * Sets current user data
+		 * @param {Object} state - Current state
+		 * @param {Object} action - Action with user data as payload
+		 */
+		setCurrentUser: (state, action) => {
+			state.currentUser = action.payload;
+		},
+		/**
+		 * Resets current user data
+		 * Used for logout
+		 * @param {Object} state - Current state
+		 */
+		resetCurrentUser: (state, _action) => {
+			state.currentUser = null;
+		},
+		/**
+		 * Sets email for password reset flow
+		 * @param {Object} state - Current state
+		 * @param {Object} action - Action with email as payload
+		 */
+		setForgotPassEmail: (state, action) => {
+			state.forgotEmail = action.payload;
+		},
+		setUserFavorites: (state, action) => {
+			state.currentUser = {
+				...state.currentUser,
+				favorites: action.payload,
+			};
+		},
+	},
 });
 
 export const {
-    setAuthEmail,
-    setAuthOtp,
-    resetAuth,
-    setCurrentUser,
-    resetCurrentUser,
-    setForgotPassEmail,
+	setAuthEmail,
+	setAuthOtp,
+	resetAuth,
+	setCurrentUser,
+	resetCurrentUser,
+	setForgotPassEmail,
+	setUserFavorites,
 } = userSlice.actions;
 export default userSlice.reducer;
