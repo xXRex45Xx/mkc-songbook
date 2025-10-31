@@ -13,6 +13,7 @@ import AlbumModel from "../models/album.model.js";
 import SongModel from "../models/song.model.js";
 import { regexBuilder } from "../utils/amharic-map.util.js";
 import { NotFoundError } from "../utils/error.util.js";
+import fs from "fs";
 
 /**
  * Get all albums with optional name-only projection
@@ -100,11 +101,11 @@ export const updateAlbum = async (req, res) => {
 
 	let albumInDb = await AlbumModel.findById(id).populate("songs");
 	if (req.file) {
-		if (albumInDb.photoPath)
-			fs.unlink(
-				albumInDb.photoPath,
-				(err) => (req.error.fileDeleteError = err)
-			);
+		if (albumInDb.photoPath && fs.existsSync(albumInDb.photoPath))
+			fs.unlink(albumInDb.photoPath, (err) => {
+				if (!req.error) req.error = {};
+				req.error.fileDeleteError = err;
+			});
 		albumInDb.photoPath = req.file.path;
 		albumInDb.photoLink = "/static/albums/images/" + req.file.filename;
 	}
@@ -167,6 +168,7 @@ export const updateAlbum = async (req, res) => {
 	}
 
 	res.status(200).json({ updated: true });
+	if (req.error?.fileDeleteError) console.error(req.error.fileDeleteError);
 };
 
 export const deleteAlbum = async (req, res) => {
@@ -180,6 +182,8 @@ export const deleteAlbum = async (req, res) => {
 		{ $pull: { albums: id } }
 	);
 	await AlbumModel.findByIdAndDelete(id);
+	if (album.photoPath && fs.existsSync(album.photoPath))
+		fs.unlink(album.photoPath, (err) => console.error(err));
 
 	res.status(200).json({ deleted: true });
 };
