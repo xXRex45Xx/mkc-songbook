@@ -94,10 +94,10 @@ const LyricViewer = ({ song }) => {
 					<BackSvg className="stroke-neutrals-700 hover:stroke-neutrals-500 active:stroke-neutrals-600" />
 				</Button>
 
-				<h1 className="text-baseblack font-bold text-2xl ml-auto">
+				<h1 className=" text-baseblack font-bold text-lg md:text-2xl ml-3">
 					{song.title}
 				</h1>
-				<div className="ml-auto flex items-center gap-12">
+				<div className="flex items-center gap-3 md:gap-12">
 					{song.musicElements?.chord && (
 						<MusicElement
 							type="chord"
@@ -178,7 +178,7 @@ const LyricViewer = ({ song }) => {
 			</Card>
 			<p
 				style={{ fontSize: `${lyricsFontSize}pt` }}
-				className={`justify-center self-center text-baseblack font-bold whitespace-pre`}
+				className={`justify-center self-center text-baseblack font-bold whitespace-pre text-wrap`}
 			>
 				{searchParams.get("q")
 					? song.lyrics.split(regex).map((part) => {
