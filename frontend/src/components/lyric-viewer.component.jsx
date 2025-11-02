@@ -99,13 +99,22 @@ const LyricViewer = ({ song }) => {
 				</h1>
 				<div className="ml-auto flex items-center gap-12">
 					{song.musicElements?.chord && (
-						<MusicElement type="chord" detail={song.musicElements.chord} />
+						<MusicElement
+							type="chord"
+							detail={song.musicElements.chord}
+						/>
 					)}
 					{song.musicElements?.tempo && (
-						<MusicElement type="tempo" detail={song.musicElements.tempo} />
+						<MusicElement
+							type="tempo"
+							detail={song.musicElements.tempo}
+						/>
 					)}
 					{song.musicElements?.rythm && (
-						<MusicElement type="rythm" detail={song.musicElements.rythm} />
+						<MusicElement
+							type="rythm"
+							detail={song.musicElements.rythm}
+						/>
 					)}
 					<Tooltip content="Font Size">
 						<Popover
@@ -129,6 +138,7 @@ const LyricViewer = ({ song }) => {
 											onChange={(e) =>
 												dispatch(setLyricsFontSize(e.target.value))
 											}
+											show
 										/>
 										<span className="text-baseblack text-center font-medium text-base">
 											{lyricsFontSize}pts
@@ -137,13 +147,19 @@ const LyricViewer = ({ song }) => {
 								</div>
 							}
 						>
-							<Button className="focus:ring-0" theme={buttonTheme} size="xxs">
+							<Button
+								className="focus:ring-0"
+								theme={buttonTheme}
+								size="xxs"
+							>
 								<TextSizeSvg className="*:stroke-baseblack hover:*:stroke-neutrals-1000 active:*:stroke-baseblack" />
 							</Button>
 						</Popover>
 					</Tooltip>
 					<Tooltip
-						content={hiddenHeader ? "Exit Fullscreen" : "Enter Fullscreen"}
+						content={
+							hiddenHeader ? "Exit Fullscreen" : "Enter Fullscreen"
+						}
 					>
 						<Button
 							className="focus:ring-0"
