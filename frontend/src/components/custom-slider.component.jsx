@@ -27,7 +27,7 @@ const CustomSlider = ({ value, step, min = 0, max, onChange, show }) => {
 				onChange={onChange}
 				theme={rangeSliderTheme}
 				step={step}
-				className="hidden md:flex"
+				className={show ? "" : "hidden md:flex"}
 			/>
 			<div
 				style={{
