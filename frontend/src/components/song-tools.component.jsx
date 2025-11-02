@@ -146,21 +146,20 @@ const SongTools = ({ song, showDelete, deleteDescription, onDelete }) => {
 			onClick={(e) => e.stopPropagation()}
 			className="flex gap-7 items-center w-fit"
 		>
-			{windowWidth >= 768 &&
-				!["admin", "super-admin"].includes(user?.role) && (
-					<>
-						{isAddingToFavorite ? (
-							<CustomTailSpin xs />
-						) : (
-							<div onClick={handleToggleFavorite}>
-								<HeartSvg className={favoriteIconStyle} />
-							</div>
-						)}
-						{/* <div>
+			{!["admin", "super-admin"].includes(user?.role) && (
+				<>
+					{isAddingToFavorite ? (
+						<CustomTailSpin xs />
+					) : (
+						<div onClick={handleToggleFavorite}>
+							<HeartSvg className={favoriteIconStyle} />
+						</div>
+					)}
+					{/* <div>
 							<DownloadSvg className="hover:first:fill-success-200 active:first:fill-success-300 cursor-pointer" />
 						</div> */}
-					</>
-				)}
+				</>
+			)}
 			{["admin", "super-admin"].includes(user?.role) ? (
 				<>
 					<Link to={`/songs/${song._id}/edit`} className="cursor-pointer">
