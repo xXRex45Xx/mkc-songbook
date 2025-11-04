@@ -14,6 +14,7 @@ import {
 	useSensors,
 	useSensor,
 	PointerSensor,
+	TouchSensor,
 } from "@dnd-kit/core";
 import { Table } from "flowbite-react";
 
@@ -59,7 +60,8 @@ const SongsTable = ({
 	const sensors = useSensors(
 		useSensor(PointerSensor, {
 			activationConstraint: { delay: 150 },
-		})
+		}),
+		useSensor(TouchSensor, { activationConstraint: { delay: 150 } })
 	);
 	/**
 	 * Table headers configuration based on screen width
