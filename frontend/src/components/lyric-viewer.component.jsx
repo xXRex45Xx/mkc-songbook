@@ -98,23 +98,27 @@ const LyricViewer = ({ song }) => {
 					{song.title}
 				</h1>
 				<div className="flex items-center gap-3 md:gap-12">
-					{song.musicElements?.chord && (
-						<MusicElement
-							type="chord"
-							detail={song.musicElements.chord}
-						/>
-					)}
-					{song.musicElements?.tempo && (
-						<MusicElement
-							type="tempo"
-							detail={song.musicElements.tempo}
-						/>
-					)}
-					{song.musicElements?.rythm && (
-						<MusicElement
-							type="rythm"
-							detail={song.musicElements.rythm}
-						/>
+					{document.fullscreenElement !== null && (
+						<>
+							{song.musicElements?.chord && (
+								<MusicElement
+									type="chord"
+									detail={song.musicElements.chord}
+								/>
+							)}
+							{song.musicElements?.tempo && (
+								<MusicElement
+									type="tempo"
+									detail={song.musicElements.tempo}
+								/>
+							)}
+							{song.musicElements?.rythm && (
+								<MusicElement
+									type="rythm"
+									detail={song.musicElements.rythm}
+								/>
+							)}
+						</>
 					)}
 					<Tooltip content="Font Size">
 						<Popover

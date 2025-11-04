@@ -13,6 +13,7 @@ import { useNavigate, useParams, useRevalidator } from "react-router-dom";
 const PlaylistViewer = ({ playlist }) => {
 	const { playlistId } = useParams();
 	const revalidator = useRevalidator();
+	const [playlistSongs, setPlaylistSongs] = useState(playlist.songs);
 	const [openPreShareModal, setOpenPreShareModal] = useState(false);
 	const [preShareModalError, setPreShareModalError] = useState("");
 	const [openRemoveSongModal, setOpenRemoveSongModal] = useState(false);
@@ -79,6 +80,40 @@ const PlaylistViewer = ({ playlist }) => {
 		}
 	};
 
+	const handleDragEnd = (e) => {
+		const { active, over } = e;
+
+		if (!over) return;
+
+		const draggedIdx = active.id;
+		const overIdx = over.id;
+
+		if (draggedIdx === overIdx || draggedIdx === overIdx - 1) return;
+
+		let tmp;
+
+		if (overIdx === 0) {
+			tmp = [playlistSongs[draggedIdx]];
+			tmp = tmp.concat(playlistSongs.slice(0, draggedIdx));
+			if (draggedIdx < playlistSongs.length - 1)
+				tmp = tmp.concat(playlistSongs.slice(draggedIdx + 1));
+		} else if (draggedIdx < overIdx - 1) {
+			tmp = playlistSongs.slice(0, draggedIdx);
+			tmp = tmp.concat(playlistSongs.slice(draggedIdx + 1, overIdx));
+			tmp.push(playlistSongs[draggedIdx]);
+			if (overIdx < playlistSongs.length) {
+				tmp = tmp.concat(playlistSongs.slice(overIdx));
+			}
+		} else if (overIdx - 1 < draggedIdx) {
+			tmp = playlistSongs.slice(0, overIdx);
+			tmp.push(playlistSongs[draggedIdx]);
+			tmp = tmp.concat(playlistSongs.slice(overIdx, draggedIdx));
+			if (draggedIdx < playlistSongs.length - 1)
+				tmp = tmp.concat(playlistSongs.slice(draggedIdx + 1));
+		}
+		setPlaylistSongs(tmp);
+	};
+
 	return (
 		<div className="flex flex-col gap-5 w-full">
 			<SongCollectionTools
@@ -102,7 +137,7 @@ const PlaylistViewer = ({ playlist }) => {
 				favorites={playlistId === "favorites"}
 			/>
 			<SongsTable
-				songs={playlist.songs}
+				songs={playlistSongs}
 				showOverflow
 				showDelete={
 					user?.id === playlist.creator._id && playlistId !== "favorites"
@@ -112,6 +147,7 @@ const PlaylistViewer = ({ playlist }) => {
 					setSongToBeRemoved(songId);
 					setOpenRemoveSongModal(true);
 				}}
+				onDragEnd={handleDragEnd}
 			/>
 			{/*Pre share modal */}
 			<Modal

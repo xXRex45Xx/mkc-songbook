@@ -9,6 +9,13 @@ import useWindowSize from "../hooks/useWindowSize.hook";
 import CustomTable from "./custom-table.component";
 import SongsTableRow from "./custom-row.component";
 import CustomTailSpin from "./custom-tail-spin.component";
+import {
+	DndContext,
+	useSensors,
+	useSensor,
+	PointerSensor,
+} from "@dnd-kit/core";
+import { Table } from "flowbite-react";
 
 /**
  * Songs Table Component
@@ -33,13 +40,13 @@ const SongsTable = ({
 	showDelete,
 	deleteDescription,
 	onDelete,
+	onDragEnd,
 }) => {
 	/**
 	 * Refs for table scroll behavior
 	 */
 	const neutralTableRef = useRef();
 	const titleTableRef = useRef();
-
 	/**
 	 * Window width from Redux store for responsive layout
 	 */
@@ -49,6 +56,11 @@ const SongsTable = ({
 	const { state: navState } = useNavigation();
 	const { state: revalidateState } = useRevalidator();
 
+	const sensors = useSensors(
+		useSensor(PointerSensor, {
+			activationConstraint: { delay: 150 },
+		})
+	);
 	/**
 	 * Table headers configuration based on screen width
 	 * Shows headers only on desktop (>= 768px)
@@ -92,16 +104,33 @@ const SongsTable = ({
 						}
 						ref={neutralTableRef}
 					>
-						{songs.map((song) => (
-							<SongsTableRow
-								key={song._id + song.title}
-								song={song}
-								highlight={searchParams.get("type") === "lyrics"}
-								showDelete={showDelete}
-								deleteDescription={deleteDescription}
-								onDelete={onDelete}
-							/>
-						))}
+						{onDragEnd ? (
+							<DndContext sensors={sensors} onDragEnd={onDragEnd}>
+								{songs.map((song, idx) => (
+									<SongsTableRow
+										key={song._id + song.title}
+										song={song}
+										highlight={searchParams.get("type") === "lyrics"}
+										showDelete={showDelete}
+										deleteDescription={deleteDescription}
+										onDelete={onDelete}
+										draggable
+										idx={idx}
+									/>
+								))}
+							</DndContext>
+						) : (
+							songs.map((song) => (
+								<SongsTableRow
+									key={song._id + song.title}
+									song={song}
+									highlight={searchParams.get("type") === "lyrics"}
+									showDelete={showDelete}
+									deleteDescription={deleteDescription}
+									onDelete={onDelete}
+								/>
+							))
+						)}
 					</CustomTable>
 				)}
 

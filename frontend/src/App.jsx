@@ -13,6 +13,7 @@ import { setCurrentUser } from "./store/slices/user.slice";
 import { Suspense } from "react";
 import CustomTailSpin from "./components/custom-tail-spin.component";
 import { useSelector } from "react-redux";
+import "./components/audio-player.styles.css";
 
 /**
  * Root application component
