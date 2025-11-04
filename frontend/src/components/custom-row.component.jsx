@@ -61,7 +61,7 @@ const SongsTableRow = ({
 			)}
 			<Table.Row
 				key={song._id}
-				className={"cursor-pointer touch-none"}
+				className={"cursor-pointer touch-manipulation"}
 				ref={draggable ? setDraggableRef : undefined}
 				{...(draggable ? attributes : {})}
 				{...(draggable ? listeners : {})}

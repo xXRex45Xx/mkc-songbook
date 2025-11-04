@@ -13,7 +13,7 @@ import {
 	DndContext,
 	useSensors,
 	useSensor,
-	PointerSensor,
+	MouseSensor,
 	TouchSensor,
 } from "@dnd-kit/core";
 import { Table } from "flowbite-react";
@@ -58,10 +58,12 @@ const SongsTable = ({
 	const { state: revalidateState } = useRevalidator();
 
 	const sensors = useSensors(
-		useSensor(PointerSensor, {
+		useSensor(MouseSensor, {
 			activationConstraint: { delay: 150 },
 		}),
-		useSensor(TouchSensor, { activationConstraint: { delay: 150 } })
+		useSensor(TouchSensor, {
+			activationConstraint: { delay: 150, tolerance: 5 },
+		})
 	);
 	/**
 	 * Table headers configuration based on screen width
