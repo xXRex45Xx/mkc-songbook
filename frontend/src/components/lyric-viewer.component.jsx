@@ -6,7 +6,7 @@ import MusicElement from "./music-element.component";
 import BackSvg from "../assets/back.svg?react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { regexBuilder } from "../utils/amharic-map.util";
 import {
 	setHiddenHeader,
@@ -44,11 +44,14 @@ import EnterFullscreenSvg from "../assets/enter-fullscreen.svg?react";
 const LyricViewer = ({ song }) => {
 	const navigate = useNavigate();
 	const [searchParams, _setSearchParams] = useSearchParams();
+	const [isFullScreen, setIsFullScreen] = useState(false);
 	const dispatch = useDispatch();
 
 	useEffect(() => {
+		if (!document.fullscreenEnabled) return;
 		dispatch(setHiddenHeader(true));
 		document.documentElement.requestFullscreen();
+		setIsFullScreen(true);
 		return () => {
 			dispatch(setHiddenHeader(false));
 			document.exitFullscreen();
@@ -73,6 +76,7 @@ const LyricViewer = ({ song }) => {
 
 	const handleToggleFullscreen = () => {
 		dispatch(toggleFullscreen());
+		setIsFullScreen((state) => !state);
 	};
 
 	return (
@@ -98,7 +102,7 @@ const LyricViewer = ({ song }) => {
 					{song.title}
 				</h1>
 				<div className="flex items-center gap-3 md:gap-12">
-					{document.fullscreenElement !== null && (
+					{!isFullScreen && (
 						<>
 							{song.musicElements?.chord && (
 								<MusicElement
