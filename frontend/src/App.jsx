@@ -9,7 +9,7 @@ import Header from "./components/header.component";
 // import AudioPlayer from "./components/audio-player.component";
 import store from "./store/store";
 import { getCurrentLoggedInUser } from "./utils/api/user-api.util";
-import { setCurrentUser } from "./store/slices/user.slice";
+import { setAdminType, setCurrentUser } from "./store/slices/user.slice";
 import { Suspense } from "react";
 import CustomTailSpin from "./components/custom-tail-spin.component";
 import { useSelector } from "react-redux";
@@ -52,6 +52,11 @@ export const loader = async () => {
 		try {
 			const data = await getCurrentLoggedInUser(token);
 			store.dispatch(setCurrentUser(data.user));
+			if (["admin", "super-admin"].includes(data.user.role)) {
+				store.dispatch(setAdminType(data.user.role));
+			} else {
+				store.dispatch(setAdminType(null));
+			}
 			return null;
 		} catch (error) {
 			if (error.status === 401) {

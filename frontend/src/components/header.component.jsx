@@ -9,7 +9,11 @@ import SearchToggleSvg from "../assets/search-toggle.svg?react";
 import { useMemo, useState } from "react";
 import { buttonTheme } from "../config/button-theme.config";
 import { useDispatch, useSelector } from "react-redux";
-import { resetCurrentUser } from "../store/slices/user.slice";
+import {
+	resetCurrentUser,
+	setAdminType,
+	toggleRole,
+} from "../store/slices/user.slice";
 
 /**
  * Header Component
@@ -51,6 +55,7 @@ const Header = () => {
 	 * Current user information from Redux store
 	 */
 	const user = useSelector((state) => state.user.currentUser);
+	const isAdmin = useSelector((state) => state.user.adminType) ? true : false;
 
 	/**
 	 * Memoized user role for conditional rendering
@@ -72,6 +77,7 @@ const Header = () => {
 	 */
 	const handleLogout = () => {
 		dispatch(resetCurrentUser());
+		dispatch(setAdminType(null));
 		localStorage.removeItem("_s");
 	};
 	return (
@@ -139,6 +145,18 @@ const Header = () => {
 									My Favorites
 								</Dropdown.Item>
 								<Dropdown.Divider />
+								{isAdmin && (
+									<>
+										<Dropdown.Item
+											onClick={() => dispatch(toggleRole())}
+										>
+											{["admin", "super-admin"].includes(user?.role)
+												? "Member Mode"
+												: "Admin Mode"}
+										</Dropdown.Item>
+										<Dropdown.Divider />
+									</>
+								)}
 								<Dropdown.Item onClick={handleLogout}>
 									Log Out
 								</Dropdown.Item>

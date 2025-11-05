@@ -17,6 +17,7 @@ export const userSlice = createSlice({
 		authOtp: "",
 		forgotEmail: "",
 		currentUser: null,
+		adminType: null,
 	},
 	reducers: {
 		/**
@@ -74,6 +75,17 @@ export const userSlice = createSlice({
 				favorites: action.payload,
 			};
 		},
+		setAdminType: (state, action) => {
+			state.adminType = action.payload;
+		},
+		toggleRole: (state) => {
+			if (!state.adminType || !state.currentUser) return;
+			if (state.currentUser.role === state.adminType) {
+				state.currentUser.role = "member";
+			} else {
+				state.currentUser.role = state.adminType;
+			}
+		},
 	},
 });
 
@@ -85,5 +97,7 @@ export const {
 	resetCurrentUser,
 	setForgotPassEmail,
 	setUserFavorites,
+	setAdminType,
+	toggleRole,
 } = userSlice.actions;
 export default userSlice.reducer;
