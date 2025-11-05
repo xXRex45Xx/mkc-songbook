@@ -11,6 +11,7 @@ import {
 	deleteSong,
 	getAllOrSearchSongs,
 	getSong,
+	streamSongAudio,
 	updateSong,
 } from "../controllers/song.controller.js";
 import { wrapAsync } from "../utils/error.util.js";
@@ -141,5 +142,7 @@ songRouter
 		wrapAsync(validateGetSong),
 		wrapAsync(deleteSong)
 	);
+
+songRouter.get("/:id/audio", wrapAsync(streamSongAudio));
 
 export default songRouter;

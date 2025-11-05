@@ -6,6 +6,7 @@
 import { configureStore } from "@reduxjs/toolkit";
 import configsReducer from "./slices/configs.slice";
 import userReducer from "./slices/user.slice";
+import playlistReducer from "./slices/playlist.slice";
 
 /**
  * Main Redux store instance
@@ -16,5 +17,6 @@ export default configureStore({
 	reducer: {
 		configs: configsReducer,
 		user: userReducer,
+		playlist: playlistReducer,
 	},
 });

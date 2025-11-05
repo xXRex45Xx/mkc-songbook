@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import AudioControls from "./audio-controls.component";
 import tmpAudio from "../assets/tmp-audio.mp3";
 
@@ -23,7 +23,7 @@ const AudioPlayer = () => {
 	 */
 	const [sliderValue, setSliderValue] = useState(0);
 	const [isPlaying, setIsPlaying] = useState(false);
-	const maxSliderValue = 100;
+	const [maxSliderValue, setMaxSliderValue] = useState(0);
 
 	const audioRef = useRef(null);
 
@@ -49,9 +49,7 @@ const AudioPlayer = () => {
 					max={maxSliderValue}
 					onChange={(e) => {
 						if (audioRef.current)
-							audioRef.current.currentTime =
-								(e.target.value / maxSliderValue) *
-								audioRef.current.duration;
+							audioRef.current.currentTime = e.target.value;
 					}}
 					value={sliderValue}
 					show
@@ -90,10 +88,13 @@ const AudioPlayer = () => {
 				onPlay={() => setIsPlaying(true)}
 				onPause={() => setIsPlaying(false)}
 				onTimeUpdate={(e) => {
-					setSliderValue((e.target.currentTime / e.target.duration) * 100);
+					setSliderValue(Math.floor(e.target.currentTime));
 				}}
 				onEnded={() => setIsPlaying(false)}
 				onStalled={() => setIsPlaying(false)}
+				onDurationChange={(e) =>
+					setMaxSliderValue(Math.floor(e.target.duration))
+				}
 			/>
 		</div>
 	);

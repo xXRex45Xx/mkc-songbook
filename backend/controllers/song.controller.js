@@ -13,7 +13,7 @@
 import AlbumModel from "../models/album.model.js";
 import SongModel from "../models/song.model.js";
 import { regexBuilder } from "../utils/amharic-map.util.js";
-import { NotFoundError } from "../utils/error.util.js";
+import { NotFoundError, ServerFaultError } from "../utils/error.util.js";
 import fs from "fs";
 
 /**
@@ -32,9 +32,10 @@ import fs from "fs";
 export const getAllOrSearchSongs = async (req, res) => {
 	const { q, page = 1, all, type, sortBy } = req.query;
 	let songs, totalPages;
+	const projection = "title songFilePath";
 	if (all) songs = await SongModel.find();
 	else if (!q) {
-		songs = await SongModel.find({}, { title: true })
+		songs = await SongModel.find({}, projection)
 			.sort(sortBy)
 			.collation({ locale: "en_US", numericOrdering: sortBy === "_id" })
 			.populate("albums", "name")
@@ -51,7 +52,7 @@ export const getAllOrSearchSongs = async (req, res) => {
 		else if (type === "id") query = { _id: q };
 		else {
 			const queryPromises = [
-				SongModel.find({ title: regex }, { title: true })
+				SongModel.find({ title: regex }, projection)
 					.sort(sortBy)
 					.collation({
 						locale: "en_US",
@@ -61,7 +62,7 @@ export const getAllOrSearchSongs = async (req, res) => {
 					.skip((page - 1) * 100)
 					.limit(100),
 				SongModel.find({ title: regex }).countDocuments(),
-				SongModel.find({ lyrics: regex }, { title: true })
+				SongModel.find({ lyrics: regex }, projection)
 					.sort(sortBy)
 					.collation({
 						locale: "en_US",
@@ -85,15 +86,23 @@ export const getAllOrSearchSongs = async (req, res) => {
 						: lyricsTotalDocuments / 100
 				) + 1;
 			songs = {
-				titleMatch,
-				lyricsMatch,
+				titleMatch: titleMatch.map((song) => ({
+					...song._doc,
+					hasAudio: song.songFilePath ? true : false,
+					songFilePath: undefined,
+				})),
+				lyricsMatch: lyricsMatch.map((song) => ({
+					...song._doc,
+					hasAudio: song.songFilePath ? true : false,
+					songFilePath: undefined,
+				})),
 			};
 
 			return res.status(200).json({ songs, totalPages });
 		}
 
 		const queryPromises = [
-			SongModel.find(query, { title: true })
+			SongModel.find(query, projection)
 				.sort(sortBy)
 				.collation({
 					locale: "en_US",
@@ -108,6 +117,11 @@ export const getAllOrSearchSongs = async (req, res) => {
 		totalPages = Math.floor(totalDocuments / 100) + 1;
 		songs = songsFromDb;
 	}
+	songs = songs.map((song) => ({
+		...song._doc,
+		hasAudio: song.songFilePath ? true : false,
+		songFilePath: undefined,
+	}));
 	res.status(200).json({ songs, totalPages });
 };
 
@@ -262,4 +276,34 @@ export const deleteSong = async (req, res) => {
 	await SongModel.findByIdAndDelete(id);
 
 	res.status(200).json({ deleted: true });
+};
+
+export const streamSongAudio = async (req, res) => {
+	const { id } = req.params;
+	const song = await SongModel.findById(id);
+	if (!song) throw new NotFoundError("Song not found.");
+	if (!song.songFilePath)
+		throw new NotFoundError("Song does not have an audio file.");
+	if (!fs.existsSync(song.songFilePath))
+		throw new ServerFaultError(
+			"Audio file seems to be missing. Please contact the system administrator."
+		);
+	const CHUNK_SIZE = 500 * 1e3;
+	const range = req.headers.range || "0";
+	const audioSize = fs.statSync(song.songFilePath).size;
+
+	const start = Number(range.replace(/\D/g, ""));
+	const end = Math.min(start + CHUNK_SIZE, audioSize - 1);
+	const contentLength = end - start + 1;
+
+	res.writeHead(206, {
+		"Content-Range": `bytes ${start}-${end}/${audioSize}`,
+		"Accept-Ranges": "bytes",
+		"Content-Length": contentLength,
+		"Content-Type": "audio/mpeg",
+		"Transfer-Encoding": "chunked",
+	});
+
+	const stream = fs.createReadStream(song.songFilePath, { start, end });
+	stream.pipe(res);
 };
