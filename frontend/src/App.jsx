@@ -6,7 +6,7 @@
 import { Await, Outlet, defer, useLoaderData } from "react-router-dom";
 import "./App.css";
 import Header from "./components/header.component";
-// import AudioPlayer from "./components/audio-player.component";
+import AudioPlayer from "./components/audio-player.component";
 import store from "./store/store";
 import { getCurrentLoggedInUser } from "./utils/api/user-api.util";
 import { setAdminType, setCurrentUser } from "./store/slices/user.slice";
@@ -23,7 +23,7 @@ import "./components/audio-player.styles.css";
  */
 function App() {
 	const data = useLoaderData();
-	// const user = useSelector((state) => state.user.currentUser);
+	const user = useSelector((state) => state.user.currentUser);
 	const hiddenHeader = useSelector((state) => state.configs.hiddenHeader);
 
 	return (
@@ -31,7 +31,7 @@ function App() {
 			<Await resolve={data?.user}>
 				{!hiddenHeader && <Header />}
 				<Outlet />
-				{/* {!["admin", "super-admin"].includes(user?.role) && <AudioPlayer />} */}
+				{!["admin", "super-admin"].includes(user?.role) && <AudioPlayer />}
 			</Await>
 		</Suspense>
 	);

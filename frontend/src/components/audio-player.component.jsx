@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import AudioControls from "./audio-controls.component";
+import tmpAudio from "../assets/tmp-audio.mp3";
 
 import CustomSlider from "./custom-slider.component";
 import AudioPlayerToolbox from "./audio-player-toolbox.component";
@@ -21,23 +22,48 @@ const AudioPlayer = () => {
 	 * State for tracking playback progress
 	 */
 	const [sliderValue, setSliderValue] = useState(0);
+	const [isPlaying, setIsPlaying] = useState(false);
 	const maxSliderValue = 100;
+
+	const audioRef = useRef(null);
+
+	const handleTogglePlayPause = () => {
+		if (!audioRef.current) return;
+		audioRef.current.paused
+			? audioRef.current.play()
+			: audioRef.current.pause();
+	};
+
+	const formatTime = (seconds) => {
+		const mins = Math.floor(seconds / 60);
+		const secs = Math.floor(seconds % 60);
+		return `${mins.toString().padStart(2, "0")}:${secs
+			.toString()
+			.padStart(2, "0")}`;
+	};
 
 	return (
 		<div className="p-px bg-gradient-to-r from-secondary to-primary">
 			<div className="flex flex-col flex-nowrap bg-basewhite">
 				<CustomSlider
 					max={maxSliderValue}
-					onChange={(e) => setSliderValue(e.target.value)}
+					onChange={(e) => {
+						if (audioRef.current)
+							audioRef.current.currentTime =
+								(e.target.value / maxSliderValue) *
+								audioRef.current.duration;
+					}}
 					value={sliderValue}
+					show
 				/>
 				<div className="flex flex-col px-5 md:px-10 py-3.5 md:pt-3.5 md:pb-7 items-stretch">
 					<div className="hidden md:flex justify-between">
 						<span className="text-neutrals-700 text-sm font-bold">
-							3:30
+							{audioRef.current &&
+								formatTime(audioRef.current.currentTime)}
 						</span>
 						<span className="text-neutrals-700 text-sm font-bold">
-							5:50
+							{audioRef.current && formatTime(audioRef.current.duration)}
 						</span>
 					</div>
 					<div className="flex justify-between items-center">
@@ -49,11 +75,26 @@ const AudioPlayer = () => {
 								Hayley Westenra/[Album Name]
 							</span>
 						</div>
-						<AudioControls />
+						<AudioControls
+							onPlayPause={handleTogglePlayPause}
+							isPlaying={isPlaying}
+						/>
 						<AudioPlayerToolbox />
 					</div>
 				</div>
 			</div>
+			<audio
+				hidden
+				ref={audioRef}
+				src={tmpAudio}
+				onPlay={() => setIsPlaying(true)}
+				onPause={() => setIsPlaying(false)}
+				onTimeUpdate={(e) => {
+					setSliderValue((e.target.currentTime / e.target.duration) * 100);
+				}}
+				onEnded={() => setIsPlaying(false)}
+				onStalled={() => setIsPlaying(false)}
+			/>
 		</div>
 	);
 };
