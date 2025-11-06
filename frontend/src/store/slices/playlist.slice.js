@@ -5,6 +5,7 @@ export const configsSlice = createSlice({
 	initialState: {
 		queue: [],
 		currentSongIdx: -1,
+		repeat: "no-repeat",
 	},
 	reducers: {
 		setPlaylist: (state, action) => {
@@ -32,6 +33,12 @@ export const configsSlice = createSlice({
 		prevSong: (state) => {
 			if (state.currentSongIdx !== 0) state.currentSongIdx--;
 		},
+		toggleRepeat: (state) => {
+			if (state.repeat === "no-repeat") state.repeat = "repeat-all";
+			else if (state.repeat === "repeat-all")
+				state.repeat = "repeat-current";
+			else if (state.repeat === "repeat-current") state.repeat = "no-repeat";
+		},
 	},
 });
 
@@ -41,5 +48,6 @@ export const {
 	nextSong,
 	prevSong,
 	addSongToQueue,
+	toggleRepeat,
 } = configsSlice.actions;
 export default configsSlice.reducer;

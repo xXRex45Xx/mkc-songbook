@@ -4,8 +4,17 @@ import tmpAudio from "../assets/tmp-audio.mp3";
 
 import CustomSlider from "./custom-slider.component";
 import AudioPlayerToolbox from "./audio-player-toolbox.component";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import backendURL from "../config/backend-url.config";
+import {
+	nextSong,
+	prevSong,
+	setCurrentSongIdx,
+	toggleRepeat,
+} from "../store/slices/playlist.slice";
+import { useLocation, useNavigate } from "react-router-dom";
+import { updateFavoriteSongs } from "../utils/api/user-api.util";
+import { setUserFavorites } from "../store/slices/user.slice";
 
 /**
  * Audio Player Component
@@ -26,9 +35,14 @@ const AudioPlayer = () => {
 	const [sliderValue, setSliderValue] = useState(0);
 	const [isPlaying, setIsPlaying] = useState(false);
 	const [maxSliderValue, setMaxSliderValue] = useState(0);
+	const [isAddingToFavorite, setIsAddingToFavorite] = useState(false);
+	const location = useLocation();
+	const navigate = useNavigate();
+	const dispatch = useDispatch();
 	const queue = useSelector((state) => state.playlist.queue);
 	const currentSongIdx = useSelector((state) => state.playlist.currentSongIdx);
-
+	const repeat = useSelector((state) => state.playlist.repeat);
+	const user = useSelector((state) => state.user.currentUser);
 	const audioRef = useRef(null);
 
 	const handleTogglePlayPause = () => {
@@ -45,6 +59,36 @@ const AudioPlayer = () => {
 		return `${mins.toString().padStart(2, "0")}:${secs
 			.toString()
 			.padStart(2, "0")}`;
+	};
+
+	const handleToggleFavorite = async () => {
+		if (!user) return navigate(`/auth?redirect=${location.pathname}`);
+		if (!queue[currentSongIdx]) return;
+		setIsAddingToFavorite(true);
+		try {
+			if (!user.favorites) user.favorites = [];
+			if (user.favorites.includes(queue[currentSongIdx]._id)) {
+				await updateFavoriteSongs(null, null, [queue[currentSongIdx]._id]);
+				dispatch(
+					setUserFavorites(
+						user.favorites.filter(
+							(favSong) => favSong !== queue[currentSongIdx]._id
+						)
+					)
+				);
+			} else {
+				await updateFavoriteSongs(null, [queue[currentSongIdx]._id]);
+				dispatch(
+					setUserFavorites(
+						user.favorites.concat([queue[currentSongIdx]._id])
+					)
+				);
+			}
+		} catch (error) {
+			alert(error.message);
+		} finally {
+			setIsAddingToFavorite(false);
+		}
 	};
 
 	return (
@@ -72,15 +116,31 @@ const AudioPlayer = () => {
 					<div className="flex justify-between items-center">
 						<div className="flex flex-col items-stretch gap-1.5 ">
 							<span className="text-xs md:text-lg font-semibold text-baseblack">
-								Amazing Grace
+								{queue[currentSongIdx]?.title}
 							</span>
 							<span className="text-[0.625rem] md:text-sm font-semibold text-neutrals-700">
-								Hayley Westenra/[Album Name]
+								{queue[currentSongIdx]?.albums
+									.map((album) => album.name)
+									.join(",")}
 							</span>
 						</div>
 						<AudioControls
 							onPlayPause={handleTogglePlayPause}
 							isPlaying={isPlaying}
+							onNext={() => dispatch(nextSong())}
+							onPrev={() => {
+								if (audioRef.current.currentTime < 3)
+									return dispatch(prevSong());
+								setSliderValue(0);
+								if (audioRef.current.paused) audioRef.current.play();
+							}}
+							onToggleFav={handleToggleFavorite}
+							toggleFavProcessing={isAddingToFavorite}
+							songInFav={user?.favorites.includes(
+								queue[currentSongIdx]?._id
+							)}
+							repeat={repeat}
+							onToggleRepeat={() => dispatch(toggleRepeat())}
 						/>
 						<AudioPlayerToolbox />
 					</div>
@@ -100,13 +160,19 @@ const AudioPlayer = () => {
 				onTimeUpdate={(e) => {
 					setSliderValue(Math.floor(e.target.currentTime));
 				}}
-				onEnded={() => setIsPlaying(false)}
+				onEnded={() => {
+					setIsPlaying(false);
+					if (repeat === "repeat-current") return audioRef.current.play();
+					if (currentSongIdx < queue.length - 1)
+						return dispatch(nextSong());
+					if (repeat === "repeat-all") dispatch(setCurrentSongIdx(0));
+				}}
 				onStalled={() => setIsPlaying(false)}
 				onDurationChange={(e) => {
 					setMaxSliderValue(Math.floor(e.target.duration));
-					console.log(e.target.duration);
 				}}
 				crossOrigin="anonymous"
+				autoPlay
 			/>
 		</div>
 	);
