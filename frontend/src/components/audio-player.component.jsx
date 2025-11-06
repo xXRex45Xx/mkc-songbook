@@ -4,6 +4,8 @@ import tmpAudio from "../assets/tmp-audio.mp3";
 
 import CustomSlider from "./custom-slider.component";
 import AudioPlayerToolbox from "./audio-player-toolbox.component";
+import { useSelector } from "react-redux";
+import backendURL from "../config/backend-url.config";
 
 /**
  * Audio Player Component
@@ -24,17 +26,20 @@ const AudioPlayer = () => {
 	const [sliderValue, setSliderValue] = useState(0);
 	const [isPlaying, setIsPlaying] = useState(false);
 	const [maxSliderValue, setMaxSliderValue] = useState(0);
+	const queue = useSelector((state) => state.playlist.queue);
+	const currentSongIdx = useSelector((state) => state.playlist.currentSongIdx);
 
 	const audioRef = useRef(null);
 
 	const handleTogglePlayPause = () => {
-		if (!audioRef.current) return;
+		if (!audioRef.current || currentSongIdx < 0 || queue.length === 0) return;
 		audioRef.current.paused
 			? audioRef.current.play()
 			: audioRef.current.pause();
 	};
 
 	const formatTime = (seconds) => {
+		if (!seconds) return "00:00";
 		const mins = Math.floor(seconds / 60);
 		const secs = Math.floor(seconds % 60);
 		return `${mins.toString().padStart(2, "0")}:${secs
@@ -84,7 +89,12 @@ const AudioPlayer = () => {
 			<audio
 				hidden
 				ref={audioRef}
-				src={tmpAudio}
+				src={
+					currentSongIdx >= 0 && currentSongIdx < queue.length
+						? `${backendURL}/api/song/${queue[currentSongIdx]._id}/audio`
+						: undefined
+				}
+				// src={tmpAudio}
 				onPlay={() => setIsPlaying(true)}
 				onPause={() => setIsPlaying(false)}
 				onTimeUpdate={(e) => {
@@ -92,9 +102,11 @@ const AudioPlayer = () => {
 				}}
 				onEnded={() => setIsPlaying(false)}
 				onStalled={() => setIsPlaying(false)}
-				onDurationChange={(e) =>
-					setMaxSliderValue(Math.floor(e.target.duration))
-				}
+				onDurationChange={(e) => {
+					setMaxSliderValue(Math.floor(e.target.duration));
+					console.log(e.target.duration);
+				}}
+				crossOrigin="anonymous"
 			/>
 		</div>
 	);

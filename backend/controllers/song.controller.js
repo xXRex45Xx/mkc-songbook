@@ -288,12 +288,54 @@ export const streamSongAudio = async (req, res) => {
 		throw new ServerFaultError(
 			"Audio file seems to be missing. Please contact the system administrator."
 		);
-	const CHUNK_SIZE = 500 * 1e3;
-	const range = req.headers.range || "0";
-	const audioSize = fs.statSync(song.songFilePath).size;
 
-	const start = Number(range.replace(/\D/g, ""));
-	const end = Math.min(start + CHUNK_SIZE, audioSize - 1);
+	const audioSize = fs.statSync(song.songFilePath).size;
+	const range = req.headers.range;
+	const CHUNK_SIZE = 500 * 1e3; // 500KB chunks
+
+	// If no range header, send first chunk with proper headers so browser knows total size
+	if (!range) {
+		const start = 0;
+		const end = Math.min(CHUNK_SIZE - 1, audioSize - 1);
+		const contentLength = end - start + 1;
+
+		res.writeHead(206, {
+			"Content-Range": `bytes ${start}-${end}/${audioSize}`,
+			"Accept-Ranges": "bytes",
+			"Content-Length": contentLength,
+			"Content-Type": "audio/mpeg",
+		});
+		const stream = fs.createReadStream(song.songFilePath, { start, end });
+		stream.pipe(res);
+		return;
+	}
+
+	// Parse range header (format: "bytes=start-end")
+	const parts = range.replace(/bytes=/, "").split("-");
+	const start = parseInt(parts[0], 10);
+	const requestedEnd = parts[1] ? parseInt(parts[1], 10) : audioSize - 1;
+
+	// Validate range start
+	if (isNaN(start) || start >= audioSize || start < 0) {
+		res.writeHead(416, {
+			"Content-Range": `bytes */${audioSize}`,
+		});
+		res.end();
+		return;
+	}
+
+	// Enforce chunk size limit - only send CHUNK_SIZE bytes at a time
+	const end = Math.min(start + CHUNK_SIZE - 1, requestedEnd, audioSize - 1);
+
+	// Validate final range
+	if (start > end) {
+		res.writeHead(416, {
+			"Content-Range": `bytes */${audioSize}`,
+		});
+		res.end();
+		return;
+	}
+
 	const contentLength = end - start + 1;
 
 	res.writeHead(206, {
@@ -301,7 +343,6 @@ export const streamSongAudio = async (req, res) => {
 		"Accept-Ranges": "bytes",
 		"Content-Length": contentLength,
 		"Content-Type": "audio/mpeg",
-		"Transfer-Encoding": "chunked",
 	});
 
 	const stream = fs.createReadStream(song.songFilePath, { start, end });

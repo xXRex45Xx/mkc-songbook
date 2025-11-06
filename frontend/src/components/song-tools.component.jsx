@@ -12,7 +12,7 @@ import OptionsSvg from "../assets/options.svg?react";
 import HeartSvg from "../assets/heart.svg?react";
 // import DownloadSvg from "../assets/download.svg?react";
 // import videoSmallIcon from "../assets/video-small.svg";
-// import queueSmallIcon from "../assets/queue-small.svg";
+import queueSmallIcon from "../assets/queue-small.svg";
 // import nextSmallIcon from "../assets/next-small.svg";
 import playlistIcon from "../assets/playlist.png";
 import shareSmallIcon from "../assets/share-small.svg";
@@ -28,6 +28,7 @@ import PlaylistCard from "./playlist-card.component";
 import { getAllPlaylists, patchPlaylist } from "../utils/api/playlist-api.util";
 import { updateFavoriteSongs } from "../utils/api/user-api.util";
 import { setUserFavorites } from "../store/slices/user.slice";
+import { addSongToQueue } from "../store/slices/playlist.slice";
 
 /**
  * Component for song interaction tools and options
@@ -132,6 +133,10 @@ const SongTools = ({ song, showDelete, deleteDescription, onDelete }) => {
 		}
 	};
 
+	const handleAddToQueue = () => {
+		if (song?.hasAudio) dispatch(addSongToQueue(song));
+	};
+
 	const favoriteIconStyle = useMemo(() => {
 		let style =
 			"hover:first:fill-primary-400 active:first:fill-primary-700 cursor-pointer ";
@@ -214,13 +219,19 @@ const SongTools = ({ song, showDelete, deleteDescription, onDelete }) => {
 						<OptionsSvg className="text-basewhite hover:text-neutrals-400 active:text-baseblack cursor-pointer" />
 					}
 				>
+					{song?.hasAudio && (
+						<Dropdown.Item
+							className="flex gap-1.5"
+							onClick={handleAddToQueue}
+						>
+							<img src={queueSmallIcon} alt="" />
+							Add To Queue
+						</Dropdown.Item>
+					)}
 					{/* <Dropdown.Item className="flex gap-1.5">
 						<img src={videoSmallIcon} alt=""></img>Play Video
 					</Dropdown.Item>
-					<Dropdown.Item className="flex gap-1.5">
-						<img src={queueSmallIcon} alt="" />
-						Add To Queue
-					</Dropdown.Item>
+					
 					<Dropdown.Item className="flex gap-1.5">
 						<img src={nextSmallIcon} alt="" />
 						Play Next
