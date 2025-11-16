@@ -15,6 +15,9 @@ const SongCollectionTools = ({
 	allowShare,
 	handleEdit,
 	handleDelete,
+	handleAddToQueue,
+	handlePlayNext,
+	showPlayerTools,
 }) => {
 	const navigate = useNavigate();
 
@@ -45,14 +48,24 @@ const SongCollectionTools = ({
 					<OptionsSvg className="stroke-neutrals-700 hover:stroke-neutrals-500 active:stroke-neutrals-600" />
 				}
 			>
-				<Dropdown.Item className="flex gap-1.5">
-					<img src={queueSmallIcon} alt="" />
-					Add To Queue
-				</Dropdown.Item>
-				<Dropdown.Item className="flex gap-1.5">
-					<img src={nextSmallIcon} alt="" />
-					Play Next
-				</Dropdown.Item>
+				{showPlayerTools && (
+					<>
+						<Dropdown.Item
+							className="flex gap-1.5"
+							onClick={handleAddToQueue}
+						>
+							<img src={queueSmallIcon} alt="" />
+							Add To Queue
+						</Dropdown.Item>
+						<Dropdown.Item
+							className="flex gap-1.5"
+							onClick={handlePlayNext}
+						>
+							<img src={nextSmallIcon} alt="" />
+							Play Next
+						</Dropdown.Item>
+					</>
+				)}
 				{allowModify && (
 					<>
 						<Dropdown.Item className="flex gap-1.5" onClick={handleEdit}>

@@ -32,6 +32,8 @@ const SongsTableRow = ({
 	onDelete,
 	draggable,
 	idx,
+	showPlayButton,
+	onPlay,
 }) => {
 	const navigate = useNavigate();
 	const [searchParams, _setSearchParams] = useSearchParams();
@@ -107,6 +109,8 @@ const SongsTableRow = ({
 						showDelete={showDelete}
 						deleteDescription={deleteDescription}
 						onDelete={onDelete}
+						showPlayButton={showPlayButton}
+						onPlay={onPlay}
 					/>
 				</Table.Cell>
 			</Table.Row>

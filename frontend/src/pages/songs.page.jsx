@@ -22,7 +22,12 @@ const SongsPage = () => {
 			<Suspense fallback={<CustomTailSpin />}>
 				<Await resolve={loaderData.songData}>
 					{({ songs, totalPages }) => (
-						<SongsTable songs={songs} totalPages={totalPages} />
+						<SongsTable
+							songs={songs}
+							totalPages={totalPages}
+							showPlayButton
+							singleSongQueue
+						/>
 					)}
 				</Await>
 			</Suspense>

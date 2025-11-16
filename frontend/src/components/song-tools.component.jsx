@@ -10,6 +10,7 @@ import {
 } from "react-router-dom";
 import OptionsSvg from "../assets/options.svg?react";
 import HeartSvg from "../assets/heart.svg?react";
+import PlaySmallSvg from "../assets/play-small.svg?react";
 // import DownloadSvg from "../assets/download.svg?react";
 // import videoSmallIcon from "../assets/video-small.svg";
 import queueSmallIcon from "../assets/queue-small.svg";
@@ -38,7 +39,14 @@ import { addSongToQueue } from "../store/slices/playlist.slice";
  * @param {Object} props.song- song to manage
  * @returns {JSX.Element} Song tools component
  */
-const SongTools = ({ song, showDelete, deleteDescription, onDelete }) => {
+const SongTools = ({
+	song,
+	showDelete,
+	deleteDescription,
+	onDelete,
+	showPlayButton,
+	onPlay,
+}) => {
 	const navigate = useNavigate();
 	const location = useLocation();
 	const dispatch = useDispatch();
@@ -153,13 +161,22 @@ const SongTools = ({ song, showDelete, deleteDescription, onDelete }) => {
 		>
 			{!["admin", "super-admin"].includes(user?.role) && (
 				<>
+					{showPlayButton && song?.hasAudio && (
+						<button className="cursor-pointer" onClick={onPlay}>
+							<PlaySmallSvg className="hover:first:fill-secondary-600 active:first:fill-secondary-700" />
+						</button>
+					)}
 					{isAddingToFavorite ? (
 						<CustomTailSpin xs />
 					) : (
-						<div onClick={handleToggleFavorite}>
+						<button
+							className="cursor-pointer"
+							onClick={handleToggleFavorite}
+						>
 							<HeartSvg className={favoriteIconStyle} />
-						</div>
+						</button>
 					)}
+
 					{/* <div>
 							<DownloadSvg className="hover:first:fill-success-200 active:first:fill-success-300 cursor-pointer" />
 						</div> */}

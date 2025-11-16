@@ -82,7 +82,7 @@ export const getPlaylist = async (req, res) => {
 	const playlist = await PlaylistModel.findById(id)
 		.populate({
 			path: "songs",
-			select: "title",
+			select: "title songFilePath",
 			populate: { path: "albums", select: "name" },
 		})
 		.populate("creator", "name");
@@ -106,7 +106,14 @@ export const getPlaylist = async (req, res) => {
 	)
 		throw new NotFoundError("Playlist not found");
 
-	res.status(200).json(playlist);
+	res.status(200).json({
+		...playlist._doc,
+		songs: playlist.songs.map((song) => ({
+			...song._doc,
+			hasAudio: song.songFilePath ? true : false,
+			songFilePath: undefined,
+		})),
+	});
 };
 
 export const updatePlaylist = async (req, res) => {

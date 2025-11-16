@@ -270,12 +270,16 @@ export const updateFavorites = async (req, res) => {
 export const getFavorites = async (req, res) => {
 	await req.user.populate({
 		path: "favorites",
-		select: "title",
+		select: "title songFilePath",
 		populate: { path: "albums", select: "name" },
 	});
 	res.status(200).json({
 		name: "Favorites",
-		songs: req.user.favorites,
+		songs: req.user.favorites.map((song) => ({
+			...song._doc,
+			hasAudio: song.songFilePath ? true : false,
+			songFilePath: undefined,
+		})),
 		creator: { _id: req.user._id, name: req.user.name },
 		visibility: "private",
 	});

@@ -24,6 +24,7 @@ import "./components/audio-player.styles.css";
 function App() {
 	const data = useLoaderData();
 	const user = useSelector((state) => state.user.currentUser);
+	const queue = useSelector((state) => state.playlist.queue);
 	const hiddenHeader = useSelector((state) => state.configs.hiddenHeader);
 
 	return (
@@ -31,7 +32,9 @@ function App() {
 			<Await resolve={data?.user}>
 				{!hiddenHeader && <Header />}
 				<Outlet />
-				{!["admin", "super-admin"].includes(user?.role) && <AudioPlayer />}
+				{!["admin", "super-admin"].includes(user?.role) &&
+					queue &&
+					queue.length > 0 && <AudioPlayer />}
 			</Await>
 		</Suspense>
 	);

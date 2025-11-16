@@ -148,6 +148,7 @@ const PlaylistViewer = ({ playlist }) => {
 					setOpenRemoveSongModal(true);
 				}}
 				onDragEnd={handleDragEnd}
+				showPlayButton
 			/>
 			{/*Pre share modal */}
 			<Modal
