@@ -44,6 +44,7 @@ const SongsTable = ({
 	onDragEnd,
 	showPlayButton,
 	singleSongQueue,
+	queueTools,
 }) => {
 	/**
 	 * Refs for table scroll behavior
@@ -138,6 +139,7 @@ const SongsTable = ({
 										idx={idx}
 										showPlayButton={showPlayButton}
 										onPlay={handlePlaySong.bind(null, song)}
+										queueTools={queueTools}
 									/>
 								))}
 							</DndContext>

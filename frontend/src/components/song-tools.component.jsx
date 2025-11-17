@@ -14,7 +14,7 @@ import PlaySmallSvg from "../assets/play-small.svg?react";
 // import DownloadSvg from "../assets/download.svg?react";
 // import videoSmallIcon from "../assets/video-small.svg";
 import queueSmallIcon from "../assets/queue-small.svg";
-// import nextSmallIcon from "../assets/next-small.svg";
+import nextSmallIcon from "../assets/next-small.svg";
 import playlistIcon from "../assets/playlist.png";
 import shareSmallIcon from "../assets/share-small.svg";
 import addSmallIcon from "../assets/add-small.svg";
@@ -29,7 +29,7 @@ import PlaylistCard from "./playlist-card.component";
 import { getAllPlaylists, patchPlaylist } from "../utils/api/playlist-api.util";
 import { updateFavoriteSongs } from "../utils/api/user-api.util";
 import { setUserFavorites } from "../store/slices/user.slice";
-import { addSongToQueue } from "../store/slices/playlist.slice";
+import { addSongToQueue, playNext } from "../store/slices/playlist.slice";
 
 /**
  * Component for song interaction tools and options
@@ -51,7 +51,7 @@ const SongTools = ({
 	const location = useLocation();
 	const dispatch = useDispatch();
 	const revalidator = useRevalidator();
-	const windowWidth = useSelector((state) => state.configs.windowWidth);
+	// const windowWidth = useSelector((state) => state.configs.windowWidth);
 	const user = useSelector((state) => state.user.currentUser);
 	const [openDeleteModal, setOpenDeleteModal] = useState(false);
 	const [isDeleting, setIsDeleting] = useState(false);
@@ -143,6 +143,9 @@ const SongTools = ({
 
 	const handleAddToQueue = () => {
 		if (song?.hasAudio) dispatch(addSongToQueue(song));
+	};
+	const handlePlayNext = () => {
+		if (song?.hasAudio) dispatch(playNext(song));
 	};
 
 	const favoriteIconStyle = useMemo(() => {
@@ -247,12 +250,12 @@ const SongTools = ({
 					)}
 					{/* <Dropdown.Item className="flex gap-1.5">
 						<img src={videoSmallIcon} alt=""></img>Play Video
-					</Dropdown.Item>
-					
-					<Dropdown.Item className="flex gap-1.5">
+					</Dropdown.Item> */}
+
+					<Dropdown.Item className="flex gap-1.5" onClick={handlePlayNext}>
 						<img src={nextSmallIcon} alt="" />
 						Play Next
-					</Dropdown.Item> */}
+					</Dropdown.Item>
 					<Dropdown.Item className="flex gap-1.5" onClick={handleShare}>
 						<img src={shareSmallIcon} alt="" />
 						Share

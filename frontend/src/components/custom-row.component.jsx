@@ -1,10 +1,13 @@
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { Table } from "flowbite-react";
 import SongTools from "./song-tools.component";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import FirstDroppableRow from "./first-droppable-row.component";
+import { removeSong, setCurrentSongIdx } from "../store/slices/playlist.slice";
+import PlaySmallSvg from "../assets/play-small.svg?react";
+import deleteIcon from "../assets/delete.svg";
 
 /**
  * Songs Table Row Component
@@ -34,7 +37,9 @@ const SongsTableRow = ({
 	idx,
 	showPlayButton,
 	onPlay,
+	queueTools,
 }) => {
+	const dispatch = useDispatch();
 	const navigate = useNavigate();
 	const [searchParams, _setSearchParams] = useSearchParams();
 	const { setNodeRef: setDroppableRef, isOver } = useDroppable({
@@ -104,14 +109,34 @@ const SongsTableRow = ({
 							: "text-end flex justify-end"
 					}
 				>
-					<SongTools
-						song={song}
-						showDelete={showDelete}
-						deleteDescription={deleteDescription}
-						onDelete={onDelete}
-						showPlayButton={showPlayButton}
-						onPlay={onPlay}
-					/>
+					{queueTools ? (
+						<div
+							onClick={(e) => e.stopPropagation()}
+							className="flex gap-7 items-center w-fit"
+						>
+							<button
+								className="cursor-pointer"
+								onClick={() => dispatch(setCurrentSongIdx(idx))}
+							>
+								<PlaySmallSvg className="hover:first:fill-secondary-600 active:first:fill-secondary-700" />
+							</button>
+							<button
+								className="cursor-pointer"
+								onClick={() => dispatch(removeSong(song._id))}
+							>
+								<img src={deleteIcon} alt="delete" />
+							</button>
+						</div>
+					) : (
+						<SongTools
+							song={song}
+							showDelete={showDelete}
+							deleteDescription={deleteDescription}
+							onDelete={onDelete}
+							showPlayButton={showPlayButton}
+							onPlay={onPlay}
+						/>
+					)}
 				</Table.Cell>
 			</Table.Row>
 			{draggable && (
