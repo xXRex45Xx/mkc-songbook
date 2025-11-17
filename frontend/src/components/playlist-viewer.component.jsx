@@ -6,14 +6,18 @@ import largeHeartIcon from "../assets/heart-large.svg";
 import { useCallback, useState } from "react";
 import { Button, Modal } from "flowbite-react";
 import CustomTailSpin from "./custom-tail-spin.component";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { deletePlaylist, patchPlaylist } from "../utils/api/playlist-api.util";
 import { useNavigate, useParams, useRevalidator } from "react-router-dom";
+import { setPlaylist } from "../store/slices/playlist.slice";
 
 const PlaylistViewer = ({ playlist }) => {
 	const { playlistId } = useParams();
 	const revalidator = useRevalidator();
+	const dispatch = useDispatch();
 	const [playlistSongs, setPlaylistSongs] = useState(playlist.songs);
+	const queue = useSelector((state) => state.playlist.queue);
+	const currentSongIdx = useSelector((state) => state.playlist.currentSongIdx);
 	const [openPreShareModal, setOpenPreShareModal] = useState(false);
 	const [preShareModalError, setPreShareModalError] = useState("");
 	const [openRemoveSongModal, setOpenRemoveSongModal] = useState(false);
@@ -114,17 +118,42 @@ const PlaylistViewer = ({ playlist }) => {
 		setPlaylistSongs(tmp);
 	};
 
+	const handleAddToQueue = () => {
+		const songsWithAudio = playlistSongs.filter((song) => song.hasAudio);
+		if (queue.length === 0) dispatch(setPlaylist([...songsWithAudio]));
+		dispatch(setPlaylist([...queue, ...songsWithAudio]));
+	};
+	const handlePlayNext = () => {
+		const songsWithAudio = playlistSongs.filter((song) => song.hasAudio);
+		if (queue.length === 0) dispatch(setPlaylist([...songsWithAudio]));
+		let tmp = queue.slice(0, currentSongIdx + 1);
+		tmp = tmp.concat(songsWithAudio);
+		if (currentSongIdx < queue.length - 1)
+			tmp = tmp.concat(queue.slice(currentSongIdx + 1));
+		dispatch(setPlaylist(tmp));
+	};
+
 	return (
 		<div className="flex flex-col gap-5 w-full">
-			<SongCollectionTools
-				handleShare={handleShare}
-				allowModify={
-					user?.id === playlist.creator._id && playlistId !== "favorites"
-				}
-				allowShare={playlistId !== "favorites"}
-				handleEdit={() => navigate("edit")}
-				handleDelete={() => setOpenDeletePlaylistModal(true)}
-			/>
+			{(user?.id === playlist.creator.id ||
+				playlistSongs?.filter((song) => song.hasAudio).length > 0) && (
+				<SongCollectionTools
+					handleShare={handleShare}
+					allowModify={
+						user?.id === playlist.creator._id &&
+						playlistId !== "favorites"
+					}
+					allowShare={playlistId !== "favorites"}
+					handleEdit={() => navigate("edit")}
+					handleDelete={() => setOpenDeletePlaylistModal(true)}
+					handleAddToQueue={handleAddToQueue}
+					handlePlayNext={handlePlayNext}
+					showPlayerTools={
+						playlistSongs?.filter((song) => song.hasAudio).length > 0 &&
+						!["admin", "super-admin"].includes(user?.role)
+					}
+				/>
+			)}
 			<HorizontalPlaylistCard
 				name={playlist.name}
 				creator={playlist.creator.name}
