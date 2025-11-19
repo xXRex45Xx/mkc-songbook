@@ -90,10 +90,12 @@ const NewAlbumSong = ({
 				formData.set("id", song._id);
 				formData.set("title", song.title);
 				formData.set("lyrics", song.lyrics);
-				formData.set("chord", song.musicElements.chord);
-				if (song.musicElements.tempo)
-					formData.set("tempo", song.musicElements.tempo);
-				formData.set("rythm", song.musicElements.rythm);
+				if (song.musicElements) {
+					formData.set("chord", song.musicElements.chord);
+					if (song.musicElements.tempo)
+						formData.set("tempo", song.musicElements.tempo);
+					formData.set("rythm", song.musicElements.rythm);
+				}
 				if (videoLink.trim()) formData.set("video-link", videoLink.trim());
 				if (audioFile) formData.set("audio-file", audioFile);
 				const data = await addOrEditSong(formData, true, song._id);
