@@ -64,6 +64,7 @@ export const addAlbum = async (req, res) => {
 		photoPath: req.file ? req.file.path : null,
 		photoLink: "/static/albums/images/" + req.file.filename,
 		songs: album.songs,
+		createdAt: album.createdAt,
 	});
 
 	for (const song of album.songs) {
@@ -122,6 +123,7 @@ export const updateAlbum = async (req, res) => {
 
 	albumInDb.name = album.title;
 	albumInDb.songs = album.songs;
+	albumInDb.createdAt = album.createdAt;
 
 	if (id != album.id) {
 		await AlbumModel.findByIdAndDelete(albumInDb._id);
@@ -134,6 +136,7 @@ export const updateAlbum = async (req, res) => {
 				? "/static/albums/images/" + req.file.filename
 				: albumInDb.photoLink,
 			songs: album.songs,
+			createdAt: albumInDb.createdAt,
 		});
 	} else await albumInDb.save();
 

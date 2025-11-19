@@ -33,6 +33,7 @@ const AlbumForm = ({ method, action, album }) => {
 	const submit = useSubmit();
 	const titleRef = useRef();
 	const playlistRef = useRef();
+	const createdAtRef = useRef();
 	const idRef = useRef();
 	/**
 	 * State for managing the list of songs in the album
@@ -135,11 +136,15 @@ const AlbumForm = ({ method, action, album }) => {
 			e.target.files[0] &&
 			e.target.files[0].size > 30 * 1024 * 1024
 		)
-			return setAlbumCoverMessage("File is too large. Maximum size is 30 MBs.");
+			return setAlbumCoverMessage(
+				"File is too large. Maximum size is 30 MBs."
+			);
 		if (
 			e.target.files &&
 			e.target.files[0] &&
-			!["image/jpeg", "image/jpg", "image/png"].includes(e.target.files[0].type)
+			!["image/jpeg", "image/jpg", "image/png"].includes(
+				e.target.files[0].type
+			)
 		)
 			return setAlbumCoverMessage("Unsupported file type.");
 		setAlbumCoverMessage(null);
@@ -177,6 +182,8 @@ const AlbumForm = ({ method, action, album }) => {
 		formData.append("title", titleRef.current.value);
 		if (playlistRef.current.value)
 			formData.append("youtube_playlist_link", playlistRef.current.value);
+		if (createdAtRef.current.value)
+			formData.append("createdAt", createdAtRef.current.value);
 		songList.forEach(({ song }) => formData.append("songs", song._id));
 		if (alubmCover) formData.append("cover", alubmCover);
 
@@ -226,7 +233,9 @@ const AlbumForm = ({ method, action, album }) => {
 						ref={titleRef}
 						defaultValue={album?.name}
 						color={error?.titleMessage ? "failure" : undefined}
-						helperText={<span className="text-sm">{error?.titleMessage}</span>}
+						helperText={
+							<span className="text-sm">{error?.titleMessage}</span>
+						}
 					/>
 				</div>
 			</div>
@@ -246,6 +255,18 @@ const AlbumForm = ({ method, action, album }) => {
 						onChange={handleAlbumCoverChange}
 					/>
 				</div>
+				<div className="flex-1 flex flex-col gap-2.5">
+					<Label htmlFor="created-at" value="Release Year" />
+					<TextInput
+						id="created-at"
+						name="created_at"
+						type="text"
+						ref={createdAtRef}
+						defaultValue={album?.createdAt}
+					/>
+				</div>
+			</div>
+			<div className="flex gap-7">
 				<div className="flex-1 flex flex-col gap-2.5">
 					<Label
 						htmlFor="youtube-playlist"
@@ -269,12 +290,17 @@ const AlbumForm = ({ method, action, album }) => {
 			</div>
 
 			<div className="flex-1 overflow-y-auto flex flex-col items-stretch gap-3.5">
-				<Accordion collapseAll className={trackError ? "border-secondary" : ""}>
+				<Accordion
+					collapseAll
+					className={trackError ? "border-secondary" : ""}
+				>
 					{songList.map(({ final, song }, idx) => (
 						<Accordion.Panel key={idx}>
 							<Accordion.Title
 								className={`text-2xl font-semibold focus:ring-0 ${
-									final ? "text-success-200 rounded-lg" : "text-neutrals-800"
+									final
+										? "text-success-200 rounded-lg"
+										: "text-neutrals-800"
 								}`}
 							>
 								<div className="flex items-center gap-2.5">

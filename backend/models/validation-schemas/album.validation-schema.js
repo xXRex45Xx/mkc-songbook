@@ -25,6 +25,7 @@ export const createAlbumBodyValidationSchema = Joi.object({
 		.allow("")
 		.optional(),
 	songs: Joi.array().items(Joi.string().min(1)).min(1).required(),
+	createdAt: Joi.string().min(1).optional(),
 }).required();
 
 export const getAlbumParamsSchema = Joi.object({
