@@ -89,9 +89,6 @@ const SongsTableRow = ({
 					className={draggable && isDragging ? "tranform scale-105" : ""}
 				>
 					{song.title}
-					{windowWidth < 768 && <br />}
-					{windowWidth < 768 &&
-						song.albums.map((song) => song.name).join(", ")}
 				</Table.Cell>
 				{windowWidth >= 768 && (
 					<Table.Cell
