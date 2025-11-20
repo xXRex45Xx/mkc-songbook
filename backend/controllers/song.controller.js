@@ -205,13 +205,14 @@ export const updateSong = async (req, res) => {
 
 	let songInDb = await SongModel.findById(id).populate("albums");
 
+	if (!songInDb) throw new NotFoundError("Song not found");
+
 	if (req.file) {
-		if (songInDb.songFilePath)
-			if (fs.existsSync(songInDb.songFilePath))
-				fs.unlink(songInDb.songFilePath, (err) => {
-					if (!req.error) req.error = {};
-					req.error.fileDeleteError = err;
-				});
+		if (songInDb.songFilePath && fs.existsSync(songInDb.songFilePath))
+			fs.unlink(songInDb.songFilePath, (err) => {
+				if (!req.error) req.error = {};
+				req.error.fileDeleteError = err;
+			});
 		songInDb.songFilePath = req.file.path;
 	}
 	songInDb.youtubeLink = song["video-link"];
@@ -248,6 +249,29 @@ export const updateSong = async (req, res) => {
 			title: songInDb.title,
 		});
 	} else await songInDb.save();
+
+	res.status(200).json({ updated: true });
+};
+
+export const patchSong = async (req, res) => {
+	const { id } = req.params;
+	const song = req.body;
+
+	let songInDb = await SongModel.findById(id);
+
+	if (!songInDb) throw new NotFoundError("Song not found.");
+
+	if (req.file) {
+		if (songInDb.songFilePath && fs.existsSync(songInDb.songFilePath))
+			fs.unlink(songInDb.songFilePath, (err) => {
+				if (!req.error) req.error = {};
+				req.error.fileDeleteError = err;
+			});
+		songInDb.songFilePath = req.file.path;
+	}
+	songInDb.youtubeLink = song["video-link"];
+
+	await songInDb.save();
 
 	res.status(200).json({ updated: true });
 };

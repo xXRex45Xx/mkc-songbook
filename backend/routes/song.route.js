@@ -11,6 +11,7 @@ import {
 	deleteSong,
 	getAllOrSearchSongs,
 	getSong,
+	patchSong,
 	streamSongAudio,
 	updateSong,
 } from "../controllers/song.controller.js";
@@ -19,6 +20,7 @@ import {
 	validateCreateSong,
 	validateGetAllSongs,
 	validateGetSong,
+	validatePatchSong,
 } from "../middlewares/song-validation.middleware.js";
 import mapSongSortBy from "../middlewares/song-map-sortby.middleware.js";
 import { audioUpload } from "../middlewares/file-upload.middleware.js";
@@ -128,6 +130,14 @@ songRouter
 		wrapAsync(checkSongNumberConflict),
 		wrapAsync(checkAlbumExists),
 		wrapAsync(updateSong)
+	)
+	.patch(
+		passport.authenticate("jwt", { session: false }),
+		wrapAsync(roleBasedAuthorization(["admin", "super-admin"])),
+		audioUpload.single("audio-file"),
+		wrapAsync(validateGetSong),
+		wrapAsync(validatePatchSong),
+		wrapAsync(patchSong)
 	)
 	/**
 	 * DELETE /api/song/:id

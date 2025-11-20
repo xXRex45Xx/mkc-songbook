@@ -79,7 +79,7 @@ export const getAlbum = async (req, res) => {
 	const { id } = req.params;
 	const album = await AlbumModel.findById(id).populate({
 		path: "songs",
-		select: "title",
+		select: "title youtubeLink songFilePath",
 		populate: { path: "albums", select: "name" },
 	});
 

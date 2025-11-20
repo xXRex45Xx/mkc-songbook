@@ -1,7 +1,7 @@
 import { TextInput, Label, FileInput, Button } from "flowbite-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import CustomTailSpin from "./custom-tail-spin.component";
-import { addOrEditSong } from "../utils/api/songs-api.util";
+import { addOrEditSong, patchSong } from "../utils/api/songs-api.util";
 
 /**
  * Component for adding or editing a song in an album
@@ -24,7 +24,6 @@ const NewAlbumSong = ({
 	isPlaylist = false,
 }) => {
 	const [songNumber, setSongNumber] = useState(song?._id ? song?._id : "");
-
 	const [videoLink, setVideoLink] = useState(
 		song?.youtubeLink ? song?.youtubeLink : ""
 	);
@@ -85,20 +84,14 @@ const NewAlbumSong = ({
 			return onSave(song);
 		}
 		try {
-			if (!isPlaylist) {
+			if (
+				!isPlaylist &&
+				(videoLink.trim() !== song.youtubeLink || audioFile)
+			) {
 				const formData = new FormData();
-				formData.set("id", song._id);
-				formData.set("title", song.title);
-				formData.set("lyrics", song.lyrics);
-				if (song.musicElements) {
-					formData.set("chord", song.musicElements.chord);
-					if (song.musicElements.tempo)
-						formData.set("tempo", song.musicElements.tempo);
-					formData.set("rythm", song.musicElements.rythm);
-				}
-				if (videoLink.trim()) formData.set("video-link", videoLink.trim());
+				formData.set("video-link", videoLink.trim());
 				if (audioFile) formData.set("audio-file", audioFile);
-				const data = await addOrEditSong(formData, true, song._id);
+				const data = await patchSong(formData, song._id);
 				if (!data || !data.updated)
 					throw { status: 500, message: "An unexpected error occurred." };
 			}
