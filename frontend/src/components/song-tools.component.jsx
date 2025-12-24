@@ -190,12 +190,21 @@ const SongTools = ({
 					<Link to={`/songs/${song._id}/edit`} className="cursor-pointer">
 						<img src={editIcon} alt="edit" />
 					</Link>
-					<button
-						className="cursor-pointer"
-						onClick={() => setOpenDeleteModal(true)}
-					>
-						<img src={deleteIcon} alt="delete" />
-					</button>
+					{onDelete && showDelete ? (
+						<button
+							className="cursor-pointer"
+							onClick={onDelete.bind(null, song._id)}
+						>
+							<img src={deleteIcon} alt="delete" />
+						</button>
+					) : (
+						<button
+							className="cursor-pointer"
+							onClick={() => setOpenDeleteModal(true)}
+						>
+							<img src={deleteIcon} alt="delete" />
+						</button>
+					)}
 					<Modal
 						show={openDeleteModal}
 						size="sm"

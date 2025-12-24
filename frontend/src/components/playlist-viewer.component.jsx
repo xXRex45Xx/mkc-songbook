@@ -3,7 +3,7 @@ import SongCollectionTools from "./song-collection-tools.component";
 import SongsTable from "./songs-table.component";
 import playlistIcon from "../assets/playlist.png";
 import largeHeartIcon from "../assets/heart-large.svg";
-import { useCallback, useState } from "react";
+import { useEffect, useState } from "react";
 import { Button, Modal } from "flowbite-react";
 import CustomTailSpin from "./custom-tail-spin.component";
 import { useDispatch, useSelector } from "react-redux";
@@ -13,7 +13,6 @@ import { setPlaylist } from "../store/slices/playlist.slice";
 
 const PlaylistViewer = ({ playlist }) => {
 	const { playlistId } = useParams();
-	const revalidator = useRevalidator();
 	const dispatch = useDispatch();
 	const [playlistSongs, setPlaylistSongs] = useState(playlist.songs);
 	const queue = useSelector((state) => state.playlist.queue);
@@ -32,7 +31,7 @@ const PlaylistViewer = ({ playlist }) => {
 	const [songToBeRemoved, setSongToBeRemoved] = useState(null);
 	const user = useSelector((state) => state.user.currentUser);
 	const navigate = useNavigate();
-
+	const revalidator = useRevalidator();
 	const handleShare = async () => {
 		if (playlist.visibility === "private") return setOpenPreShareModal(true);
 		try {
@@ -44,6 +43,10 @@ const PlaylistViewer = ({ playlist }) => {
 			console.error(error);
 		}
 	};
+
+	useEffect(() => {
+		setPlaylistSongs(playlist.songs);
+	}, [playlist]);
 
 	const handleUpdate = async (visibility) => {
 		setIsUpdating(true);
@@ -58,8 +61,7 @@ const PlaylistViewer = ({ playlist }) => {
 		}
 	};
 
-	const handleRemoveSong = useCallback(async () => {
-		if (songToBeRemoved === null) return;
+	const handleRemoveSong = async () => {
 		setIsRemovingSong(true);
 		try {
 			await patchPlaylist(playlist._id, null, null, [songToBeRemoved]);
@@ -70,7 +72,7 @@ const PlaylistViewer = ({ playlist }) => {
 		} finally {
 			setIsRemovingSong(false);
 		}
-	}, [songToBeRemoved]);
+	};
 
 	const handleDeletePlaylist = async () => {
 		setIsDeletingPlaylist(true);
@@ -239,7 +241,9 @@ const PlaylistViewer = ({ playlist }) => {
 			>
 				<Modal.Header>Remove Song</Modal.Header>
 				<Modal.Body>
-					<p className="text-baseblack">You are about to remove a song.</p>
+					<p className="text-baseblack">
+						You are about to remove a song from the playlist.
+					</p>
 					{removeSongModalError && (
 						<p className="text-secondary mt-2">{removeSongModalError}</p>
 					)}
