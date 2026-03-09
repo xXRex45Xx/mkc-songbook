@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Audio player toolbox component for additional player controls
+ * Provides presentation mode, font size adjustment, and queue management
+ */
+
 import { Tooltip, Button, Popover, Modal } from "flowbite-react";
 import CustomSlider from "./custom-slider.component";
 import { useDispatch, useSelector } from "react-redux";

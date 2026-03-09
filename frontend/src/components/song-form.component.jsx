@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Song form component for creating and editing songs
+ * Handles song metadata, music elements, album association, and media files
+ */
+
 import {
     Form,
     useActionData,
@@ -20,16 +25,28 @@ import CustomTailSpin from "./custom-tail-spin.component";
 /**
  * Song Form Component
  *
- * A form component for creating and editing songs.
- * Includes fields for song details, music elements, album association, and media files.
- * Handles file validation and form submission with error handling.
+ * A comprehensive form for creating and editing songs.
+ * Features:
+ * - Song metadata (title, number, chord, tempo, rhythm)
+ * - Album association (multiple select)
+ * - Audio file upload with validation
+ * - YouTube video link
+ * - Lyrics textarea
+ * - File type and size validation
+ * - Error handling and display
  *
  * @component
  * @param {Object} props - Component props
- * @param {Array} props.albums - List of available albums for song association
+ * @param {Array<Object>} props.albums - List of available albums for song association
  * @param {string} props.method - HTTP method for form submission (POST/PUT)
  * @param {string} props.action - Form submission endpoint
- * @param {Object} props.song - Existing song data for editing (optional)
+ * @param {Object} [props.song] - Existing song data for editing (optional)
+ * @param {string} [props.song._id] - Song identifier
+ * @param {string} [props.song.title] - Song title
+ * @param {string} [props.song.lyrics] - Song lyrics
+ * @param {Object} [props.song.musicElements] - Music elements (chord, tempo, rhythm)
+ * @param {string} [props.song.youtubeLink] - YouTube video link
+ * @param {boolean} [props.song.hasAudio] - Whether song has audio file
  *
  * @example
  * return (

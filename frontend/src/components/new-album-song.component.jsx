@@ -1,3 +1,8 @@
+/**
+ * @fileoverview New album song component for adding songs to albums
+ * Handles song search, metadata editing, and audio file upload
+ */
+
 import { TextInput, Label, FileInput, Button } from "flowbite-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import CustomTailSpin from "./custom-tail-spin.component";

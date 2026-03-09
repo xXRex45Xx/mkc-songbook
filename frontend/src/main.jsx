@@ -1,6 +1,7 @@
 /**
  * @fileoverview Application entry point
  * Sets up React Router, Redux store, and renders the root component
+ * Defines all application routes including protected admin routes
  */
 
 import { StrictMode } from "react";
@@ -73,10 +74,12 @@ import EditPlaylistPage, {
 	loader as editPlaylistLoader,
 	action as editPlaylistAction,
 } from "./pages/edit-playlist.page.jsx";
+
 /**
- * Router configuration
- * Defines all application routes and their corresponding components
- * Includes protected routes for admin functionality
+ * Main application router configuration.
+ * Defines all routes including public pages, protected admin routes,
+ * and authentication flow. Uses React Router v6 loader/action pattern.
+ *
  * @type {import('react-router-dom').RouteObject[]}
  */
 const router = createBrowserRouter([

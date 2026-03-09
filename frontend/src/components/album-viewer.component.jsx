@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Album viewer component for displaying album details
+ * Provides album information, song list, and management actions
+ */
+
 import HorizontalAlbumCard from "./horizontal-album-card.component";
 import backendURL from "../config/backend-url.config";
 import SongsTable from "./songs-table.component";
@@ -10,6 +15,27 @@ import { Modal, Button } from "flowbite-react";
 import CustomTailSpin from "./custom-tail-spin.component";
 import { deleteAlbum } from "../utils/api/album-api.util";
 
+/**
+ * Album Viewer Component
+ *
+ * Displays detailed album information with song list and management actions.
+ * Features:
+ * - Album metadata display (title, year, song count, cover image)
+ * - Paginated song table with search highlighting
+ * - Share functionality
+ * - Admin-only edit and delete actions
+ * - Queue management integration
+ * - Play next functionality
+ *
+ * @component
+ * @param {Object} props - Component props
+ * @param {Object} props.album - Album object to display
+ * @param {string} props.album._id - Album number identifier
+ * @param {string} props.album.name - Album title
+ * @param {string} props.album.createdAt - Release year
+ * @param {string} props.album.photoLink - Album cover image path
+ * @param {Array<Object>} props.album.songs - Array of songs in album
+ */
 const AlbumViewer = ({ album }) => {
 	const dispatch = useDispatch();
 	const navigate = useNavigate();

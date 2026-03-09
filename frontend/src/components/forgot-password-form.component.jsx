@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Forgot password form component for initiating password reset
+ * Represents step 1 of the password reset flow
+ */
+
 import { Label, TextInput, Button } from "flowbite-react";
 import { Form, redirect, useActionData, useNavigation } from "react-router-dom";
 import { formButtonTheme } from "../config/button-theme.config";
@@ -10,10 +15,24 @@ import { resetAuth, setForgotPassEmail } from "../store/slices/user.slice";
 import CustomTailSpin from "./custom-tail-spin.component";
 
 /**
- * Form component for initiating password reset process
- * Represents step 1 of the password reset flow
- * Allows users to enter their email to receive a reset code
- * @returns {JSX.Element} Forgot password form component
+ * Forgot Password Form Component
+ *
+ * Form component for initiating password reset process.
+ * Represents step 1 of the password reset flow.
+ * Features:
+ * - Email input for OTP request
+ * - Step indicator showing progress
+ * - Help text explaining the process
+ * - Loading state during submission
+ * - Error handling and display
+ *
+ * @component
+ * @returns {JSX.Element} Forgot password form
+ *
+ * @example
+ * return (
+ *   <ForgotPasswordForm />
+ * )
  */
 const ForgotPasswordForm = () => {
     const error = useActionData();
@@ -70,9 +89,11 @@ export default ForgotPasswordForm;
 /**
  * Action handler for the forgot password form submission
  * Requests an OTP to be sent to the provided email
+ *
  * @param {Object} params - Parameters object containing the request
  * @param {Request} params.request - Form submission request object
  * @returns {Promise<Response>} Redirects to verification page on success, returns validation errors otherwise
+ * @throws {Error} 400: Invalid email format, 500: Server error
  */
 export const action = async ({ request }) => {
     const formData = await request.formData();

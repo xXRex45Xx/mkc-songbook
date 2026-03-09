@@ -1,8 +1,28 @@
+/**
+ * @fileoverview Users table component for displaying and managing user accounts
+ * Provides paginated table with role management actions via row component
+ */
+
 import { useNavigation, useSearchParams } from "react-router-dom";
 import CustomTable from "./custom-table.component.jsx";
 import CustomTailSpin from "./custom-tail-spin.component.jsx";
 import UsersTableRow from "./users-table-row.component.jsx";
 
+/**
+ * Users Table Component
+ *
+ * Displays a paginated table of user accounts with role management.
+ * Features:
+ * - User name, email, and role display
+ * - Pagination support
+ * - Loading state during navigation
+ * - Integration with user management actions via row component
+ *
+ * @component
+ * @param {Object} props - Component props
+ * @param {Array<Object>} props.users - Array of user objects to display
+ * @param {number} props.totalPages - Total number of pages for pagination
+ */
 const UsersTable = ({ users, totalPages }) => {
     const { state: navState } = useNavigation();
 

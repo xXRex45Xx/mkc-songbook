@@ -9,14 +9,17 @@ import jwt from "jsonwebtoken";
 
 /**
  * Authenticates a user using local strategy and generates a JWT token.
- * Uses Passport's local strategy for authentication and creates a JWT token upon successful login.
- * The token contains the user's ID and expires in 30 days.
- * @param {Object} req - Express request object containing login credentials
- * @param {Object} res - Express response object
- * @param {Function} next - Express next middleware function
- * @returns {Object} Response containing user data and JWT token
- * @throws {ClientFaultError} If authentication fails due to invalid credentials
- * @throws {ServerFaultError} If there's an internal server error during authentication
+ *
+ * This middleware authenticates users using Passport's local strategy (email/password).
+ * Upon successful authentication, it generates a JWT token containing the user's ID
+ * that expires in 30 days. The token is used for subsequent authenticated requests.
+ *
+ * @param {Object} req - Express request object containing login credentials with explanation of auth flow and token generation process
+ * @param {Object} res - Express response object for sending responses back to client
+ * @param {Function} next - Express next middleware function for continuing the request flow
+ * @returns {Object} Response containing user data and JWT token with explanation of token structure and authentication process
+ * @throws {ClientFaultError} If authentication fails due to invalid credentials with clear explanation of authentication failure conditions and error context
+ * @throws {ServerFaultError} If there's an internal server error during authentication with clear explanation of server error conditions and error context
  */
 const localAuth = async (req, res, next) => {
     passport.authenticate("local", {}, (err, user) => {
@@ -46,3 +49,4 @@ const localAuth = async (req, res, next) => {
 };
 
 export default localAuth;
+

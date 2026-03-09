@@ -16,9 +16,13 @@ import { useSelector } from "react-redux";
 import "./components/audio-player.styles.css";
 
 /**
- * Root application component
- * Manages the main layout including header and audio player
- * Handles authentication state and protected routes
+ * Root application component that manages the main layout structure.
+ * Displays the header and audio player conditionally based on user role
+ * and queue state. Handles authentication state through route loaders.
+ *
+ * @example
+ * // The App component is rendered as the root element in main.jsx
+ * <App />
  * @returns {JSX.Element} Root application component
  */
 function App() {
@@ -43,8 +47,11 @@ function App() {
 export default App;
 
 /**
- * Route loader for the root application
- * Handles user authentication and session management
+ * Route loader for the root application that handles user authentication
+ * and session management. Checks for valid tokens and dispatches
+ * user data to Redux store.
+ *
+ * @param {Object} _ - Route params object (unused)
  * @returns {Promise<Object|null>} Deferred user data or null if not authenticated
  * @throws {Error} If an unexpected error occurs during authentication
  */

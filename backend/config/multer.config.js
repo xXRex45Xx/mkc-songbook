@@ -26,10 +26,18 @@ config();
 /**
  * Configuration for user profile image uploads
  *
- * @type {Object}
- * @property {Object} storage - Disk storage configuration
- * @property {number} limits.fileSize - Maximum file size (30MB)
- * @property {Function} fileFilter - File type validation
+ * This configuration handles user profile image uploads with:
+ * 1. Local disk storage for images
+ * 2. File size limits (30MB max)
+ * 3. Image format validation
+ *
+ * @param {Object} req - Express request object containing request data
+ * @param {string} req.user._id - Unique identifier of the user requesting upload
+ * @param {Object} res - Express response object for sending responses back to client
+ * @returns {Promise<void>} Sends JSON response with success message and file details explaining the complete process flow
+ * @throws {NotFoundError} If referenced entity doesn't exist in database with specific context about related entities
+ * @throws {ServerFaultError} If database operation fails due to server-side issues like connection problems or constraint violations
+ * @throws {ClientFaultError} If client provides invalid data that doesn't meet validation requirements with clear explanation of what caused the validation failure
  */
 export const userImageOpts = {
 	storage: multer.diskStorage({
@@ -51,10 +59,18 @@ export const userImageOpts = {
 /**
  * Configuration for album cover image uploads
  *
- * @type {Object}
- * @property {Object} storage - Disk storage configuration
- * @property {number} limits.fileSize - Maximum file size (30MB)
- * @property {Function} fileFilter - File type validation
+ * This configuration handles album cover image uploads with:
+ * 1. Local disk storage for images
+ * 2. File size limits (30MB max)
+ * 3. Image format validation
+ *
+ * @param {Object} req - Express request object containing request data
+ * @param {string} req.user._id - Unique identifier of the user requesting upload
+ * @param {Object} res - Express response object for sending responses back to client
+ * @returns {Promise<void>} Sends JSON response with success message and file details explaining the complete process flow
+ * @throws {NotFoundError} If referenced entity doesn't exist in database with specific context about related entities
+ * @throws {ServerFaultError} If database operation fails due to server-side issues like connection problems or constraint violations
+ * @throws {ClientFaultError} If client provides invalid data that doesn't meet validation requirements with clear explanation of what caused the validation failure
  */
 export const albumImageOpts = {
 	storage: multer.diskStorage({
@@ -78,10 +94,18 @@ export const albumImageOpts = {
 /**
  * Configuration for audio file uploads
  *
- * @type {Object}
- * @property {Object} storage - Disk storage configuration
- * @property {number} limits.fileSize - Maximum file size (50MB)
- * @property {Function} fileFilter - File type validation
+ * This configuration handles audio file uploads with:
+ * 1. Local disk storage for audio files
+ * 2. File size limits (50MB max)
+ * 3. Audio format validation
+ *
+ * @param {Object} req - Express request object containing request data
+ * @param {string} req.user._id - Unique identifier of the user requesting upload
+ * @param {Object} res - Express response object for sending responses back to client
+ * @returns {Promise<void>} Sends JSON response with success message and file details explaining the complete process flow
+ * @throws {NotFoundError} If referenced entity doesn't exist in database with specific context about related entities
+ * @throws {ServerFaultError} If database operation fails due to server-side issues like connection problems or constraint violations
+ * @throws {ClientFaultError} If client provides invalid data that doesn't meet validation requirements with clear explanation of what caused the validation failure
  */
 export const audioOpts = {
 	storage: multer.diskStorage({

@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Audio player component for song playback
+ * Provides playback controls, progress tracking, and favorites management
+ */
+
 import { useState, useRef } from "react";
 import AudioControls from "./audio-controls.component";
 import tmpAudio from "../assets/tmp-audio.mp3";
@@ -24,9 +29,14 @@ import { setUserFavorites } from "../store/slices/user.slice";
  * - Progress slider with gradient background
  * - Time display (desktop only)
  * - Song title and album/artist information
- * - Playback controls
+ * - Playback controls via AudioControls
  * - Additional toolbox controls
+ * - Favorite song management
  * - Responsive layout for mobile and desktop
+ * - Redux integration for queue management
+ *
+ * @component
+ * @returns {JSX.Element} Audio player with controls
  */
 const AudioPlayer = () => {
 	/**

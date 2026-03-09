@@ -5,15 +5,19 @@
 
 /**
  * Maps user-friendly sort options to corresponding database field names.
- * Supported sort options:
+ *
+ * This middleware converts user-friendly sort options into database field names
+ * that can be used for query sorting. It supports the following mappings:
  * - "A-Z" -> "title"
  * - "Recently Added" -> "createdAt"
  * - default -> "_id"
- * @param {Object} req - Express request object
- * @param {Object} req.query - Query parameters containing sortBy option
- * @param {string} req.query.sortBy - Sort option provided by the user
- * @param {Object} _res - Express response object
- * @param {Function} next - Express next middleware function
+ *
+ * @param {Object} req - Express request object containing request data with explanation of sort options and field names
+ * @param {Object} req.query - Query parameters containing sortBy option with explanation of supported sort values and format requirements
+ * @param {string} req.query.sortBy - Sort option provided by the user with explanation of supported sort options and their database field mappings
+ * @param {Object} res - Express response object for sending responses back to client
+ * @param {Function} next - Express next middleware function for continuing the request flow
+ * @returns {Promise<void>} Maps sort options to database fields explaining the complete mapping process flow
  */
 const mapSongSortBy = async (req, _res, next) => {
     switch (req.query.sortBy) {
@@ -31,3 +35,4 @@ const mapSongSortBy = async (req, _res, next) => {
 };
 
 export default mapSongSortBy;
+

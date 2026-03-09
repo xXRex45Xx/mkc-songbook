@@ -123,6 +123,14 @@ export const addOrEditSong = async (
 	return data;
 };
 
+/**
+ * Updates a song by ID (partial update)
+ * @param {FormData} formData - Form data containing song update fields
+ * @param {string} songId - ID of song to update
+ * @param {string} token - Authentication token (defaults to token in localStorage)
+ * @returns {Promise<Object>} Updated song data
+ * @throws {Object} Validation errors or server error response
+ */
 export const patchSong = async (
 	formData,
 	songId,

@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Album form component for creating and editing albums
+ * Handles album metadata, cover image upload, and dynamic song list management
+ */
+
 import { Accordion, Button, FileInput, Label, TextInput } from "flowbite-react";
 import {
 	Form,

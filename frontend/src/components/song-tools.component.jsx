@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Song tools component for song interaction and management
+ * Provides options menu with playback, sharing, and admin actions
+ */
+
 import { Button, Dropdown, Modal } from "flowbite-react";
 import {
 	createSearchParams,
@@ -36,7 +41,12 @@ import { addSongToQueue, playNext } from "../store/slices/playlist.slice";
  * Provides different functionality based on user role (admin/regular user)
  * Includes options for song management, playback control, and sharing
  * @param {Object} props - Component props
- * @param {Object} props.song- song to manage
+ * @param {Object} props.song - Song to manage
+ * @param {boolean} [props.showDelete] - Whether to show delete option
+ * @param {string} [props.deleteDescription] - Description for delete action
+ * @param {Function} [props.onDelete] - Delete callback function
+ * @param {boolean} [props.showPlayButton] - Whether to show play button
+ * @param {Function} [props.onPlay] - Play callback function
  * @returns {JSX.Element} Song tools component
  */
 const SongTools = ({

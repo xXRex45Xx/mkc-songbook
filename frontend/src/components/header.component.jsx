@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Header component for main navigation
+ * Provides logo, search bar, notifications, user profile dropdown, and navigation links
+ */
+
 import { Avatar, Button, Dropdown, Navbar } from "flowbite-react";
 import { navbarTheme } from "../config/navbar-theme.config";
 import { Link, useLocation, useSearchParams } from "react-router-dom";

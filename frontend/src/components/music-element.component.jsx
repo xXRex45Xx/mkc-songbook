@@ -1,4 +1,9 @@
 /**
+ * @fileoverview Music element component for displaying musical attributes
+ * Shows chord, tempo, or rhythm with consistent styling
+ */
+
+/**
  * Music Element Component
  *
  * Displays a musical attribute (chord, tempo, rhythm) with consistent styling.

@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Custom slider component for audio progress and font size control
+ * Styled range slider with gradient progress bar
+ */
+
 import { RangeSlider } from "flowbite-react";
 import { rangeSliderTheme } from "../config/forms-theme.config";
 

@@ -1,6 +1,21 @@
+/**
+ * @fileoverview Error page component
+ * Displays error information and navigation options
+ */
+
 import { useRouteError } from "react-router-dom";
 import { Link } from "react-router-dom";
 
+/**
+ * Error Page Component
+ *
+ * Displays error information from React Router
+ * Shows appropriate message based on error status code
+ * Provides navigation back to home page
+ *
+ * @component
+ * @returns {JSX.Element} Error display component
+ */
 const ErrorPage = () => {
     const error = useRouteError();
     return (

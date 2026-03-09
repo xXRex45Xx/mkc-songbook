@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Create password form component for completing user registration
+ * Represents step 3 of the signup process
+ */
+
 import { Button, Label, TextInput } from "flowbite-react";
 import { useEffect, useState } from "react";
 import {
@@ -29,9 +34,25 @@ const eyeWrapper = (onClick, icon) => (
 );
 
 /**
- * Form component for creating a new user account with password
- * Represents step 3 of the signup process
- * @returns {JSX.Element} Create password form component
+ * CreatePasswordForm Component
+ *
+ * Form component for creating a new user account with password.
+ * Represents step 3 of the signup process.
+ * Features:
+ * - Name input field
+ * - Password and confirm password fields with visibility toggle
+ * - Google OAuth integration (via GoogleLink)
+ * - Step indicator showing progress
+ * - Form validation and error display
+ * - Loading state during submission
+ *
+ * @component
+ * @returns {JSX.Element} Create password form
+ *
+ * @example
+ * return (
+ *   <CreatePasswordForm />
+ * )
  */
 const CreatePasswordForm = () => {
     const navigate = useNavigate();
@@ -149,9 +170,11 @@ export default CreatePasswordForm;
 /**
  * Action handler for the create password form submission
  * Registers a new user with the provided name and password
+ *
  * @param {Object} params - Parameters object containing the request
  * @param {Request} params.request - Form submission request object
  * @returns {Promise<Response>} Redirects to home on success, returns validation errors otherwise
+ * @throws {Error} 400: Invalid input, 500: Server error
  */
 export const action = async ({ request }) => {
     const formData = await request.formData();

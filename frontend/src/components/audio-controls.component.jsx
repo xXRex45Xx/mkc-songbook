@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Audio controls component for playback buttons
+ * Provides play/pause, next/previous, repeat, and favorite controls
+ */
+
 import { Button } from "flowbite-react";
 import HeartSvg from "../assets/heart.svg?react";
 import PreviousSvg from "../assets/previous.svg?react";

@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Protected route component for role-based access control
+ * Redirects unauthenticated users and throws 403 for unauthorized roles
+ */
+
 import { useEffect } from "react";
 import { useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";

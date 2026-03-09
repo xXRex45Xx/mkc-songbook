@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Google OAuth link component for authentication
+ * Handles Google sign-in flow and redirects after successful authentication
+ */
+
 import googleIcon from "../assets/google.svg";
 import { useGoogleLogin } from "@react-oauth/google";
 import store from "../store/store";

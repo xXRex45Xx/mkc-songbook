@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Playlists listing page component
+ * Displays all user playlists with creation functionality
+ */
+
 import MainBodyContainer from "../components/main-body-container.component";
 import PlaylistCard from "../components/playlist-card.component";
 import playlistIcon from "../assets/playlist.png";
@@ -10,6 +15,16 @@ import CustomTailSpin from "../components/custom-tail-spin.component";
 import { getAllPlaylists } from "../utils/api/playlist-api.util";
 import { useSelector } from "react-redux";
 
+/**
+ * Playlists Page Component
+ *
+ * Displays a grid of playlist cards with search functionality
+ * Shows create playlist button for authenticated users
+ * Includes favorites shortcut for logged-in users
+ *
+ * @component
+ * @returns {JSX.Element} Playlists listing page
+ */
 const PlaylistsPage = () => {
 	const navigate = useNavigate();
 	const loaderData = useLoaderData();
@@ -58,6 +73,15 @@ const PlaylistsPage = () => {
 
 export default PlaylistsPage;
 
+/**
+ * Route loader for playlists listing page
+ * Fetches all playlists with optional search query and pagination
+ *
+ * @param {Object} params - Route parameters
+ * @param {Request} params.request - HTTP request
+ * @returns {Promise<{playlistData: Object}>} Resolves to playlists and pagination data
+ * @throws {Error} 401: Unauthenticated
+ */
 export const loader = ({ request }) => {
 	const searchParams = new URL(request.url).searchParams;
 	const searchQuery = { q: searchParams.get("q") };

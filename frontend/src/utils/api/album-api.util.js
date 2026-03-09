@@ -84,6 +84,12 @@ export const addOrEditAlbum = async (
 	return data;
 };
 
+/**
+ * Fetches a single album by ID
+ * @param {string} id - Album ID to fetch
+ * @returns {Promise<Object>} Album data
+ * @throws {Object} Error with message and status if request fails
+ */
 export const getAlbum = async (id) => {
 	if (id.length === 0)
 		throw { message: "Album number is required.", status: 400 };
@@ -95,6 +101,13 @@ export const getAlbum = async (id) => {
 	return data;
 };
 
+/**
+ * Deletes an album by ID
+ * @param {string} id - ID of album to delete
+ * @param {string} token - Authentication token (defaults to token in localStorage)
+ * @returns {Promise<void>}
+ * @throws {Object} Error with message and status if deletion fails
+ */
 export const deleteAlbum = async (id, token = localStorage.getItem("_s")) => {
 	if (id.length === 0)
 		throw { message: "Album number is required.", status: 400 };

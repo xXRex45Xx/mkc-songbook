@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Lyric viewer component for displaying song lyrics
+ * Supports search highlighting and font size customization
+ */
+
 import { Card, Button, Tooltip, Popover } from "flowbite-react";
 
 import { buttonTheme } from "../config/button-theme.config";
@@ -30,6 +35,8 @@ import EnterFullscreenSvg from "../assets/enter-fullscreen.svg?react";
  * - Configurable lyrics font size
  * - Search term highlighting with Amharic character support
  * - Whitespace preservation for lyrics formatting
+ * - Fullscreen mode support
+ * - Redux integration for font size persistence
  *
  * @component
  * @param {Object} props - Component props

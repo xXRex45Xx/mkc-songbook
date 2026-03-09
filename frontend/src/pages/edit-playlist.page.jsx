@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Edit playlist page component
+ * Allows playlist creators to update their playlist information
+ */
+
 import {
 	Await,
 	defer,
@@ -12,6 +17,15 @@ import PlaylistForm from "../components/playlist-form.component";
 import { addOrEditPlaylist, getPlaylist } from "../utils/api/playlist-api.util";
 import { useSelector } from "react-redux";
 
+/**
+ * Edit Playlist Page Component
+ *
+ * Displays playlist form pre-populated with existing playlist data
+ * Only accessible to playlist creators
+ *
+ * @component
+ * @returns {JSX.Element} Playlist edit form
+ */
 const EditPlaylistPage = () => {
 	const loaderData = useLoaderData();
 	const params = useParams();
@@ -43,6 +57,15 @@ const EditPlaylistPage = () => {
 
 export default EditPlaylistPage;
 
+/**
+ * Route loader for edit playlist page
+ * Fetches existing playlist data and verifies ownership
+ *
+ * @param {Object} params - Route parameters
+ * @param {string} params.playlistId - The playlist identifier to edit
+ * @returns {Promise<{data: Object}>} Resolves to playlist data
+ * @throws {Error} 403: Not authorized, 404: Playlist not found
+ */
 export const loader = ({ params }) => {
 	const { playlistId } = params;
 	return defer({
@@ -50,6 +73,16 @@ export const loader = ({ params }) => {
 	});
 };
 
+/**
+ * Route action for edit playlist page
+ * Handles playlist update submissions
+ *
+ * @param {Object} params - Action parameters
+ * @param {FormData} params.formData - Form submission data
+ * @param {string} params.playlistId - The playlist identifier
+ * @returns {Response|Object} Redirect on success, error object on validation failure
+ * @throws {Error} 400: Invalid input, 500: Server error
+ */
 export const action = async ({ request, params }) => {
 	const formData = await request.formData();
 	try {

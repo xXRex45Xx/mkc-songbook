@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Songs table component for displaying paginated song lists
+ * Supports multiple table views for title and lyrics search results
+ */
+
 import { useRef } from "react";
 import {
 	useSearchParams,
@@ -28,11 +33,21 @@ import { setCurrentSongIdx, setPlaylist } from "../store/slices/playlist.slice";
  * - Pagination with smooth scroll to top
  * - Loading states during navigation and revalidation
  * - Highlight support for lyrics search matches
+ * - Drag and drop support for queue management
+ * - Conditional display of play buttons and delete actions
  *
  * @component
  * @param {Object} props - Component props
  * @param {Array<Object>} props.songs - Array of song objects to display
  * @param {number} props.totalPages - Total number of pages for pagination
+ * @param {boolean} [props.showOverflow] - Whether to show overflow menu
+ * @param {boolean} [props.showDelete] - Whether to show delete button
+ * @param {string} [props.deleteDescription] - Delete action description
+ * @param {Function} [props.onDelete] - Delete callback function
+ * @param {Function} [props.onDragEnd] - Drag and drop end callback
+ * @param {boolean} [props.showPlayButton] - Whether to show play button
+ * @param {boolean} [props.singleSongQueue] - Whether queue contains single song
+ * @param {boolean} [props.queueTools] - Whether to show queue management tools
  */
 const SongsTable = ({
 	songs,

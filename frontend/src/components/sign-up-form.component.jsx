@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Sign up form component for initiating user registration
+ * Represents step 1 of the signup flow
+ */
+
 import { Button, Label, TextInput } from "flowbite-react";
 import {
     Form,
@@ -17,10 +22,24 @@ import store from "../store/store";
 import CustomTailSpin from "./custom-tail-spin.component";
 import { useState } from "react";
 /**
- * Form component for initiating user signup process
- * Represents step 1 of the signup flow
- * Allows users to enter email or sign up with Google
- * @returns {JSX.Element} Sign up form component
+ * SignUpForm Component
+ *
+ * Form component for initiating user signup process.
+ * Represents step 1 of the signup flow.
+ * Features:
+ * - Email input for OTP request
+ * - Google OAuth signup option
+ * - Step indicator showing progress
+ * - Error handling and display
+ * - Navigation to login page
+ *
+ * @component
+ * @returns {JSX.Element} Sign up form
+ *
+ * @example
+ * return (
+ *   <SignUpForm />
+ * )
  */
 const SignUpForm = () => {
     const error = useActionData();
@@ -92,9 +111,11 @@ export default SignUpForm;
 /**
  * Action handler for the sign up form submission
  * Requests an OTP to be sent to the provided email
+ *
  * @param {Object} params - Parameters object containing the request
  * @param {Request} params.request - Form submission request object
  * @returns {Promise<Response>} Redirects to verification page on success, returns validation errors otherwise
+ * @throws {Error} 400: Invalid email format, 500: Server error
  */
 export const action = async ({ request }) => {
     const formData = await request.formData();

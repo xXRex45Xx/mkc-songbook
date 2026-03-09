@@ -1,8 +1,23 @@
+/**
+ * @fileoverview New schedule page component
+ * Allows admins to create a new service schedule
+ */
+
 import { Form, useNavigate } from "react-router-dom";
 import MainBodyContainer from "../components/main-body-container.component";
 import { Datepicker, Label, TextInput, Button } from "flowbite-react";
 import { datePickerTheme } from "../config/date-picker.config";
 
+/**
+ * New Schedule Page Component
+ *
+ * Displays form for creating a new service schedule
+ * Includes date picker, time selection, and location input
+ * Note: Form submission handling should be implemented via action
+ *
+ * @component
+ * @returns {JSX.Element} Schedule creation form
+ */
 const NewSchedule = () => {
 	const navigate = useNavigate();
 

@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Sort dropdown component for managing search result sorting
+ * Manages sort parameters through URL search params
+ */
+
 import { Dropdown } from "flowbite-react";
 
 import arrowIcon from "../assets/dropdown-arrow.svg";
@@ -5,9 +10,13 @@ import { useSearchParams } from "react-router-dom";
 import { useMemo } from "react";
 
 /**
- * Dropdown component for sorting options
- * Manages sort parameters through URL search params
- * Provides options to sort by number, alphabetically, or by date added
+ * Sort Dropdown Component
+ *
+ * A dropdown component for sorting search results.
+ * Manages sort parameters through URL search params.
+ * Provides options to sort by number, alphabetically, or by date added.
+ *
+ * @component
  * @returns {JSX.Element} Sort dropdown component
  */
 const SortDropdown = () => {

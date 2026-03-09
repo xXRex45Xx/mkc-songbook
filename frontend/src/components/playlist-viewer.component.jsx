@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Playlist viewer component for displaying playlist details
+ * Provides playlist information, song list, and management actions
+ */
+
 import HorizontalPlaylistCard from "./horizontal-playlist-card.component";
 import SongCollectionTools from "./song-collection-tools.component";
 import SongsTable from "./songs-table.component";
@@ -11,6 +16,28 @@ import { deletePlaylist, patchPlaylist } from "../utils/api/playlist-api.util";
 import { useNavigate, useParams, useRevalidator } from "react-router-dom";
 import { setPlaylist } from "../store/slices/playlist.slice";
 
+/**
+ * Playlist Viewer Component
+ *
+ * Displays detailed playlist information with song list and management actions.
+ * Features:
+ * - Playlist metadata display (name, creator, visibility, song count)
+ * - Paginated song table with search highlighting
+ * - Share functionality with privacy controls
+ * - Admin-only edit and delete actions
+ * - Remove song from playlist
+ * - Queue management integration
+ *
+ * @component
+ * @param {Object} props - Component props
+ * @param {Object} props.playlist - Playlist object to display
+ * @param {string} props.playlist._id - Playlist identifier
+ * @param {string} props.playlist.name - Playlist name
+ * @param {string} props.playlist.visibility - Playlist visibility status
+ * @param {Object} props.playlist.creator - Playlist creator information
+ * @param {string} props.playlist.creator.name - Creator name
+ * @param {Array<Object>} props.playlist.songs - Array of songs in playlist
+ */
 const PlaylistViewer = ({ playlist }) => {
 	const { playlistId } = useParams();
 	const dispatch = useDispatch();

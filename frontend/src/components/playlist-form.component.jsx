@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Playlist form component for creating and editing playlists
+ * Handles playlist metadata and song list management
+ */
+
 import { useEffect, useRef, useState } from "react";
 import {
 	Form,
@@ -15,6 +20,28 @@ import CustomTailSpin from "./custom-tail-spin.component";
 import NewAlbumSong from "./new-album-song.component";
 import { useSelector } from "react-redux";
 
+/**
+ * Playlist Form Component
+ *
+ * A form component for creating and editing playlists.
+ * Features:
+ * - Playlist name and visibility settings
+ * - Dynamic song list with search and validation
+ * - Song finalization workflow
+ * - Drag and drop song ordering
+ * - File upload for cover image (if applicable)
+ * - Error handling and validation
+ *
+ * @component
+ * @param {Object} props - Component props
+ * @param {string} props.method - HTTP method for form submission (POST/PUT)
+ * @param {string} props.action - Form submission endpoint
+ * @param {Object} [props.playlist] - Existing playlist data for editing (optional)
+ * @param {string} [props.playlist._id] - Playlist identifier
+ * @param {string} [props.playlist.name] - Playlist name
+ * @param {string} [props.playlist.visibility] - Playlist visibility status
+ * @param {Array<Object>} [props.playlist.songs] - Array of songs in playlist
+ */
 const PlaylistForm = ({ method, action, playlist }) => {
 	const navigate = useNavigate();
 	const navigation = useNavigation();

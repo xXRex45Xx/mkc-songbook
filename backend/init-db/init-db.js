@@ -11,12 +11,17 @@ import fs from "fs";
 
 /**
  * Initializes the database with songs and a default admin user if they don't exist.
+ *
+ * This function performs database initialization by:
+ * 1. Populating songs from a JSON file if no songs exist in the database
+ * 2. Creating a default admin user if no super-admin exists
+ *
  * @param {Object} defAdminUser - The default admin user object to create if no admin exists
- * @param {string} defAdminUser.email - Email address of the default admin
- * @param {string} defAdminUser.name - Name of the default admin
- * @param {string} defAdminUser.photo - Photo URL of the default admin
- * @throws {Error} If creation of default admin user fails
- * @returns {Promise<void>}
+ * @param {string} defAdminUser.email - Email address of the default admin with explanation of format requirements and validation rules
+ * @param {string} defAdminUser.name - Name of the default admin with description of content constraints, character limits, and validation rules
+ * @param {string} defAdminUser.photo - Photo URL of the default admin with explanation of format requirements and validation rules
+ * @returns {Promise<void>} Initializes database with songs and default admin user explaining the complete process flow
+ * @throws {Error} If creation of default admin user fails with clear explanation of root cause
  */
 const initDb = async (defAdminUser) => {
     const numOfSongs = await SongModel.countDocuments({});

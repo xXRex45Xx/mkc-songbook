@@ -238,6 +238,16 @@ export const googleOauthLogin = async (accessToken) => {
 	return data;
 };
 
+/**
+ * Fetches all users with pagination and search
+ * @param {Object} [searchQuery] - Search parameters
+ * @param {string} [searchQuery.q] - Search query string
+ * @param {string} [searchQuery.type] - Search type
+ * @param {number} page - Page number for pagination
+ * @param {string} token - Authentication token (defaults to token in localStorage)
+ * @returns {Promise<Object>} User data from the server
+ * @throws {Object} Error with message and status if request fails
+ */
 export const getAllOrSearchUsers = async (
 	searchQuery = null,
 	page = 1,
@@ -259,6 +269,14 @@ export const getAllOrSearchUsers = async (
 	return data;
 };
 
+/**
+ * Updates user role
+ * @param {string} id - User ID to update
+ * @param {string} role - New role to assign
+ * @param {string} token - Authentication token (defaults to token in localStorage)
+ * @returns {Promise<Object>} Updated user data
+ * @throws {Object} Validation errors or server error response
+ */
 export const updateUserRole = async (
 	id,
 	role,
@@ -281,6 +299,15 @@ export const updateUserRole = async (
 	return data;
 };
 
+/**
+ * Updates user's favorite songs
+ * @param {string[]} [favorites] - Array of favorite song IDs
+ * @param {string|string[]} [addSongs] - Song ID(s) to add to favorites
+ * @param {string|string[]} [removeSongs] - Song ID(s) to remove from favorites
+ * @param {string} token - Authentication token (defaults to token in localStorage)
+ * @returns {Promise<void>}
+ * @throws {Object} Validation errors or server error response
+ */
 export const updateFavoriteSongs = async (
 	favorites,
 	addSongs = null,
@@ -309,6 +336,12 @@ export const updateFavoriteSongs = async (
 	if (!data.updated) throw { message: "An unexpected error occurred." };
 };
 
+/**
+ * Fetches user's favorite songs
+ * @param {string} token - Authentication token (defaults to token in localStorage)
+ * @returns {Promise<Object>} Favorite songs data
+ * @throws {Object} Error with message and status if request fails
+ */
 export const getFavorites = async (token = localStorage.getItem("_s")) => {
 	const response = await fetch(`${backendURL}/api/user/favorites`, {
 		headers: {

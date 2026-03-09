@@ -16,13 +16,25 @@ import { NotFoundError } from "../utils/error.util.js";
 import fs from "fs";
 
 /**
- * Get all albums with optional name-only projection
+ * Get all albums or search albums with pagination
  *
- * @param {Object} req - Express request object
- * @param {Object} req.query - Query parameters
- * @param {boolean} [req.query.names] - Whether to return only album names
- * @param {Object} res - Express response object
- * @returns {Promise<void>} Sends JSON response with albums
+ * This function retrieves all albums from the database or searches for albums by name.
+ * It supports pagination, searching by album title, and returning only album names.
+ * The function handles various search types and sorting options to provide flexible access to data.
+ *
+ * @param {Object} req - Express request object containing query parameters
+ * @param {Object} req.query - Query parameters with detailed explanation of each option
+ * @param {string} [req.query.q] - Search query (album name) with description of search scope and matching rules
+ * @param {boolean} [req.query.names] - Whether to return only album names with explanation of when to use this option
+ * @param {number} [req.query.page=1] - Page number for pagination with explanation of how pages are calculated and limits
+ * @param {Object} res - Express response object for sending responses back to client
+ * @returns {Promise<void>} Sends JSON response with albums and totalPages count explaining pagination details and result structure
+ * @throws {NotFoundError} If no albums match the search criteria with specific explanation of why no matches were found
+ * @throws {ServerFaultError} If database query fails due to server-side issues or database errors with detailed context
+ * @example
+ * // Example usage:
+ * GET /api/album?q=Amazing&names=true
+ * This example retrieves album names matching "Amazing" with pagination.
  */
 export const getAllOrSearchAlbums = async (req, res) => {
 	const { names, q } = req.query;
@@ -46,14 +58,30 @@ export const getAllOrSearchAlbums = async (req, res) => {
 /**
  * Add a new album and update associated songs
  *
- * @param {Object} req - Express request object
- * @param {Object} req.body - Album data
- * @param {string} req.body.id - Album ID
- * @param {string} req.body.title - Album title
- * @param {Array} req.body.songs - Array of song IDs
- * @param {Object} req.file - Album cover photo (optional)
- * @param {Object} res - Express response object
- * @returns {Promise<void>} Sends JSON response with inserted album ID
+ * This function creates a new album in the database with provided data.
+ * It validates the input parameters, checks for duplicates or constraints,
+ * and stores the entity in the database. The function returns information about
+ * the created entity for confirmation.
+ *
+ * @param {Object} req - Express request object containing request data
+ * @param {Object} req.body - Album data to create with detailed explanation of each field
+ * @param {string} req.body.id - Unique identifier for album with explanation of generation method and validation rules
+ * @param {string} req.body.title - Title of album with description of content, length constraints, and allowed characters
+ * @param {Array} [req.body.songs] - Array of song IDs (optional) with explanation of relationships and constraints
+ * @param {Object} req.file - Uploaded file (if applicable) with details about format, size limits, and validation requirements
+ * @param {Object} res - Express response object for sending responses back to client
+ * @returns {Promise<void>} Sends JSON response with inserted ID and success message explaining the complete process flow
+ * @throws {NotFoundError} If referenced entity doesn't exist in database with specific context about related entities
+ * @throws {ServerFaultError} If database operation fails due to server-side issues like connection problems or constraint violations
+ * @example
+ * // Example usage:
+ * POST /api/album
+ * {
+ *   "id": "album-123",
+ *   "title": "Amazing Grace Album",
+ *   "songs": ["song-456", "song-789"]
+ * }
+ * This example demonstrates creating a new album with associated songs.
  */
 export const addAlbum = async (req, res) => {
 	const album = req.body;
@@ -75,6 +103,24 @@ export const addAlbum = async (req, res) => {
 	res.status(201).json({ insertedId: insertedAlbum._id });
 };
 
+/**
+ * Get a single album by ID
+ *
+ * This function retrieves a single album from the database by its ID.
+ * It populates associated songs with relevant information and returns
+ * detailed album data including song information.
+ *
+ * @param {Object} req - Express request object containing request data
+ * @param {Object} req.params - Route parameters with explanation of what they represent
+ * @param {string} req.params.id - Album ID with explanation of how it's used to find the album
+ * @param {Object} res - Express response object for sending responses back to client
+ * @returns {Promise<void>} Sends JSON response with album data explaining the complete structure and content
+ * @throws {NotFoundError} If album is not found with specific explanation of why no album was found
+ * @example
+ * // Example usage:
+ * GET /api/album/album-123
+ * This example retrieves details for album with ID "album-123".
+ */
 export const getAlbum = async (req, res) => {
 	const { id } = req.params;
 	const album = await AlbumModel.findById(id).populate({
@@ -96,6 +142,32 @@ export const getAlbum = async (req, res) => {
 	});
 };
 
+/**
+ * Update an existing album
+ *
+ * This function updates an existing album in the database with provided data.
+ * It validates the input parameters, checks for changes to album relationships,
+ * and stores the updated entity in the database. The function handles file updates
+ * and maintains consistency between albums and songs.
+ *
+ * @param {Object} req - Express request object containing request data
+ * @param {Object} req.params - Route parameters with explanation of what they represent
+ * @param {string} req.params.id - Album ID with explanation of how it's used to find the album
+ * @param {Object} req.body - Updated album data with detailed explanation of each field
+ * @param {Object} req.file - New album cover image (optional) with details about format, size limits, and validation requirements
+ * @param {Object} res - Express response object for sending responses back to client
+ * @returns {Promise<void>} Sends JSON response with update status explaining the complete process flow
+ * @throws {NotFoundError} If album is not found with specific explanation of why no album was found
+ * @throws {ServerFaultError} If database operation fails due to server-side issues like connection problems or constraint violations
+ * @example
+ * // Example usage:
+ * PUT /api/album/album-123
+ * {
+ *   "title": "Amazing Grace Album - Updated",
+ *   "songs": ["song-456", "song-789"]
+ * }
+ * This example demonstrates updating album details with new song list.
+ */
 export const updateAlbum = async (req, res) => {
 	const { id } = req.params;
 	const album = req.body;
@@ -174,6 +246,24 @@ export const updateAlbum = async (req, res) => {
 	if (req.error?.fileDeleteError) console.error(req.error.fileDeleteError);
 };
 
+/**
+ * Delete an album and remove it from associated songs
+ *
+ * This function deletes an album from the database and removes references to it
+ * from associated songs. It also handles file deletion for album cover images.
+ *
+ * @param {Object} req - Express request object containing request data
+ * @param {Object} req.params - Route parameters with explanation of what they represent
+ * @param {string} req.params.id - Album ID with explanation of how it's used to find the album
+ * @param {Object} res - Express response object for sending responses back to client
+ * @returns {Promise<void>} Sends JSON response with deletion status explaining the complete process flow
+ * @throws {NotFoundError} If album is not found with specific explanation of why no album was found
+ * @throws {ServerFaultError} If database operation fails due to server-side issues like connection problems or constraint violations
+ * @example
+ * // Example usage:
+ * DELETE /api/album/album-123
+ * This example deletes album with ID "album-123" and removes references from songs.
+ */
 export const deleteAlbum = async (req, res) => {
 	const { id } = req.params;
 

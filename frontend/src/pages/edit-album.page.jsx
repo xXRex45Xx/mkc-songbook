@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Edit album page component
+ * Allows authenticated users to update album information
+ */
+
 import {
     useLoaderData,
     useParams,
@@ -12,6 +17,15 @@ import { getAlbum } from "../utils/api/album-api.util";
 import MainBodyContainer from "../components/main-body-container.component";
 import { addOrEditAlbum } from "../utils/api/album-api.util";
 
+/**
+ * Edit Album Page Component
+ *
+ * Displays album form pre-populated with existing album data
+ * Only accessible to authorized users
+ *
+ * @component
+ * @returns {JSX.Element} Album edit form
+ */
 const EditAlbumPage = () => {
     const loaderData = useLoaderData();
     const params = useParams();
@@ -35,6 +49,15 @@ const EditAlbumPage = () => {
 
 export default EditAlbumPage;
 
+/**
+ * Route loader for edit album page
+ * Fetches existing album data for form pre-population
+ *
+ * @param {Object} params - Route parameters
+ * @param {string} params.albumId - The album identifier to edit
+ * @returns {Promise<{data: Object}>} Resolves to album data
+ * @throws {Error} 404: Album not found
+ */
 export const loader = ({ params }) => {
     const { albumId } = params;
     return defer({
@@ -42,6 +65,16 @@ export const loader = ({ params }) => {
     });
 };
 
+/**
+ * Route action for edit album page
+ * Handles album update submissions
+ *
+ * @param {Object} params - Action parameters
+ * @param {FormData} params.formData - Form submission data
+ * @param {string} params.albumId - The album identifier
+ * @returns {Response|Object} Redirect on success, error object on validation failure
+ * @throws {Error} 400: Invalid input, 500: Server error
+ */
 export const action = async ({ request, params }) => {
     const formData = await request.formData();
     try {

@@ -22,7 +22,10 @@ config();
  * Configures and creates a nodemailer transport using SMTP settings
  * from environment variables.
  *
- * @returns {Object} Configured nodemailer transport
+ * This transport is used for sending emails through the configured SMTP server.
+ *
+ * @returns {Object} Configured nodemailer transport object with authentication details and connection settings
+ * @throws {Error} If transport configuration fails due to invalid settings or network issues
  */
 const transporter = nodemailer.createTransport({
 	host: process.env.SMTP_HOST,
@@ -37,10 +40,17 @@ const transporter = nodemailer.createTransport({
 /**
  * Send email using configured transporter
  *
+ * Sends an email through the configured SMTP transport with specified parameters.
+ *
  * @param {string} email - Recipient email address
  * @param {string} title - Email subject
  * @param {string} body - Email content
- * @returns {Promise<void>} Resolves when email is sent
+ * @returns {Promise<void>} Resolves when email is sent successfully with confirmation of delivery
+ * @throws {Error} If email sending fails due to transport issues or invalid parameters with clear explanation of root causes
+ * @example
+ * // Example usage:
+ * await sendEmail("user@example.com", "Welcome!", "Thank you for joining!");
+ * This example demonstrates sending a welcome email to a new user with proper formatting and content.
  */
 const sendEmail = async (email, title, body) => {
 	await transporter.sendMail({

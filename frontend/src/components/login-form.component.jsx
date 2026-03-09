@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Login form component for user authentication
+ * Supports email/password login and Google OAuth
+ */
+
 import { Button, Label, TextInput } from "flowbite-react";
 import {
 	Form,

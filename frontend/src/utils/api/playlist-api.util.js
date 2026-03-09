@@ -1,5 +1,20 @@
 import backendURL from "../../config/backend-url.config";
 
+/**
+ * @fileoverview Playlist API utility functions
+ * Contains functions for interacting with the playlist endpoints
+ */
+
+/**
+ * Fetches all playlists with pagination and search
+ * @param {Object} [searchQuery] - Search parameters
+ * @param {string} [searchQuery.q] - Search query string
+ * @param {number} page - Page number for pagination
+ * @param {boolean} myPlaylists - If true, fetches only user's playlists
+ * @param {string} token - Authentication token (defaults to token in localStorage)
+ * @returns {Promise<Object>} Playlist data from the server
+ * @throws {Object} Error with message and status if request fails
+ */
 export const getAllPlaylists = async (
 	searchQuery = null,
 	page = 1,
@@ -29,6 +44,15 @@ export const getAllPlaylists = async (
 	return data;
 };
 
+/**
+ * Creates or updates a playlist
+ * @param {FormData} formData - Form data containing playlist details
+ * @param {boolean} edit - If true, updates existing playlist; if false, creates new playlist
+ * @param {string|null} playlistId - ID of playlist to edit (required if edit is true)
+ * @param {string} token - Authentication token (defaults to token in localStorage)
+ * @returns {Promise<Object>} Created or updated playlist data
+ * @throws {Object} Validation errors or server error response
+ */
 export const addOrEditPlaylist = async (
 	formData,
 	edit = false,
@@ -66,6 +90,16 @@ export const addOrEditPlaylist = async (
 	return data;
 };
 
+/**
+ * Updates playlist visibility or manages song additions/removals
+ * @param {string} playlistId - ID of playlist to update
+ * @param {string} [visibility] - New visibility setting
+ * @param {string[]} [addSongs] - Array of song IDs to add
+ * @param {string|string[]} [removeSongs] - Song ID(s) to remove
+ * @param {string} token - Authentication token (defaults to token in localStorage)
+ * @returns {Promise<void>}
+ * @throws {Object} Validation errors or server error response
+ */
 export const patchPlaylist = async (
 	playlistId,
 	visibility,
@@ -94,6 +128,13 @@ export const patchPlaylist = async (
 	if (!data.updated) throw { message: "An unexpected error occurred." };
 };
 
+/**
+ * Fetches a single playlist by ID
+ * @param {string} id - Playlist ID to fetch
+ * @param {string} token - Authentication token (defaults to token in localStorage)
+ * @returns {Promise<Object>} Playlist data
+ * @throws {Object} Error with message and status if request fails
+ */
 export const getPlaylist = async (id, token = localStorage.getItem("_s")) => {
 	if (id.length === 0)
 		throw new { message: "Playlist id is required.", status: 4000 }();
@@ -111,6 +152,13 @@ export const getPlaylist = async (id, token = localStorage.getItem("_s")) => {
 	return data;
 };
 
+/**
+ * Deletes a playlist by ID
+ * @param {string} id - Playlist ID to delete
+ * @param {string} token - Authentication token (defaults to token in localStorage)
+ * @returns {Promise<void>}
+ * @throws {Object} Error with message and status if deletion fails
+ */
 export const deletePlaylist = async (
 	id,
 	token = localStorage.getItem("_s")

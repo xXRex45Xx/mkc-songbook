@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Custom table component for displaying paginated data
+ * Supports optional pagination, headers, and hover effects
+ */
+
 import { Pagination, Table } from "flowbite-react";
 import { tableTheme } from "../config/table-theme.config";
 import { forwardRef } from "react";

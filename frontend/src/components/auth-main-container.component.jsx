@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Authentication main container component for auth page layouts
+ * Provides consistent styling and navigation for authentication flows
+ */
+
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "flowbite-react";
 import { buttonTheme } from "../config/button-theme.config";

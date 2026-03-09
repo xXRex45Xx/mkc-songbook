@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Custom row component for songs table with drag-and-drop support
+ * Displays song information with responsive layout and action buttons
+ */
+
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { Table } from "flowbite-react";
@@ -26,6 +31,14 @@ import deleteIcon from "../assets/delete.svg";
  * @param {string} props.song.title - Song title
  * @param {Array<{name: string}>} props.song.albums - List of albums the song belongs to
  * @param {boolean} props.highlight - Whether to include search term in navigation
+ * @param {boolean} [props.showDelete] - Whether to show delete button
+ * @param {string} [props.deleteDescription] - Description for delete action
+ * @param {Function} [props.onDelete] - Delete callback function
+ * @param {boolean} [props.draggable] - Whether row is draggable
+ * @param {number} [props.idx] - Row index for drag operations
+ * @param {boolean} [props.showPlayButton] - Whether to show play button
+ * @param {Function} [props.onPlay] - Play callback function
+ * @param {boolean} [props.queueTools] - Whether to show queue management tools
  */
 const SongsTableRow = ({
 	song,
