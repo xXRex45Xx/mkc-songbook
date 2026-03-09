@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-This is a **React-based single-page application** for the MKC Choir Song Book platform. The application provides a web interface for managing and streaming gospel songs, albums, and playlists for a choir community.
+This is a **React-based single-page application** for the MKC Choir Song Book platform. The application provides a web interface for managing and streaming gospel songs, albums, playlists, and service records for a choir community.
 
 ### Core Technologies
 
@@ -16,6 +16,7 @@ This is a **React-based single-page application** for the MKC Choir Song Book pl
 | **Styling** | Tailwind CSS 3.4 |
 | **Authentication** | Google OAuth (@react-oauth/google) |
 | **Loading States** | React Loader Spinner 6.1 |
+| **Drag & Drop** | @dnd-kit/core 6.3 |
 
 ### Architecture
 
@@ -26,15 +27,17 @@ The application follows a **modular architecture** with clear separation of conc
 - **Store**: Redux slices for state management (`user`, `configs`, `playlist`)
 - **Utils**: API clients and utility functions
 - **Config**: Theme and environment configurations
+- **Hooks**: Custom React hooks for reusable logic
 
 ### Key Features
 
-1. **Authentication**: Email/password login, Google OAuth, JWT-based sessions
-2. **Song Management**: Upload, edit, search, and organize songs
-3. **Album Management**: Create and manage music albums
-4. **Playlists**: Custom playlist creation and management
-5. **Schedule**: Choir schedule/logbook management (admin features)
+1. **Authentication**: Email/password with OTP, Google OAuth, JWT-based sessions
+2. **Song Management**: Upload, edit, search, stream, and organize songs with lyrics/chords
+3. **Album Management**: Create and manage albums with cover images
+4. **Playlists**: Custom playlist creation with visibility controls (private/members/public)
+5. **Service Logbook**: Record and track choir service performances
 6. **User Management**: Admin panel for user roles and permissions
+7. **Audio Streaming**: Range-request supported audio playback
 
 ---
 
@@ -103,18 +106,18 @@ Runs ESLint to check for code issues.
 src/
 ├── components/           # Reusable UI components
 │   ├── *.component.jsx  # Component files use .component.jsx extension
-│   └── *.styles.css     # Component-specific styles
+│   └── *.styles.css     # Component-specific styles (optional)
 ├── pages/               # Page-level components
 │   └── *.page.jsx       # Page files use .page.jsx extension
 ├── store/
-│   ├── slices/          # Redux slice definitions
+│   ├── slices/          # Redux slice definitions (user, configs, playlist)
 │   └── store.js         # Main store configuration
 ├── utils/
 │   ├── api/             # API client functions
 │   └── *.util.js        # Utility functions
 ├── config/              # Configuration files
 ├── hooks/               # Custom React hooks
-└── assets/              # Static assets (images, icons)
+└── assets/              # Static assets (images, icons, SVGs)
 ```
 
 ### Naming Conventions
@@ -142,18 +145,25 @@ This project follows **JSDoc** documentation standards:
 
 ### React Router Pattern
 
-The app uses **React Router v6** with **loader/actions** pattern (similar to Remix):
+The app uses **React Router v6** with **loader/actions** pattern:
 
 ```javascript
 // Page exports loader and action for data fetching
-export const loader = async ({ request }) => {
-  const data = await api.fetch();
+export const loader = async ({ params }) => {
+  const data = await api.fetch(params.id);
   return data;
 };
 
 export const action = async ({ request }) => {
-  const result = await api.submit(formData);
+  const formData = await request.formData();
+  await api.submit(formData);
   return redirect('/success');
+};
+
+// In component
+const MyPage = () => {
+  const data = useLoaderData();
+  // ...
 };
 ```
 
@@ -164,12 +174,32 @@ export const action = async ({ request }) => {
 - **Selectors**: Use `useSelector` with inline state access
 - **Actions**: Export action creators via `slice.actions`
 
+```javascript
+// Slice definition
+export const userSlice = createSlice({
+  name: 'user',
+  initialState: { currentUser: null, token: null },
+  reducers: {
+    setCurrentUser: (state, action) => {
+      state.currentUser = action.payload;
+    },
+  },
+});
+
+// Usage in components
+const user = useSelector((state) => state.user.currentUser);
+const dispatch = useDispatch();
+dispatch(setCurrentUser(userData));
+```
+
 ### API Integration
 
 All API calls go through utility functions in `src/utils/api/`:
 
 ```javascript
 // Example: user-api.util.js
+const backendURL = import.meta.env.VITE_BACKEND_URL;
+
 export const login = async (email, password) => {
   const response = await fetch(`${backendURL}/api/user/login`, {
     method: 'POST',
@@ -187,6 +217,7 @@ export const login = async (email, password) => {
 - **API Errors**: Throw objects with `status` and `message`
 - **Route Errors**: Use `errorElement` for error pages
 - **Validation**: Client-side validation before API calls
+- **Protected Routes**: Redirect to auth page if not authenticated
 
 ### Styling
 
@@ -205,13 +236,6 @@ const SongCard = ({ song, showPlayButton, onPlay }) => {
 };
 ```
 
-### State Management Pattern
-
-```javascript
-const user = useSelector((state) => state.user.currentUser);
-const queue = useSelector((state) => state.playlist.queue);
-```
-
 ---
 
 ## Project Structure
@@ -221,6 +245,7 @@ const queue = useSelector((state) => state.playlist.queue);
 `src/main.jsx` - Initializes:
 - React Router with route definitions
 - Redux store provider
+- Google OAuth provider
 - All page routes with loaders/actions
 
 ### Application Root
@@ -232,16 +257,26 @@ const queue = useSelector((state) => state.playlist.queue);
 
 ### Key Pages
 
-| Page | Purpose | Protected |
-|------|---------|-----------|
-| `HomePage` | Redirects to songs | No |
-| `SongsPage` | Browse/search songs | No |
-| `LyricsPage` | View song lyrics | No |
-| `Auth` | Login/signup flow | No |
-| `UploadSongPage` | Add new songs | Admin only |
-| `EditSongPage` | Edit existing songs | Admin only |
-| `UsersPage` | User management | Admin only |
-| `SchedulePage` | Choir schedule | Member+ |
+| Page | Route | Purpose | Protected |
+|------|-------|---------|-----------|
+| `HomePage` | `/` | Redirects to songs | No |
+| `SongsPage` | `/songs` | Browse/search songs | No |
+| `LyricsPage` | `/lyrics/:id` | View song lyrics/chords | No |
+| `AuthPage` | `/auth` | Login/signup flow | No |
+| `AlbumsPage` | `/albums` | Browse albums | No |
+| `AlbumPage` | `/album/:id` | View album details | No |
+| `PlaylistsPage` | `/playlists` | Browse public playlists | No |
+| `PlaylistPage` | `/playlist/:id` | View playlist | No |
+| `UploadSongPage` | `/upload-song` | Add new songs | Admin |
+| `EditSongPage` | `/edit-song/:id` | Edit existing songs | Admin |
+| `UploadAlbumPage` | `/upload-album` | Create album | Admin |
+| `EditAlbumPage` | `/edit-album/:id` | Edit album | Admin |
+| `NewPlaylistPage` | `/new-playlist` | Create playlist | Yes |
+| `EditPlaylistPage` | `/edit-playlist/:id` | Edit playlist | Creator |
+| `SchedulePage` | `/schedule` | View service logbook | Member+ |
+| `NewSchedulePage` | `/new-schedule` | Create service record | Admin |
+| `UsersPage` | `/users` | User management | Admin |
+| `ErrorPage` | `/error` | Error display | No |
 
 ### Protected Routes
 
@@ -255,42 +290,78 @@ Protected routes use the `ProtectedRoute` component:
 
 ### Roles
 
-- **public**: Unauthenticated users
-- **member**: Registered users
-- **admin**: Administrative access
-- **super-admin**: Full administrative access
+- **public**: Unauthenticated users (view public content only)
+- **member**: Registered users (create playlists, view logbook)
+- **admin**: Administrative access (CRUD songs, albums, manage users)
+- **super-admin**: Full access including admin role management
 
 ---
 
-## Development Notes
+## Redux Store Structure
 
-### Known Issues
+### `userSlice` (`src/store/slices/user.slice.js`)
 
-1. **Typo in protected route**: `"memeber"` should be `"member"` in `main.jsx`
-2. **Inconsistent documentation**: Page components lack JSDoc
-3. **Missing type annotations**: Some functions lack JSDoc types
+Manages user authentication state:
+- `currentUser`: User profile data (id, name, email, role, favorites)
+- `token`: JWT authentication token
+- `adminType`: Admin role type for UI conditioning
 
-### Common Tasks
+### `configsSlice` (`src/store/slices/configs.slice.js`)
 
-**Adding a new page:**
+Manages app-wide configuration:
+- `fontSize`: User preference for text size
+- `windowSize`: Current window dimensions
+- UI theme settings
 
-1. Create `src/pages/new-page.page.jsx`
-2. Export `loader` and/or `action` if data fetching needed
-3. Add route to `main.jsx` router configuration
-4. Add `ProtectedRoute` if admin-only
+### `playlistSlice` (`src/store/slices/playlist.slice.js`)
 
-**Adding a new Redux slice:**
+Manages audio playback state:
+- `queue`: Array of songs in current playlist
+- `currentSong`: Currently playing song
+- `isPlaying`: Playback state
+- `volume`: Volume level
 
-1. Create `src/store/slices/new.slice.js`
-2. Define state shape and reducers
-3. Import and add to `store.js`
-4. Use `useSelector` and `useDispatch` in components
+---
 
-**Adding a new API endpoint:**
+## Component Categories
 
-1. Create `src/utils/api/new-api.util.js`
-2. Follow existing patterns for fetch calls
-3. Document with JSDoc
+### Layout Components
+- `header.component.jsx` - Main navigation header
+- `main-body-container.component.jsx` - Main content wrapper
+- `auth-main-container.component.jsx` - Auth page wrapper
+- `protected-route.component.jsx` - Route protection
+
+### Form Components
+- `login-form.component.jsx` - Login form
+- `sign-up-form.component.jsx` - Registration form
+- `forgot-password-form.component.jsx` - Password reset request
+- `create-password-form.component.jsx` - Password creation
+- `verify-email-form.component.jsx` - Email verification
+- `song-form.component.jsx` - Song create/edit form
+- `album-form.component.jsx` - Album create/edit form
+- `playlist-form.component.jsx` - Playlist create/edit form
+
+### Media Components
+- `audio-player.component.jsx` - Main audio player
+- `audio-player-toolbox.component.jsx` - Player controls
+- `audio-controls.component.jsx` - Playback controls
+- `lyric-viewer.component.jsx` - Lyrics display
+- `album-viewer.component.jsx` - Album display
+- `playlist-viewer.component.jsx` - Playlist display
+
+### Card Components
+- `album-card.component.jsx` - Album card
+- `horizontal-album-card.component.jsx` - Horizontal album card
+- `playlist-card.component.jsx` - Playlist card
+- `horizontal-playlist-card.component.jsx` - Horizontal playlist card
+
+### UI Components
+- `custom-table.component.jsx` - Reusable table
+- `custom-row.component.jsx` - Table row
+- `custom-slider.component.jsx` - Slider/carousel
+- `custom-tail-spin.component.jsx` - Loading spinner
+- `search-bar.component.jsx` - Search input
+- `sort-dropdown.component.jsx` - Sort options
 
 ---
 
@@ -298,20 +369,26 @@ Protected routes use the `ProtectedRoute` component:
 
 ### Production
 
-- `react` & `react-dom`: UI framework
-- `react-router-dom`: Client-side routing
-- `@reduxjs/toolkit` & `react-redux`: State management
-- `flowbite-react`: UI component library
-- `@react-oauth/google`: Google OAuth integration
-- `react-loader-spinner`: Loading animations
+| Package | Purpose |
+|---------|---------|
+| `react`, `react-dom` | UI framework |
+| `react-router-dom` | Client-side routing |
+| `@reduxjs/toolkit`, `react-redux` | State management |
+| `flowbite-react` | UI component library |
+| `@react-oauth/google` | Google OAuth integration |
+| `react-loader-spinner` | Loading animations |
+| `@dnd-kit/core` | Drag-and-drop functionality |
 
 ### Development
 
-- `vite`: Build tool and dev server
-- `tailwindcss`: Utility-first CSS framework
-- `@vitejs/plugin-react`: React plugin for Vite
-- `eslint`: Code linting
-- `vite-plugin-svgr`: SVG as React components
+| Package | Purpose |
+|---------|---------|
+| `vite` | Build tool and dev server |
+| `tailwindcss` | Utility-first CSS |
+| `@vitejs/plugin-react` | React plugin for Vite |
+| `eslint` | Code linting |
+| `vite-plugin-svgr` | SVG as React components |
+| `postcss`, `autoprefixer` | CSS processing |
 
 ---
 
@@ -330,9 +407,10 @@ Protected routes use the `ProtectedRoute` component:
 
 ```bash
 npm install          # Install dependencies
-npm run dev          # Start dev server
+npm run dev          # Start dev server (port 5173)
 npm run build        # Build for production
 npm run lint         # Run ESLint
+npm run preview      # Preview production build
 ```
 
 ### File Locations
@@ -344,6 +422,7 @@ npm run lint         # Run ESLint
 | Add Redux slice | `src/store/slices/new.slice.js` |
 | Add API utility | `src/utils/api/new-api.util.js` |
 | Update theme | `tailwind.config.js` |
+| Update routes | `src/main.jsx` |
 
 ### Documentation Files
 
@@ -355,8 +434,42 @@ npm run lint         # Run ESLint
 
 ---
 
+## Development Notes
+
+### Known Issues
+
+1. **Typo in protected route**: `"memeber"` should be `"member"` in `main.jsx`
+2. **Inconsistent documentation**: Page components and hooks lack JSDoc
+3. **Missing type annotations**: Some functions need complete JSDoc types
+
+### Common Tasks
+
+**Adding a new page:**
+
+1. Create `src/pages/new-page.page.jsx`
+2. Export `loader` and/or `action` if data fetching needed
+3. Add route to `main.jsx` router configuration
+4. Add `ProtectedRoute` wrapper if admin/member-only
+
+**Adding a Redux slice:**
+
+1. Create `src/store/slices/new.slice.js`
+2. Define state shape and reducers using `createSlice`
+3. Import and add to `store.js`
+4. Use `useSelector` and `useDispatch` in components
+
+**Adding a new API endpoint:**
+
+1. Create `src/utils/api/new-api.util.js`
+2. Follow existing patterns for fetch calls
+3. Document with JSDoc
+4. Handle errors with status and message
+
+---
+
 ## Revision History
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
+| 1.1.0 | 2026-03-09 | Updated | Added playlist, logbook, streaming docs |
 | 1.0.0 | 2026-03-05 | Initial | Project initialization |
