@@ -177,7 +177,7 @@ const router = createBrowserRouter([
 				path: "playlists/:playlistId/edit",
 				element: (
 					<ProtectedRoute
-						roles={["public", "memeber", "admin", "super-admin"]}
+						roles={["public", "member", "admin", "super-admin"]}
 					>
 						<EditPlaylistPage />
 					</ProtectedRoute>
