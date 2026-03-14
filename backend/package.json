@@ -42,7 +42,10 @@
     },
     "type": "module",
     "devDependencies": {
+        "@babel/core": "^7.29.0",
+        "@babel/preset-env": "^7.29.0",
         "@types/jest": "^30.0.0",
+        "babel-jest": "^30.3.0",
         "jest": "^30.3.0",
         "jest-mock-extended": "^4.0.0",
         "mongodb-memory-server": "^11.0.1",

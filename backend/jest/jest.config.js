@@ -23,6 +23,9 @@ export const jestConfig = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
   },
+  transform: {
+    '^.+\\.js$': 'babel-jest',
+  },
   setupFilesAfterEnv: ['<rootDir>/jest/jest.setup.js'],
   globalSetup: '<rootDir>/jest/jest.globalSetup.js',
   globalTeardown: '<rootDir>/jest/jest.globalTeardown.js',
