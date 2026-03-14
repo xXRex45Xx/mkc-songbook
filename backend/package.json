@@ -4,7 +4,13 @@
     "main": "index.js",
     "scripts": {
         "start": "node index.js",
-        "dev": "nodemon ."
+        "dev": "nodemon .",
+        "test": "jest --coverage",
+        "test:watch": "jest --watch",
+        "test:coverage": "jest --coverage --coverageReporters=text-lcov",
+        "test:unit": "jest --testPathPattern='(utils|middlewares)'",
+        "test:integration": "jest --testPathPattern='(controllers|routes)'",
+        "test:e2e": "jest --testPathPattern='e2e'"
     },
     "repository": {
         "type": "git",
@@ -36,6 +42,11 @@
     },
     "type": "module",
     "devDependencies": {
-        "nodemon": "^3.1.10"
+        "@types/jest": "^30.0.0",
+        "jest": "^30.3.0",
+        "jest-mock-extended": "^4.0.0",
+        "mongodb-memory-server": "^11.0.1",
+        "nodemon": "^3.1.10",
+        "supertest": "^7.2.2"
     }
 }
