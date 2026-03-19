@@ -25,27 +25,27 @@ import AlbumModel from "../models/album.model.js";
  * @throws {ClientFaultError} When songs array is invalid or contains non-existent song IDs with detailed error explanation
  */
 export const checkSongExists = async (req, _res, next) => {
-    const { songs: songIds } = req.body;
+	const { songs: songIds } = req.body;
 
-    // Find all songs in a single query
-    const existingSongs = await SongModel.find({
-        _id: { $in: songIds },
-    });
+	// Find all songs in a single query
+	const existingSongs = await SongModel.find({
+		_id: { $in: songIds },
+	});
 
-    const foundSongMap = new Map(existingSongs.map((song) => [song._id, song]));
+	const foundSongMap = new Map(existingSongs.map((song) => [song._id, song]));
 
-    // Find missing song IDs
-    const missingSongIds = songIds.filter((id) => !foundSongMap.has(id));
+	// Find missing song IDs
+	const missingSongIds = songIds.filter((id) => !foundSongMap.has(id));
 
-    if (missingSongIds.length > 0) {
-        throw new ClientFaultError(
-            `The following songs don't exist: ${missingSongIds.join(", ")}`
-        );
-    }
+	if (missingSongIds.length > 0) {
+		throw new ClientFaultError(
+			`The following songs don't exist: ${missingSongIds.join(", ")}`,
+		);
+	}
 
-    // Preserve the original order of songs as specified in the request
-    req.body.songs = songIds.map((id) => foundSongMap.get(id));
-    next();
+	// Preserve the original order of songs as specified in the request
+	req.body.songs = songIds.map((id) => foundSongMap.get(id));
+	next();
 };
 
 /**
@@ -63,13 +63,11 @@ export const checkSongExists = async (req, _res, next) => {
  * @throws {ClientFaultError} When an album with the provided ID already exists with clear explanation of duplicate condition and error context
  */
 export const checkAlbumExists = async (req, _res, next) => {
-    const { id } = req.body;
-    const album = await AlbumModel.findById(id);
-    if (album)
-        throw new ClientFaultError(
-            `Album with id ${album._id} already exists.`
-        );
-    next();
+	const { id } = req.body;
+	const album = await AlbumModel.findById(id);
+	if (album)
+		throw new ClientFaultError(`Album with id ${album._id} already exists.`);
+	next();
 };
 
 /**
@@ -91,15 +89,15 @@ export const checkAlbumExists = async (req, _res, next) => {
  * @throws {ClientFaultError} When attempting to change album ID to an already existing ID with clear explanation of duplicate condition and error context
  */
 export const checkAlbumExistsForUpdate = async (req, _res, next) => {
-    const { id } = req.params;
-    const album = await AlbumModel.findById(id);
-    if (!album) throw new NotFoundError(`Album with id ${id} does not exist.`);
-    if (req.body.id !== id) {
-        const albumWithNewId = await AlbumModel.findById(req.body.id);
-        if (albumWithNewId)
-            throw new ClientFaultError(
-                `Album with id ${req.body.id} already exists.`
-            );
-    }
-    next();
+	const { id } = req.params;
+	const album = await AlbumModel.findById(id);
+	if (!album) throw new NotFoundError(`Album with id ${id} does not exist.`);
+	if (req.body.id !== id) {
+		const albumWithNewId = await AlbumModel.findById(req.body.id);
+		if (albumWithNewId)
+			throw new ClientFaultError(
+				`Album with id ${req.body.id} already exists.`,
+			);
+	}
+	next();
 };

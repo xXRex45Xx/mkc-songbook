@@ -22,14 +22,14 @@ import { ClientFaultError } from "../utils/error.util.js";
  * @throws {ClientFaultError} If user existence check fails based on context with clear explanation of root cause and error conditions
  */
 const checkUserExists = async (req, _res, next) => {
-    const { email } = req.body;
-    const { forgotPassword } = req.query;
-    const user = await UserModel.findOne({ email });
-    if (user && !forgotPassword)
-        throw new ClientFaultError("User already exists");
-    if (!user && forgotPassword)
-        throw new ClientFaultError("User doesn't exist");
-    next();
+  const { email } = req.body;
+  const forgotPassword = req.query?.forgotPassword;
+  const user = await UserModel.findOne({ email });
+  if (user && !forgotPassword)
+    throw new ClientFaultError("User already exists");
+  if (!user && forgotPassword)
+    throw new ClientFaultError("User doesn't exist");
+  next();
 };
 
 export default checkUserExists;

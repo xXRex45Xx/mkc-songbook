@@ -5,7 +5,7 @@ jest.mock('dotenv', () => ({
 
 // Mock file system operations
 jest.mock('fs', () => ({
-  ...jest.importActual('fs'),
+  ...jest.requireActual('fs'),
   createReadStream: jest.fn(),
   createWriteStream: jest.fn(),
   existsSync: jest.fn(),
@@ -23,7 +23,7 @@ jest.mock('nodemailer', () => ({
 
 // Mock Multer file handling
 jest.mock('multer', () => {
-  const multer = jest.importActual('multer');
+  const multer = jest.requireActual('multer');
   return {
     ...multer,
     default: () => ({
@@ -38,7 +38,7 @@ jest.mock('multer', () => {
 // Extend Jest expect matchers
 expect.extend({
   toBeValidObjectId(received) {
-    const mongoose = jest.importActual('mongoose');
+    const mongoose = jest.requireActual('mongoose');
     const isValid = mongoose.Types.ObjectId.isValid(received);
     return {
       pass: isValid,
