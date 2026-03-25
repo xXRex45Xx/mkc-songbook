@@ -16,7 +16,6 @@ import { MulterError } from "multer";
 import fs from "fs";
 import helmet from "helmet";
 import morgan from "morgan";
-import initDb from "./init-db/init-db.js";
 import path from "path";
 import { wrapAsync } from "./utils/error.util.js";
 
@@ -27,6 +26,8 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 const app = express();
+
+export default app;
 
 /**
  * Custom Morgan tokens for logging errors.
@@ -275,14 +276,17 @@ app.use(async (err, req, res, _next) => {
  * // "Connected to MongoDB"
  * // "Server started on port: 3000"
  */
-connect(process.env.DB_URI).then(async () => {
-	console.log("Connected to MongoDB");
-	await initDb({
-		email: process.env.DEFAULT_ADMIN_EMAIL,
-		name: process.env.DEFAULT_ADMIN_NAME,
-		photoLink: process.env.DEFAULT_ADMIN_PHOTO_LINK,
+if (process.env.NODE_ENV !== "test") {
+	connect(process.env.DB_URI).then(async () => {
+		const { default: initDb } = await import("./init-db/init-db.js");
+		console.log("Connected to MongoDB");
+		await initDb({
+			email: process.env.DEFAULT_ADMIN_EMAIL,
+			name: process.env.DEFAULT_ADMIN_NAME,
+			photoLink: process.env.DEFAULT_ADMIN_PHOTO_LINK,
+		});
+		app.listen(process.env.PORT, () =>
+			console.log("Server started on port: ", process.env.PORT)
+		);
 	});
-	app.listen(process.env.PORT, () =>
-		console.log("Server started on port: ", process.env.PORT)
-	);
-});
+}

@@ -17,6 +17,7 @@ import UserModel from "../models/user.model.js";
 import jwt from "jsonwebtoken";
 import {
 	ClientFaultError,
+	ForbiddenError,
 	NotFoundError,
 	UnauthorizedError,
 } from "../utils/error.util.js";

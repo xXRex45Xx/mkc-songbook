@@ -26,6 +26,7 @@ export const jestConfig = {
   transform: {
     '^.+\\.js$': 'babel-jest',
   },
+  setupFiles: ['<rootDir>/jest/jest.env.js'],
   setupFilesAfterEnv: ['<rootDir>/jest/jest.setup.js'],
   globalSetup: '<rootDir>/jest/jest.globalSetup.js',
   globalTeardown: '<rootDir>/jest/jest.globalTeardown.js',

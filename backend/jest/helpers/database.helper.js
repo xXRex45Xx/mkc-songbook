@@ -1,4 +1,4 @@
-import { mongoose } from 'mongoose';
+import mongoose from 'mongoose';
 
 export const clearDatabase = async () => {
   const collections = await mongoose.connection.db.listCollections().toArray();

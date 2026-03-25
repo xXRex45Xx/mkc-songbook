@@ -85,12 +85,14 @@ export const getAllOrSearchAlbums = async (req, res) => {
  */
 export const addAlbum = async (req, res) => {
 	const album = req.body;
+	const photoPath = req.file ? req.file.path : null;
+	const photoLink = req.file ? "/static/albums/images/" + req.file.filename : null;
 
 	const insertedAlbum = await AlbumModel.create({
 		_id: album.id,
 		name: album.title,
-		photoPath: req.file ? req.file.path : null,
-		photoLink: "/static/albums/images/" + req.file.filename,
+		photoPath,
+		photoLink,
 		songs: album.songs,
 		createdAt: album.createdAt,
 	});
@@ -195,7 +197,7 @@ export const updateAlbum = async (req, res) => {
 
 	albumInDb.name = album.title;
 	albumInDb.songs = album.songs;
-	albumInDb.createdAt = album.createdAt;
+	albumInDb.createdAt = album.createdAt ?? albumInDb.createdAt;
 
 	if (id != album.id) {
 		await AlbumModel.findByIdAndDelete(albumInDb._id);

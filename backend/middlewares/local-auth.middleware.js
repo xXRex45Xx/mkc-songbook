@@ -3,7 +3,7 @@
  * Handles user authentication using Passport's local strategy and JWT token generation.
  */
 
-import * as passport from "passport";
+import passport from "passport";
 import { ClientFaultError, ServerFaultError } from "../utils/error.util.js";
 import jwt from "jsonwebtoken";
 
@@ -53,4 +53,3 @@ const localAuth = async (req, res, next) => {
 };
 
 export default localAuth;
-

@@ -129,6 +129,7 @@ userRouter
  */
 	.post(
 		wrapAsync(validateRegisterUser),
+		wrapAsync(checkUserExists),
 		wrapAsync(validateOtp),
 		wrapAsync(registerUser)
 	);
@@ -444,131 +445,32 @@ userRouter
 	);
 
 /**
+ * Routes for /api/user/favorites
+ * Handles reading and updating the current user's favorites.
+ */
+userRouter
+	.route("/favorites")
+	.get(
+		passport.authenticate("jwt", { session: false }),
+		wrapAsync(getFavorites)
+	)
+	.patch(
+		passport.authenticate("jwt", { session: false }),
+		wrapAsync(validateUpdateFavorites),
+		wrapAsync(updateFavorites)
+	);
+
+/**
  * Routes for /api/user/:id
  * Handles user role updates (admin only)
- *
- * This route updates a user's role (admin only).
- *
- * @param {Object} req - Express request object containing request data
- * @param {string} req.body.role - New role (required) with explanation of available roles and their permissions
- * @param {Object} res - Express response object for sending responses back to client
- * @returns {Promise<void>} Sends JSON response with updated user information explaining the complete process flow
- * @throws {NotFoundError} If no user matches criteria with specific explanation of why no matches were found
- * @throws {ServerFaultError} If database operation fails due to server-side issues like connection problems or constraint violations
- * @throws {ClientFaultError} If client provides invalid data that doesn't meet validation requirements with clear explanation of what caused the validation failure
- * @example
- * // Example usage:
- * PATCH /api/user/123
- * {
- *   "role": "admin"
- * }
- * This example demonstrates updating a user's role.
  */
 userRouter
 	.route("/:id")
-	/**
-	 * PATCH /api/user/:id
-	 * Update user role (admin only).
-	 *
-	 * This function updates a user's role in the database.
-	 * It requires admin privileges to access.
-	 *
-	 * @param {Object} req - Express request object containing request data
- * @property {string} req.body.role - New role (required) with explanation of available roles and their permissions
- * @param {Object} res - Express response object for sending responses back to client
- * @returns {Promise<void>} Sends JSON response with updated user information explaining the complete process flow
- * @throws {NotFoundError} If no user matches criteria with specific explanation of why no matches were found
- * @throws {ServerFaultError} If database operation fails due to server-side issues like connection problems or constraint violations
- * @throws {ClientFaultError} If client provides invalid data that doesn't meet validation requirements with clear explanation of what caused the validation failure
- * @example
- * // Example usage:
- * PATCH /api/user/123
- * {
- *   "role": "admin"
- * }
- * This example demonstrates updating a user's role.
- */
 	.patch(
 		passport.authenticate("jwt", { session: false }),
 		wrapAsync(roleBasedAuthorization(["admin", "super-admin"])),
 		wrapAsync(validateUpdateUserRole),
 		wrapAsync(updateUserRole)
-	);
-
-/**
- * Routes for /api/user/favorites
- * Handles user favorites updates
- *
- * This route updates a user's favorites.
- *
- * @param {Object} req - Express request object containing request data
- * @param {string[]} [req.body.favorites] - Array of favorite song IDs (optional) with explanation of relationship mapping and constraint validation
- * @param {string[]} [req.body.addSongs] - Array of songs to add to favorites (optional) with explanation of how it's used for playlist management
- * @param {string[]} [req.body.removeSongs] - Array of songs to remove from favorites (optional) with explanation of how it's used for playlist management
- * @param {Object} res - Express response object for sending responses back to client
- * @returns {Promise<void>} Sends JSON response with updated user information explaining the complete process flow
- * @throws {NotFoundError} If no user matches criteria with specific explanation of why no matches were found
- * @throws {ServerFaultError} If database operation fails due to server-side issues like connection problems or constraint violations
- * @throws {ClientFaultError} If client provides invalid data that doesn't meet validation requirements with clear explanation of what caused the validation failure
- * @example
- * // Example usage:
- * PATCH /api/user/update-favorites
- * {
- *   "addSongs": ["song-456"]
- * }
- * This example demonstrates adding songs to favorites.
- */
-userRouter
-	.route("/favorites")
-	/**
-	 * GET /api/user/favorites
-	 * Get current user's favorites.
-	 *
-	 * This function retrieves a user's favorites from the database.
-	 *
-	 * @param {Object} req - Express request object containing request data
- * @property {string} req.params.id - User ID (required) with explanation of generation method and validation rules
- * @param {Object} res - Express response object for sending responses back to client
- * @returns {Promise<void>} Sends JSON response with favorites list explaining the complete process flow
- * @throws {NotFoundError} If no user matches criteria with specific explanation of why no matches were found
- * @throws {ServerFaultError} If database operation fails due to server-side issues like connection problems or constraint violations
- * @throws {ClientFaultError} If client provides invalid data that doesn't meet validation requirements with clear explanation of what caused the validation failure
- * @example
- * // Example usage:
- * GET /api/user/favorites
- * This example demonstrates retrieving user favorites.
- */
-	.get(
-		passport.authenticate("jwt", { session: false }),
-		wrapAsync(getFavorites)
-	)
-	/**
-	 * PATCH /api/user/update-favorites
-	 * Update user favorites.
-	 *
-	 * This function updates a user's favorites in the database.
-	 *
-	 * @param {Object} req - Express request object containing request data
- * @property {string[]} [req.body.favorites] - Array of favorite song IDs (optional) with explanation of relationship mapping and constraint validation
- * @property {string[]} [req.body.addSongs] - Array of songs to add to favorites (optional) with explanation of how it's used for playlist management
- * @property {string[]} [req.body.removeSongs] - Array of songs to remove from favorites (optional) with explanation of how it's used for playlist management
- * @param {Object} res - Express response object for sending responses back to client
- * @returns {Promise<void>} Sends JSON response with updated user information explaining the complete process flow
- * @throws {NotFoundError} If no user matches criteria with specific explanation of why no matches were found
- * @throws {ServerFaultError} If database operation fails due to server-side issues like connection problems or constraint violations
- * @throws {ClientFaultError} If client provides invalid data that doesn't meet validation requirements with clear explanation of what caused the validation failure
- * @example
- * // Example usage:
- * PATCH /api/user/update-favorites
- * {
- *   "addSongs": ["song-456"]
- * }
- * This example demonstrates adding songs to favorites.
- */
-	.patch(
-		passport.authenticate("jwt", { session: false }),
-		wrapAsync(validateUpdateFavorites),
-		wrapAsync(updateFavorites)
 	);
 
 export default userRouter;
