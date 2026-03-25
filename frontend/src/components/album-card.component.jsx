@@ -9,25 +9,33 @@ import { useSelector } from "react-redux";
 import { useState } from "react";
 import CustomTailSpin from "./custom-tail-spin.component";
 import { deleteAlbum } from "../utils/api/album-api.util";
+import { Card, Button, Modal } from "flowbite-react";
 
 /**
  * Album Card Component
  *
- * Displays album information with delete functionality for admins.
- * Features:
- * - Album number, title, year, and song count
- * - Album cover image
- * - Navigation to album details
- * - Admin-only edit and delete actions
- * - Delete confirmation modal
+ * Displays album metadata and navigates to album detail pages.
+ * Admin and super-admin users also see edit and delete actions, and deletion is confirmed
+ * through a modal before the album is removed and route data is revalidated.
  *
  * @component
  * @param {Object} props - Component props
- * @param {string} props.number - Album number identifier
- * @param {string} props.title - Album title
- * @param {string} props.year - Release year
- * @param {number} props.numOfSongs - Number of songs in album
- * @param {string} props.imgSrc - Album cover image URL
+ * @param {string} props.number - Album number used for navigation and delete requests
+ * @param {string} props.title - Album title displayed in the card body
+ * @param {string} props.year - Album release year shown in the metadata row
+ * @param {number} props.numOfSongs - Total number of songs displayed with the album year
+ * @param {string} props.imgSrc - Album cover image source rendered in the card
+ * @returns {JSX.Element} Rendered album card with optional admin actions
+ * @example
+ * ```jsx
+ * <AlbumCard
+ *   number="12"
+ *   title="Worship Collection"
+ *   year="2025"
+ *   numOfSongs={10}
+ *   imgSrc="/images/albums/worship-collection.jpg"
+ * />
+ * ```
  */
 const AlbumCard = ({ number, title, year, numOfSongs, imgSrc }) => {
   const revalidator = useRevalidator();
@@ -89,7 +97,7 @@ const AlbumCard = ({ number, title, year, numOfSongs, imgSrc }) => {
           >
             <Modal.Header>Delete Album?</Modal.Header>
             <Modal.Body>
-              <p className="text-baseblack">This can't be undone!</p>
+              <p className="text-baseblack">This can&apos;t be undone!</p>
               {deleteError && (
                 <p className="text-secondary mt-2">{deleteError}</p>
               )}

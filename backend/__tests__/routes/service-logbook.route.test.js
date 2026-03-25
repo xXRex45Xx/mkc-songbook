@@ -121,7 +121,7 @@ describe("service logbook routes", () => {
   });
 
   describe("PUT /api/logbook/:id", () => {
-    it("should create a new log entry instead of updating the existing one", async () => {
+    it("should return 404 because the update route is not registered", async () => {
       await seedAuthUsers();
       await createSong({ _id: "song-001" });
       const existing = await LogBookModel.create({
@@ -140,12 +140,8 @@ describe("service logbook routes", () => {
           songs: ["song-001"],
         });
 
-      const entries = await LogBookModel.find({});
-
-      expect(response.status).toBe(201);
-      expect(entries).toHaveLength(2);
-      expect(entries.some((entry) => entry.churchName === "Old Church")).toBe(true);
-      expect(entries.some((entry) => entry.churchName === "Updated Church")).toBe(true);
+      expect(response.status).toBe(404);
+      expect(await LogBookModel.countDocuments()).toBe(1);
     });
   });
 });

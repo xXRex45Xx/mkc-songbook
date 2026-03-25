@@ -1,4 +1,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, jest } from "@jest/globals";
+import fs from "fs/promises";
+import os from "os";
+import path from "path";
 import request from "supertest";
 
 import app from "../../index.js";
@@ -215,11 +218,94 @@ describe("song routes", () => {
     });
   });
 
-  describe("unwired song routes", () => {
-    it("should return 404 for PATCH /api/song/:id because the route is not registered", async () => {
-      const response = await request(app).patch("/api/song/song-001").send({ "video-link": "" });
+  describe("PATCH /api/song/:id", () => {
+    it("should reject unauthenticated patch requests", async () => {
+      const response = await request(app)
+        .patch("/api/song/song-001")
+        .send({ "video-link": "https://www.youtube.com/watch?v=dQw4w9WgXcQ" });
+
+      expect(response.status).toBe(401);
+    });
+
+    it("should reject non-admin patch requests", async () => {
+      await seedAuthUsers();
+      await createSong({ _id: "song-001" });
+      const loginResponse = await loginUser("member@mkc.com", "member123");
+
+      const response = await request(app)
+        .patch("/api/song/song-001")
+        .set(authHeader(loginResponse.body.token))
+        .send({ "video-link": "https://www.youtube.com/watch?v=dQw4w9WgXcQ" });
+
+      expect(response.status).toBe(403);
+    });
+
+    it("should update a song video link for an admin", async () => {
+      await seedAuthUsers();
+      await createSong({ _id: "song-001", youtubeLink: null });
+      const loginResponse = await loginUser("admin-route@mkc.com", "admin123");
+
+      const response = await request(app)
+        .patch("/api/song/song-001")
+        .set(authHeader(loginResponse.body.token))
+        .send({ "video-link": "https://www.youtube.com/watch?v=dQw4w9WgXcQ" });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ updated: true });
+      expect((await SongModel.findById("song-001")).youtubeLink).toBe(
+        "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      );
+    });
+
+    it("should reject patch requests with an invalid video link", async () => {
+      await seedAuthUsers();
+      await createSong({ _id: "song-001" });
+      const loginResponse = await loginUser("admin-route@mkc.com", "admin123");
+
+      const response = await request(app)
+        .patch("/api/song/song-001")
+        .set(authHeader(loginResponse.body.token))
+        .send({ "video-link": "not-a-url" });
+
+      expect(response.status).toBe(400);
+    });
+
+    it("should return 404 when patching a missing song", async () => {
+      await seedAuthUsers();
+      const loginResponse = await loginUser("admin-route@mkc.com", "admin123");
+
+      const response = await request(app)
+        .patch("/api/song/missing-song")
+        .set(authHeader(loginResponse.body.token))
+        .send({ "video-link": "https://www.youtube.com/watch?v=dQw4w9WgXcQ" });
 
       expect(response.status).toBe(404);
+      expect(response.body.message).toBe("Song not found.");
+    });
+  });
+
+  describe("GET /api/song/:id/audio", () => {
+    it("should stream audio for a song with an audio file", async () => {
+      const audioPath = path.join(os.tmpdir(), `song-route-${Date.now()}.mp3`);
+      await fs.writeFile(audioPath, Buffer.from("fake-audio-data"));
+      await createSong({ _id: "song-001", songFilePath: audioPath });
+
+      const response = await request(app).get("/api/song/song-001/audio");
+
+      expect(response.status).toBe(206);
+      expect(response.headers["accept-ranges"]).toBe("bytes");
+      expect(response.headers["content-type"]).toContain("audio/mpeg");
+
+      await fs.unlink(audioPath);
+    });
+
+    it("should return 404 when the song has no audio file", async () => {
+      await createSong({ _id: "song-001", songFilePath: null });
+
+      const response = await request(app).get("/api/song/song-001/audio");
+
+      expect(response.status).toBe(404);
+      expect(response.body.message).toBe("Song does not have an audio file.");
     });
   });
 });

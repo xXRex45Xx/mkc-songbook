@@ -329,7 +329,7 @@ describe("user routes", () => {
       const loginResponse = await loginUser("member@mkc.com", "member123");
 
       const response = await request(app)
-        .patch("/api/user/favorites")
+        .patch("/api/user/update-favorites")
         .set(authHeader(loginResponse.body.token))
         .send({ addSongs: ["song-002"], removeSongs: ["song-001"] });
 

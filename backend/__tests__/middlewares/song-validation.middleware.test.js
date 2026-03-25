@@ -550,5 +550,29 @@ describe("song validation middleware", () => {
       );
       expect(mockNext).not.toHaveBeenCalled();
     });
+
+    it("should throw error when the patch body is missing", async () => {
+      const mockReq = {};
+      const mockRes = {};
+      const mockNext = jest.fn();
+
+      await expect(validatePatchSong(mockReq, mockRes, mockNext)).rejects.toThrow(
+        ClientFaultError
+      );
+      expect(mockNext).not.toHaveBeenCalled();
+    });
+
+    it("should throw error when the patch body is null", async () => {
+      const mockReq = {
+        body: null,
+      };
+      const mockRes = {};
+      const mockNext = jest.fn();
+
+      await expect(validatePatchSong(mockReq, mockRes, mockNext)).rejects.toThrow(
+        ClientFaultError
+      );
+      expect(mockNext).not.toHaveBeenCalled();
+    });
   });
 });

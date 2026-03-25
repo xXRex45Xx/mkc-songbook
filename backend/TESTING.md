@@ -12,14 +12,20 @@ npm run test:watch
 # Run with coverage report
 npm run test:coverage
 
-# Run only unit tests (utils, middlewares)
+# Run only unit-focused tests
 npm run test:unit
 
-# Run only integration tests (controllers, routes)
+# Run controller and route integration tests
 npm run test:integration
 
-# Run only E2E tests
+# Run E2E tests (reserved; no backend E2E suite is checked in yet)
 npm run test:e2e
+
+# Run a single test file
+npm test -- __tests__/routes/user.route.test.js
+
+# Run tests by filename pattern
+npm test -- --testPathPattern=song.route
 ```
 
 ## Test Organization
@@ -27,207 +33,172 @@ npm run test:e2e
 ```
 backend/
 ├── __tests__/
-│   ├── config/              # Configuration tests
-│   ├── controllers/         # Controller integration tests
-│   ├── routes/              # Route/API endpoint tests
-│   ├── middlewares/         # Middleware tests
-│   ├── models/              # Model schema tests
-│   ├── utils/               # Utility function tests
-│   └── e2e/                 # End-to-end tests
+│   ├── config/              # Config and bootstrap tests
+│   ├── middlewares/         # Middleware unit tests
+│   ├── routes/              # Route integration tests with Supertest
+│   └── utils/               # Utility unit tests
 ├── jest/
 │   ├── __mocks__/           # Manual mocks
-│   ├── fixtures/            # Test data fixtures
-│   ├── factories/           # Test data factories
-│   └── helpers/             # Test helper functions
-├── jest.config.js           # Jest configuration
-└── TESTING.md              # This file
+│   ├── factories/           # Reusable data factories
+│   ├── fixtures/            # Shared fixture data
+│   ├── helpers/             # Auth, request, DB, and integration helpers
+│   ├── jest.config.js       # Main Jest configuration source
+│   ├── jest.env.js          # Test env defaults loaded before Jest setup
+│   ├── jest.sequencer.js    # Custom test ordering
+│   └── jest.setup.js        # Global mocks and test setup
+├── jest.config.js           # Jest entry file
+└── TESTING.md               # This file
 ```
+
+## Current Test Setup
+
+- Jest runs in a Node environment with Babel transform support.
+- `backend/index.js` exports the Express app so route tests can import the app without starting the HTTP server.
+- Environment defaults such as `NODE_ENV=test` and `JWT_SECRET` are provided by `backend/jest/jest.env.js`.
+- Global mocks for `dotenv`, `fs`, `nodemailer`, `multer`, and `bcrypt` are configured in `backend/jest/jest.setup.js`.
+- Route integration tests use an in-memory MongoDB instance created by `backend/jest/helpers/integration.helper.js`.
+- Coverage thresholds are enforced globally from `backend/jest/jest.config.js`.
 
 ## Writing Tests
 
-### Test Structure
+### Unit Test Structure
 
 ```javascript
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
-import { mongoose } from 'mongoose';
-import { clearDatabase } from '../../jest/helpers/database.helper.js';
+import { describe, it, expect, jest } from "@jest/globals";
+import SongModel from "../../models/song.model.js";
+import { validateUpdateFavorites } from "../../middlewares/user-validation.middleware.js";
 
-describe('Module Name', () => {
-  beforeEach(async () => {
-    await clearDatabase();
-  });
-
-  afterEach(async () => {
-    await mongoose.connection.close();
-  });
-
-  describe('Function Name', () => {
-    it('should return expected result with valid input', async () => {
-      // Arrange
-      const input = { key: 'value' };
-      const expected = { result: 'success' };
-
-      // Act
-      const result = await functionToTest(input);
-
-      // Assert
-      expect(result).toEqual(expected);
-    });
-
-    it('should throw error with invalid input', async () => {
-      await expect(functionToTest(null)).rejects.toThrow('Invalid input');
-    });
-  });
-});
-```
-
-### Mocking External Dependencies
-
-```javascript
-// Mock a module
-jest.mock('../../models/song.model.js', () => ({
-  Song: {
+jest.mock("../../models/song.model.js", () => ({
+  __esModule: true,
+  default: {
     find: jest.fn(),
-    findById: jest.fn(),
   },
 }));
 
-// Use the mocked module
-import { Song } from '../../models/song.model.js';
+describe("validateUpdateFavorites", () => {
+  it("calls next when the provided songs exist", async () => {
+    const req = {
+      body: { favorites: ["song-001"] },
+      user: { favorites: [] },
+    };
+    const next = jest.fn();
 
-describe('Controller', () => {
-  it('should return songs from database', async () => {
-    const mockSongs = [{ _id: '1', title: 'Test' }];
-    Song.find.mockResolvedValue(mockSongs);
+    SongModel.find.mockResolvedValue([{ _id: "song-001" }]);
 
-    const result = await controllerFunction();
-    
-    expect(result).toEqual(mockSongs);
-    expect(Song.find).toHaveBeenCalled();
+    await validateUpdateFavorites(req, {}, next);
+
+    expect(next).toHaveBeenCalledTimes(1);
   });
 });
 ```
 
-### API Testing with Supertest
+### Route Integration Test Structure
 
 ```javascript
-import request from 'supertest';
-import app from '../../index.js';
-import { authHelper } from '../../jest/helpers/request.helper.js';
+import request from "supertest";
 
-describe('POST /api/song', () => {
-  it('should create a new song', async () => {
-    const token = await authHelper.getAdminToken();
-    
-    const response = await request(app)
-      .post('/api/song')
-      .set(authHelper.withAuth(token))
-      .send({
-        title: 'Test Song',
-        lyrics: 'Test lyrics',
-      });
+import app from "../../index.js";
+import {
+  authHeader,
+  createSong,
+  ensureDbConnection,
+  loginUser,
+  resetDatabase,
+  seedAuthUsers,
+  teardownDb,
+} from "../../jest/helpers/integration.helper.js";
 
-    expect(response.status).toBe(201);
-    expect(response.body).toHaveProperty('_id');
-    expect(response.body.title).toBe('Test Song');
+describe("GET /api/user/favorites", () => {
+  beforeAll(async () => {
+    await ensureDbConnection();
   });
 
-  it('should return 401 without authentication', async () => {
-    const response = await request(app)
-      .post('/api/song')
-      .send({
-        title: 'Test Song',
-        lyrics: 'Test lyrics',
-      });
-
-    expect(response.status).toBe(401);
+  beforeEach(async () => {
+    await resetDatabase();
   });
-});
-```
 
-### Testing with Test Data
+  afterAll(async () => {
+    await teardownDb();
+  });
 
-```javascript
-import { createSongFactory } from '../../jest/factories/song.factory.js';
-import { testUsers } from '../../jest/fixtures/users.js';
+  it("returns the current user's favorites", async () => {
+    const { memberUser } = await seedAuthUsers();
+    await createSong({ _id: "song-001" });
+    memberUser.favorites = ["song-001"];
+    await memberUser.save();
 
-describe('Song Controller', () => {
-  it('should handle song creation', async () => {
-    const song = createSongFactory({
-      title: 'Custom Song',
-      lyrics: 'Custom lyrics',
-    });
+    const loginResponse = await loginUser("member@mkc.com", "member123");
 
     const response = await request(app)
-      .post('/api/song')
-      .send(song);
+      .get("/api/user/favorites")
+      .set(authHeader(loginResponse.body.token));
 
-    expect(response.status).toBe(201);
+    expect(response.status).toBe(200);
   });
 });
 ```
+
+## Available Helpers
+
+### `jest/helpers/integration.helper.js`
+
+- `ensureDbConnection()` - starts or reuses the in-memory MongoDB connection
+- `resetDatabase()` - clears test collections between tests
+- `teardownDb()` - closes Mongoose and stops the in-memory server
+- `seedAuthUsers()` - creates public/member/admin/super-admin test users
+- `loginUser(email, password)` - logs in through the real auth route
+- `authHeader(token)` - returns a Bearer auth header object
+- `createSong()`, `createAlbum()`, `createPlaylist()`, `createOtp()` - direct model seeding helpers
+
+### Other Helpers
+
+- `jest/helpers/auth.helper.js` - JWT helpers for token creation/decoding
+- `jest/helpers/request.helper.js` - convenience wrappers around Supertest requests
+- `jest/helpers/database.helper.js` - lower-level database cleanup helpers
 
 ## Best Practices
 
-1. **Descriptive Test Names**: Use `should <expected> when <condition>` format
-2. **Arrange-Act-Assert**: Organize tests into clear sections
-3. **Mock External Dependencies**: Use `jest.mock()` for databases, APIs, file system
-4. **Test Edge Cases**: Include tests for null, undefined, empty arrays, etc.
-5. **Keep Tests Independent**: Each test should be able to run in isolation
-6. **Use Fixtures and Factories**: Avoid repetitive test data setup
-7. **Clean Up After Tests**: Use `beforeEach` and `afterEach` for setup/teardown
-8. **Test Coverage**: Aim for 80%+ coverage on critical modules
-
-## Common Matchers
-
-```javascript
-// Equality
-expect(value).toBe(expected);
-expect(value).toEqual(expected);
-
-// Truthiness
-expect(value).toBeTruthy();
-expect(value).toBeNull();
-expect(value).toBeDefined();
-
-// Arrays/Objects
-expect(array).toContain(item);
-expect(object).toHaveProperty('key');
-
-// Functions/Promises
-expect(fn).toThrow('error');
-await expect(promise).resolves.toBe(value);
-await expect(promise).rejects.toThrow('error');
-
-// Mock functions
-expect(mockFn).toHaveBeenCalled();
-expect(mockFn).toHaveBeenCalledWith(arg1, arg2);
-expect(mockFn).toHaveBeenCalledTimes(2);
-
-// Custom matchers
-expect(value).toBeValidObjectId();
-```
+1. Use `beforeAll`/`beforeEach`/`afterAll` with the integration helper for route tests.
+2. Keep tests isolated by calling `resetDatabase()` before each integration test.
+3. Prefer seeding through shared helpers instead of repeating setup inline.
+4. Mock external services and filesystem interactions in unit tests.
+5. Assert both status codes and response payloads for route tests.
+6. Cover happy paths and failure branches, especially validation and authorization cases.
+7. Use descriptive test names that explain the expected behavior.
+8. Keep examples aligned with real routes and helper APIs.
 
 ## Environment Variables for Testing
 
-The test suite automatically sets up:
-- `DB_URI`: Points to in-memory MongoDB server
-- `JWT_SECRET`: Defaults to 'test-jwt-secret'
-- `NODE_ENV`: Set to 'test'
+The test suite sets defaults for:
+
+- `NODE_ENV=test`
+- `JWT_SECRET=test-jwt-secret`
+- `ALLOWED_ORIGINS=http://localhost:3000`
+- `IMAGE_STORAGE=uploads/images`
+- `AUDIO_STORAGE=uploads/audio`
+- `DEFAULT_ADMIN_EMAIL=admin@mkc.com`
+- `DEFAULT_ADMIN_NAME=Admin User`
+- `DEFAULT_ADMIN_PHOTO_LINK=https://example.com/admin.jpg`
+- `PORT=3001`
+
+Note: integration tests do not rely on a preconfigured `DB_URI`; the in-memory database is started inside the integration helper.
+
+## Coverage Notes
+
+- Jest enforces global coverage thresholds of 80% for statements, branches, lines, and functions.
+- Use `npm run test:coverage` to generate the HTML report in `backend/coverage/`.
+- When coverage drops, prioritize uncovered controller branches and error paths.
 
 ## Troubleshooting
 
-### Tests are slow
-- Use `mongodb-memory-server` for fast in-memory database
-- Mock external APIs and file system operations
-- Run specific test files: `npm test -- song.controller.test.js`
+### Tests fail with auth or env issues
+- Confirm the test imports run through Jest so `jest.env.js` and `jest.setup.js` are loaded.
+- Avoid starting the app with `npm run dev` while running integration tests.
 
-### Tests are flaky
-- Ensure proper cleanup in `afterEach`
-- Use proper async/await patterns
-- Check for race conditions in tests
+### Integration tests interfere with each other
+- Ensure `resetDatabase()` runs in `beforeEach`.
+- Seed only the records required for the current test.
 
-### Coverage is low
-- Run tests with `npm run test:coverage` and open `coverage/index.html`
-- Identify uncovered code paths
-- Add tests for error conditions and edge cases
+### Coverage threshold fails
+- The suite can still have all tests passing while `npm test` fails on coverage.
+- Open `coverage/index.html` and add tests for uncovered branches reported there.
