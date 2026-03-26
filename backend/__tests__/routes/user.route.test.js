@@ -55,6 +55,38 @@ describe("user routes", () => {
       expect(response.body).toEqual({ success: true });
       expect(await OTPModel.findOne({ email: "member@mkc.com" })).toBeTruthy();
     });
+
+    it("should reject forgot password when the user does not exist", async () => {
+      const response = await request(app)
+        .post("/api/user/otp?forgotPassword=true")
+        .send({ email: "missing-user@example.com" });
+
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe("User doesn't exist");
+    });
+
+    it("should reject OTP registration requests for an existing user", async () => {
+      await seedAuthUsers();
+
+      const response = await request(app).post("/api/user/otp").send({ email: "member@mkc.com" });
+
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe("User already exists");
+    });
+
+    it("should overwrite an existing OTP for the same email", async () => {
+      const existingOtp = await createOtp({ email: "replace@example.com", otp: 111111 });
+
+      const response = await request(app).post("/api/user/otp").send({ email: "replace@example.com" });
+      const otps = await OTPModel.find({ email: "replace@example.com" });
+
+      expect(response.status).toBe(200);
+      expect(otps).toHaveLength(1);
+      expect(otps[0]._id.toString()).toBe(existingOtp._id.toString());
+      expect(new Date(otps[0].createdAt).getTime()).toBeGreaterThanOrEqual(
+        new Date(existingOtp.createdAt).getTime(),
+      );
+    });
   });
 
   describe("POST /api/user/verify-otp", () => {
@@ -78,6 +110,17 @@ describe("user routes", () => {
 
       expect(response.status).toBe(400);
       expect(response.body.message).toBe("The verification code is invalid");
+    });
+
+    it("should verify a string OTP payload", async () => {
+      await createOtp({ email: "verify@example.com", otp: 123456 });
+
+      const response = await request(app)
+        .post("/api/user/verify-otp")
+        .send({ email: "verify@example.com", otp: "123456" });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ success: true });
     });
   });
 
@@ -120,6 +163,22 @@ describe("user routes", () => {
 
       expect(response.status).toBe(400);
       expect(response.body.message).toBe("User already exists");
+    });
+
+    it("should reject registration when the OTP is invalid", async () => {
+      await createOtp({ email: "register@example.com", otp: 123456 });
+
+      const response = await request(app)
+        .post("/api/user")
+        .send({
+          email: "register@example.com",
+          name: "Registered User",
+          password: "password123",
+          otp: 654321,
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe("Verification code is invalid.");
     });
   });
 
@@ -196,6 +255,41 @@ describe("user routes", () => {
         "Failed to sign up or login with google. Please, try again.",
       );
     });
+
+    it("should log in an existing Google user without creating a duplicate", async () => {
+      await UserModel.create({
+        email: "google@example.com",
+        name: "Existing Google User",
+        password: "hashed:password123",
+        role: "public",
+      });
+      global.fetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          email: "google@example.com",
+          name: "Google User",
+          picture: "https://example.com/google.jpg",
+        }),
+      });
+
+      const response = await request(app)
+        .post("/api/user/google/callback")
+        .send({ accessToken: "valid-token" });
+
+      expect(response.status).toBe(200);
+      expect(await UserModel.countDocuments({ email: "google@example.com" })).toBe(1);
+    });
+
+    it("should return a generic server error when Google userinfo fetch fails", async () => {
+      global.fetch.mockRejectedValue(new Error("network failure"));
+
+      const response = await request(app)
+        .post("/api/user/google/callback")
+        .send({ accessToken: "valid-token" });
+
+      expect(response.status).toBe(500);
+      expect(response.body.message).toBe("An unexpected error occurred.");
+    });
   });
 
   describe("PUT /api/user/reset-password", () => {
@@ -226,6 +320,18 @@ describe("user routes", () => {
       expect(response.status).toBe(400);
       expect(response.body.message).toBe("Verification code is invalid.");
     });
+
+    it("should keep succeeding even when the user does not exist", async () => {
+      await createOtp({ email: "missing@mkc.com", otp: 555555 });
+
+      const response = await request(app)
+        .put("/api/user/reset-password")
+        .send({ email: "missing@mkc.com", password: "newpassword123", otp: 555555 });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ success: true });
+      expect(await UserModel.findOne({ email: "missing@mkc.com" })).toBeNull();
+    });
   });
 
   describe("GET /api/user", () => {
@@ -252,6 +358,44 @@ describe("user routes", () => {
 
       expect(response.status).toBe(403);
       expect(response.body.message).toBe("You are not authorized to access this resource.");
+    });
+
+    it("should search users by name for an admin", async () => {
+      await seedAuthUsers();
+      const loginResponse = await loginUser("admin-route@mkc.com", "admin123");
+
+      const response = await request(app)
+        .get("/api/user?q=Member&type=name")
+        .set(authHeader(loginResponse.body.token));
+
+      expect(response.status).toBe(200);
+      expect(response.body.users).toHaveLength(1);
+      expect(response.body.users[0].email).toBe("member@mkc.com");
+    });
+
+    it("should search users by email for an admin", async () => {
+      await seedAuthUsers();
+      const loginResponse = await loginUser("admin-route@mkc.com", "admin123");
+
+      const response = await request(app)
+        .get("/api/user?q=member@mkc.com&type=email")
+        .set(authHeader(loginResponse.body.token));
+
+      expect(response.status).toBe(200);
+      expect(response.body.users).toHaveLength(1);
+      expect(response.body.users[0].email).toBe("member@mkc.com");
+    });
+
+    it("should search users across name and email when type is all", async () => {
+      await seedAuthUsers();
+      const loginResponse = await loginUser("admin-route@mkc.com", "admin123");
+
+      const response = await request(app)
+        .get("/api/user?q=member&type=all")
+        .set(authHeader(loginResponse.body.token));
+
+      expect(response.status).toBe(200);
+      expect(response.body.users.some((user) => user.email === "member@mkc.com")).toBe(true);
     });
   });
 
@@ -302,6 +446,19 @@ describe("user routes", () => {
       expect(response.status).toBe(400);
       expect(response.body.message).toBe("Super admin role cannot be changed");
     });
+
+    it("should return 404 when the target user does not exist", async () => {
+      await seedAuthUsers();
+      const loginResponse = await loginUser("admin@mkc.com", "admin123");
+
+      const response = await request(app)
+        .patch("/api/user/507f1f77bcf86cd799439011")
+        .set(authHeader(loginResponse.body.token))
+        .send({ role: "member" });
+
+      expect(response.status).toBe(404);
+      expect(response.body.message).toBe("User not found");
+    });
   });
 
   describe("/api/user/favorites", () => {
@@ -335,6 +492,84 @@ describe("user routes", () => {
 
       expect(response.status).toBe(200);
       expect(response.body).toEqual({ updated: true });
+      expect((await UserModel.findById(memberUser._id)).favorites).toEqual(["song-002"]);
+    });
+
+    it("should reject unauthenticated favorites reads", async () => {
+      const response = await request(app).get("/api/user/favorites");
+
+      expect(response.status).toBe(401);
+    });
+
+    it("should reject unauthenticated favorites updates", async () => {
+      const response = await request(app)
+        .patch("/api/user/update-favorites")
+        .send({ addSongs: ["song-001"] });
+
+      expect(response.status).toBe(401);
+    });
+
+    it("should reject favorites replacement when a song does not exist", async () => {
+      await seedAuthUsers();
+      const loginResponse = await loginUser("member@mkc.com", "member123");
+
+      const response = await request(app)
+        .patch("/api/user/update-favorites")
+        .set(authHeader(loginResponse.body.token))
+        .send({ favorites: ["song-404"] });
+
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe("One or more songs don't exist.");
+    });
+
+    it("should replace favorites when favorites is provided", async () => {
+      const { memberUser } = await seedAuthUsers();
+      await createSong({ _id: "song-001" });
+      await createSong({ _id: "song-002" });
+      memberUser.favorites = ["song-001"];
+      await memberUser.save();
+      const loginResponse = await loginUser("member@mkc.com", "member123");
+
+      const response = await request(app)
+        .patch("/api/user/update-favorites")
+        .set(authHeader(loginResponse.body.token))
+        .send({ favorites: ["song-002"] });
+
+      expect(response.status).toBe(200);
+      expect((await UserModel.findById(memberUser._id)).favorites).toEqual(["song-002"]);
+    });
+
+    it("should add songs to favorites without replacing existing entries", async () => {
+      const { memberUser } = await seedAuthUsers();
+      await createSong({ _id: "song-001" });
+      await createSong({ _id: "song-002" });
+      memberUser.favorites = ["song-001"];
+      await memberUser.save();
+      const loginResponse = await loginUser("member@mkc.com", "member123");
+
+      const response = await request(app)
+        .patch("/api/user/update-favorites")
+        .set(authHeader(loginResponse.body.token))
+        .send({ addSongs: ["song-002"] });
+
+      expect(response.status).toBe(200);
+      expect((await UserModel.findById(memberUser._id)).favorites).toEqual(["song-001", "song-002"]);
+    });
+
+    it("should remove songs from favorites without replacing the remaining entries", async () => {
+      const { memberUser } = await seedAuthUsers();
+      await createSong({ _id: "song-001" });
+      await createSong({ _id: "song-002" });
+      memberUser.favorites = ["song-001", "song-002"];
+      await memberUser.save();
+      const loginResponse = await loginUser("member@mkc.com", "member123");
+
+      const response = await request(app)
+        .patch("/api/user/update-favorites")
+        .set(authHeader(loginResponse.body.token))
+        .send({ removeSongs: ["song-001"] });
+
+      expect(response.status).toBe(200);
       expect((await UserModel.findById(memberUser._id)).favorites).toEqual(["song-002"]);
     });
   });

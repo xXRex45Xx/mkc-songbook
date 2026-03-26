@@ -54,6 +54,64 @@ describe("song routes", () => {
       expect(response.body.songs[0].title).toBe("Amazing Grace");
     });
 
+    it("should search by lyrics", async () => {
+      await createSong({ _id: "song-001", title: "Amazing Grace", lyrics: "grace grace" });
+      await createSong({ _id: "song-002", title: "It Is Well", lyrics: "peace peace" });
+
+      const response = await request(app).get("/api/song?q=peace&type=lyrics");
+
+      expect(response.status).toBe(200);
+      expect(response.body.songs).toHaveLength(1);
+      expect(response.body.songs[0]._id).toBe("song-002");
+    });
+
+    it("should search by id", async () => {
+      await createSong({ _id: "song-001", title: "Amazing Grace" });
+      await createSong({ _id: "song-002", title: "It Is Well" });
+
+      const response = await request(app).get("/api/song?q=song-002&type=id");
+
+      expect(response.status).toBe(200);
+      expect(response.body.songs).toHaveLength(1);
+      expect(response.body.songs[0]._id).toBe("song-002");
+    });
+
+    it("should return grouped matches when searching all song fields", async () => {
+      await createSong({ _id: "song-001", title: "Mercy Song", lyrics: "grace forever" });
+      await createSong({ _id: "song-002", title: "Grace Song", lyrics: "peace forever" });
+
+      const response = await request(app).get("/api/song?q=grace&type=all");
+
+      expect(response.status).toBe(200);
+      expect(response.body.songs.titleMatch).toHaveLength(1);
+      expect(response.body.songs.lyricsMatch).toHaveLength(1);
+    });
+
+    it("should paginate results", async () => {
+      await Promise.all(
+        Array.from({ length: 101 }, (_, index) =>
+          createSong({ _id: `song-${String(index + 1).padStart(3, "0")}` }),
+        ),
+      );
+
+      const response = await request(app).get("/api/song?page=2");
+
+      expect(response.status).toBe(200);
+      expect(response.body.totalPages).toBe(2);
+      expect(response.body.songs).toHaveLength(1);
+    });
+
+    it("should return all songs when all=true", async () => {
+      await createSong({ _id: "song-001", title: "Amazing Grace" });
+      await createSong({ _id: "song-002", title: "It Is Well" });
+
+      const response = await request(app).get("/api/song?all=true");
+
+      expect(response.status).toBe(200);
+      expect(response.body.songs).toHaveLength(2);
+      expect(response.body.totalPages).toBeUndefined();
+    });
+
     it("should reject invalid query combinations", async () => {
       const response = await request(app).get("/api/song?q=Amazing");
 
@@ -122,6 +180,58 @@ describe("song routes", () => {
 
       expect(response.status).toBe(403);
     });
+
+    it("should reject unauthenticated song creation", async () => {
+      const response = await request(app).post("/api/song").send({
+        id: "song-100",
+        title: "Route Song",
+        lyrics: "Route song lyrics",
+      });
+
+      expect(response.status).toBe(401);
+    });
+
+    it("should reject duplicate song ids", async () => {
+      await seedAuthUsers();
+      await createSong({ _id: "song-100" });
+      const loginResponse = await loginUser("admin-route@mkc.com", "admin123");
+
+      const response = await request(app)
+        .post("/api/song")
+        .set(authHeader(loginResponse.body.token))
+        .send({
+          id: "song-100",
+          title: "Route Song",
+          lyrics: "Route song lyrics",
+          chord: "C",
+          tempo: 110,
+          rythm: "4/4",
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe("A song exists with the provided song number");
+    });
+
+    it("should reject missing referenced albums", async () => {
+      await seedAuthUsers();
+      const loginResponse = await loginUser("admin-route@mkc.com", "admin123");
+
+      const response = await request(app)
+        .post("/api/song")
+        .set(authHeader(loginResponse.body.token))
+        .send({
+          id: "song-100",
+          title: "Route Song",
+          lyrics: "Route song lyrics",
+          chord: "C",
+          tempo: 110,
+          rythm: "4/4",
+          albums: "album-404",
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe("The following albums don't exist: album-404");
+    });
   });
 
   describe("PUT /api/song/:id", () => {
@@ -187,6 +297,28 @@ describe("song routes", () => {
 
       expect(response.status).toBe(404);
       expect(response.body.message).toBe("Song not found");
+    });
+
+    it("should reject changing the song id to one that already exists", async () => {
+      await seedAuthUsers();
+      await createSong({ _id: "song-001", title: "Old Title" });
+      await createSong({ _id: "song-002", title: "Conflict Song" });
+      const loginResponse = await loginUser("admin-route@mkc.com", "admin123");
+
+      const response = await request(app)
+        .put("/api/song/song-001")
+        .set(authHeader(loginResponse.body.token))
+        .send({
+          id: "song-002",
+          title: "Migrated Title",
+          lyrics: "Updated lyrics",
+          chord: "G",
+          tempo: 95,
+          rythm: "3/4",
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe("A song exists with the provided song number.");
     });
   });
 
@@ -299,6 +431,22 @@ describe("song routes", () => {
       await fs.unlink(audioPath);
     });
 
+    it("should stream a valid requested audio range", async () => {
+      const audioPath = path.join(os.tmpdir(), `song-range-${Date.now()}.mp3`);
+      await fs.writeFile(audioPath, Buffer.alloc(1024, 1));
+      await createSong({ _id: "song-001", songFilePath: audioPath });
+
+      const response = await request(app)
+        .get("/api/song/song-001/audio")
+        .set("Range", "bytes=100-199");
+
+      expect(response.status).toBe(206);
+      expect(response.headers["content-range"]).toBe("bytes 100-199/1024");
+      expect(response.body.length).toBe(100);
+
+      await fs.unlink(audioPath);
+    });
+
     it("should return 404 when the song has no audio file", async () => {
       await createSong({ _id: "song-001", songFilePath: null });
 
@@ -306,6 +454,22 @@ describe("song routes", () => {
 
       expect(response.status).toBe(404);
       expect(response.body.message).toBe("Song does not have an audio file.");
+    });
+
+    it("should return 404 when the song does not exist", async () => {
+      const response = await request(app).get("/api/song/missing-song/audio");
+
+      expect(response.status).toBe(404);
+      expect(response.body.message).toBe("Song not found.");
+    });
+
+    it("should return 500 when the stored audio file is missing on disk", async () => {
+      await createSong({ _id: "song-001", songFilePath: path.join(os.tmpdir(), "missing-audio.mp3") });
+
+      const response = await request(app).get("/api/song/song-001/audio");
+
+      expect(response.status).toBe(500);
+      expect(response.body.message).toBe("An unexpected error occurred.");
     });
   });
 });
