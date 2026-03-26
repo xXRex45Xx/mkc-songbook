@@ -34,88 +34,56 @@ import { optionalAuth } from "../middlewares/authorization.middleware.js";
 const playlistRouter = Router();
 
 /**
- * Routes for /api/playlist
- * Handles playlist listing and creation
- *
- * This route creates a new playlist in the database. It requires authentication
- * and admin privileges to access. The request body must contain valid playlist data,
- * including name, description, and associated songs.
- *
- * @param {Object} req - Express request object containing request data
- * @param {string} req.body.name - Playlist name (required, 2-100 characters) with description of content constraints, character limits, and validation rules
- * @param {string} [req.body.description] - Playlist description (optional, 2-500 characters) with explanation of content constraints and text limitations
- * @param {string[]} req.body.songs - Array of song IDs this playlist contains (required) with explanation of relationship mapping and constraint validation
- * @param {Object} res - Express response object for sending responses back to client
- * @returns {Promise<void>} Sends JSON response with inserted ID and success message explaining the complete process flow
- * @throws {NotFoundError} If referenced entity doesn't exist in database with specific context about related entities
- * @throws {ServerFaultError} If database operation fails due to server-side issues like connection problems or constraint violations
- * @throws {ClientFaultError} If client provides invalid data that doesn't meet validation requirements with clear explanation of what caused the validation failure
- * @example
- * // Example usage:
- * POST /api/playlist
- * {
- *   "name": "My Favorite Songs",
- *   "description": "A collection of my favorite hymns",
- *   "songs": ["song-456"]
- * }
- * This example demonstrates creating a new playlist with associated songs.
+ * Routes for /api/playlist.
+ * Handles playlist listing and creation.
  */
 playlistRouter
 	.route("/")
 	/**
-	 * GET /api/playlist
 	 * Get all playlists or search playlists.
 	 *
-	 * This function retrieves playlists from the database based on specified criteria.
-	 * It supports searching by name, description, ID, and other attributes with pagination support
-	 * for efficient data retrieval. The function handles various search types and sorting options
-	 * to provide flexible access to data.
-	 *
-	 * @param {Object} req - Express request object containing query parameters
- * @property {string} [req.query.q] - Search query (optional, max 100 characters) with explanation of search scope and matching rules
- * @property {number} [req.query.page] - Page number for pagination (optional, min 1) with explanation of how pages are calculated and limits
- * @property {string} [req.query.type] - Search type (optional) with description of available search modes and their behavior
- * @param {Object} res - Express response object for sending responses back to client
- * @returns {Promise<void>} Sends JSON response with playlists and totalPages count explaining pagination details and result structure
- * @throws {NotFoundError} If no playlists match criteria with specific explanation of why no matches were found
- * @throws {ServerFaultError} If database query fails due to server-side issues or database errors with detailed context
- * @example
- * // Example usage:
- * GET /api/playlist?q=Amazing&sortBy=A-Z&page=1
- * This example demonstrates searching for playlists by name.
- */
+	 * @param {Object} req - Express request object containing request data
+	 * @param {string} [req.query.q] - Playlist name search term (optional) used for case-insensitive matching
+	 * @param {number} [req.query.page] - Page number for paginated playlist results (optional, defaults to 1)
+	 * @param {boolean} [req.query.myPlaylists] - Flag that limits results to the authenticated user's playlists when truthy
+	 * @param {Object} res - Express response object for sending responses back to client
+	 * @returns {Promise<void>} Sends JSON response with playlist results and pagination metadata when applicable
+	 * @throws {ForbiddenError} If `myPlaylists` is requested without an authenticated user
+	 * @throws {ClientFaultError} If query parameters fail playlist query validation
+	 * @throws {ServerFaultError} If playlist lookup fails unexpectedly
+	 * @example
+	 * // Example usage:
+	 * GET /api/playlist?q=Practice&page=1
+	 * This example demonstrates searching for playlists by name.
+	 */
 	.get(
 		wrapAsync(optionalAuth),
 		wrapAsync(validateGetAllPlaylists),
 		wrapAsync(getAllOrSearchPlaylists)
 	)
 	/**
-	 * POST /api/playlist
-	 * Create a new playlist. Requires admin privileges.
-	 *
-	 * This function creates a new playlist entity in the database by processing the provided data.
-	 * It validates the input parameters, checks for duplicates or constraints, and stores the entity
-	 * in the database. The function returns information about the created entity for confirmation.
+	 * Create a new playlist.
 	 *
 	 * @param {Object} req - Express request object containing request data
- * @property {string} req.body.name - Playlist name (required, 2-100 characters) with description of content constraints, character limits, and validation rules
- * @property {string} [req.body.description] - Playlist description (optional, 2-500 characters) with explanation of content constraints and text limitations
- * @property {string[]} req.body.songs - Array of song IDs this playlist contains (required) with explanation of relationship mapping and constraint validation
- * @param {Object} res - Express response object for sending responses back to client
- * @returns {Promise<void>} Sends JSON response with inserted ID and success message explaining the complete process flow
- * @throws {NotFoundError} If referenced entity doesn't exist in database with specific context about related entities
- * @throws {ServerFaultError} If database operation fails due to server-side issues like connection problems or constraint violations
- * @throws {ClientFaultError} If client provides invalid data that doesn't meet validation requirements with clear explanation of what caused the validation failure
- * @example
- * // Example usage:
- * POST /api/playlist
- * {
- *   "name": "My Favorite Songs",
- *   "description": "A collection of my favorite hymns",
- *   "songs": ["song-456"]
- * }
- * This example demonstrates creating a new playlist with associated songs.
- */
+	 * @param {string} req.body.name - Playlist name (required) used as the persisted display name
+	 * @param {string[]} req.body.songs - Song ids included in the playlist (required, may be empty)
+	 * @param {string} [req.body.visibility] - Playlist visibility (optional) limited to `public`, `private`, or `members`
+	 * @param {Object} res - Express response object for sending responses back to client
+	 * @returns {Promise<void>} Sends JSON response with the inserted playlist id
+	 * @throws {UnauthorizedError} If the request is not authenticated
+	 * @throws {ForbiddenError} If a public user attempts to create a members-only playlist
+	 * @throws {ClientFaultError} If the request body fails validation or references songs that do not exist
+	 * @throws {ServerFaultError} If playlist creation fails unexpectedly
+	 * @example
+	 * // Example usage:
+	 * POST /api/playlist
+	 * {
+	 *   "name": "My Favorite Songs",
+	 *   "songs": ["song-456"],
+	 *   "visibility": "private"
+	 * }
+	 * This example demonstrates creating a new playlist with associated songs.
+	 */
 	.post(
 		passport.authenticate("jwt", { session: false }),
 		wrapAsync(validateCreatePlaylist),
@@ -124,84 +92,56 @@ playlistRouter
 	);
 
 /**
- * Routes for /api/playlist/:id
- * Handles operations on specific playlists
- *
- * This route updates an existing playlist in the database. It requires authentication
- * and admin privileges to access. The request body must contain valid playlist data,
- * including name, description, and associated songs.
- *
- * @param {Object} req - Express request object containing request data
- * @param {string} req.body.name - Playlist name (required, 2-100 characters) with description of content constraints, character limits, and validation rules
- * @param {string} [req.body.description] - Playlist description (optional, 2-500 characters) with explanation of content constraints and text limitations
- * @param {string[]} req.body.songs - Array of song IDs this playlist contains (required) with explanation of relationship mapping and constraint validation
- * @param {Object} res - Express response object for sending responses back to client
- * @returns {Promise<void>} Sends JSON response with updated playlist data and success message explaining the complete process flow
- * @throws {NotFoundError} If referenced entity doesn't exist in database with specific context about related entities
- * @throws {ServerFaultError} If database operation fails due to server-side issues like connection problems or constraint violations
- * @throws {ClientFaultError} If client provides invalid data that doesn't meet validation requirements with clear explanation of what caused the validation failure
- * @example
- * // Example usage:
- * PUT /api/playlist/playlist-123
- * {
- *   "name": "My Favorite Songs Updated",
- *   "description": "Updated collection of my favorite hymns",
- *   "songs": ["song-456"]
- * }
- * This example demonstrates updating an existing playlist.
+ * Routes for /api/playlist/:id.
+ * Handles read, update, patch, and delete operations for a specific playlist.
  */
 playlistRouter
 	.route("/:id")
 	/**
-	 * GET /api/playlist/:id
-	 * Get a specific playlist by ID.
-	 *
-	 * This function retrieves a specific playlist from the database based on its ID.
-	 * It returns detailed information about the playlist including name, description, songs, etc.
+	 * Get a specific playlist by id.
 	 *
 	 * @param {Object} req - Express request object containing request data
- * @property {string} req.params.id - Playlist ID (required) with explanation of generation method and validation rules
- * @param {Object} res - Express response object for sending responses back to client
- * @returns {Promise<void>} Sends JSON response with playlist details explaining the complete process flow
- * @throws {NotFoundError} If no playlist matches criteria with specific explanation of why no matches were found
- * @throws {ServerFaultError} If database query fails due to server-side issues or database errors with detailed context
- * @example
- * // Example usage:
- * GET /api/playlist/playlist-123
- * This example demonstrates retrieving a specific playlist by ID.
- */
+	 * @param {string} req.params.id - Playlist identifier (required) used to load the requested playlist
+	 * @param {Object} res - Express response object for sending responses back to client
+	 * @returns {Promise<void>} Sends JSON response with playlist details when the requester can access it
+	 * @throws {ClientFaultError} If the playlist id parameter fails validation
+	 * @throws {NotFoundError} If the playlist does not exist or is hidden by visibility rules
+	 * @throws {ServerFaultError} If playlist retrieval fails unexpectedly
+	 * @example
+	 * // Example usage:
+	 * GET /api/playlist/playlist-123
+	 * This example demonstrates retrieving a specific playlist by ID.
+	 */
 	.get(
 		wrapAsync(optionalAuth),
 		wrapAsync(validateGetPlaylist),
 		wrapAsync(getPlaylist)
 	)
 	/**
-	 * PUT /api/playlist/:id
-	 * Update a specific playlist. Requires admin privileges.
-	 *
-	 * This function updates an existing playlist in the database by processing the provided data.
-	 * It validates the input parameters, checks for duplicates or constraints, and stores the entity
-	 * in the database. The function returns information about the updated entity for confirmation.
+	 * Replace a specific playlist.
 	 *
 	 * @param {Object} req - Express request object containing request data
- * @property {string} req.body.name - Playlist name (required, 2-100 characters) with description of content constraints, character limits, and validation rules
- * @property {string} [req.body.description] - Playlist description (optional, 2-500 characters) with explanation of content constraints and text limitations
- * @property {string[]} req.body.songs - Array of song IDs this playlist contains (required) with explanation of relationship mapping and constraint validation
- * @param {Object} res - Express response object for sending responses back to client
- * @returns {Promise<void>} Sends JSON response with updated playlist data and success message explaining the complete process flow
- * @throws {NotFoundError} If referenced entity doesn't exist in database with specific context about related entities
- * @throws {ServerFaultError} If database operation fails due to server-side issues like connection problems or constraint violations
- * @throws {ClientFaultError} If client provides invalid data that doesn't meet validation requirements with clear explanation of what caused the validation failure
- * @example
- * // Example usage:
- * PUT /api/playlist/playlist-123
- * {
- *   "name": "My Favorite Songs Updated",
- *   "description": "Updated collection of my favorite hymns",
- *   "songs": ["song-456"]
- * }
- * This example demonstrates updating an existing playlist.
- */
+	 * @param {string} req.params.id - Playlist identifier (required) used to find the playlist to replace
+	 * @param {string} req.body.name - Playlist name (required) used as the updated display name
+	 * @param {string[]} req.body.songs - Song ids that should remain in the playlist after replacement
+	 * @param {string} req.body.visibility - Playlist visibility (required) limited to `public`, `private`, or `members`
+	 * @param {Object} res - Express response object for sending responses back to client
+	 * @returns {Promise<void>} Sends JSON response confirming that the playlist was updated
+	 * @throws {UnauthorizedError} If the request is not authenticated
+	 * @throws {ForbiddenError} If the authenticated user is not allowed to update the playlist
+	 * @throws {ClientFaultError} If the route params or request body fail validation, or referenced songs do not exist
+	 * @throws {NotFoundError} If the playlist cannot be found
+	 * @throws {ServerFaultError} If playlist replacement fails unexpectedly
+	 * @example
+	 * // Example usage:
+	 * PUT /api/playlist/playlist-123
+	 * {
+	 *   "name": "My Favorite Songs Updated",
+	 *   "visibility": "public",
+	 *   "songs": ["song-456"]
+	 * }
+	 * This example demonstrates updating an existing playlist.
+	 */
 	.put(
 		passport.authenticate("jwt", { session: false }),
 		wrapAsync(validateGetPlaylist),
@@ -210,30 +150,29 @@ playlistRouter
 		wrapAsync(updatePlaylist)
 	)
 	/**
-	 * PATCH /api/playlist/:id
-	 * Partially update a specific playlist. Requires admin privileges.
-	 *
-	 * This function partially updates an existing playlist in the database by processing the provided data.
-	 * It validates the input parameters, checks for duplicates or constraints, and stores the entity
-	 * in the database. The function returns information about the updated entity for confirmation.
+	 * Patch a specific playlist.
 	 *
 	 * @param {Object} req - Express request object containing request data
- * @property {string} [req.body.name] - Playlist name (optional) with description of content constraints, character limits, and validation rules
- * @property {string} [req.body.description] - Playlist description (optional) with explanation of content constraints and text limitations
- * @property {string[]} [req.body.songs] - Array of song IDs this playlist contains (optional) with explanation of relationship mapping and constraint validation
- * @param {Object} res - Express response object for sending responses back to client
- * @returns {Promise<void>} Sends JSON response with updated playlist data and success message explaining the complete process flow
- * @throws {NotFoundError} If referenced entity doesn't exist in database with specific context about related entities
- * @throws {ServerFaultError} If database operation fails due to server-side issues like connection problems or constraint violations
- * @throws {ClientFaultError} If client provides invalid data that doesn't meet validation requirements with clear explanation of what caused the validation failure
- * @example
- * // Example usage:
- * PATCH /api/playlist/playlist-123
- * {
- *   "name": "My Favorite Songs Updated"
- * }
- * This example demonstrates partially updating a playlist.
- */
+	 * @param {string} req.params.id - Playlist identifier (required) used to find the playlist to patch
+	 * @param {string} [req.body.visibility] - Updated playlist visibility (optional) limited to `public`, `private`, or `members`
+	 * @param {string[]} [req.body.addSongs] - Song ids to add to the playlist (optional)
+	 * @param {string[]} [req.body.removeSongs] - Song ids to remove from the playlist (optional)
+	 * @param {Object} res - Express response object for sending responses back to client
+	 * @returns {Promise<void>} Sends JSON response confirming that the playlist was patched
+	 * @throws {UnauthorizedError} If the request is not authenticated
+	 * @throws {ForbiddenError} If the authenticated user is not allowed to update the playlist
+	 * @throws {ClientFaultError} If the route params or request body fail validation, or referenced songs do not exist
+	 * @throws {NotFoundError} If the playlist cannot be found
+	 * @throws {ServerFaultError} If playlist patching fails unexpectedly
+	 * @example
+	 * // Example usage:
+	 * PATCH /api/playlist/playlist-123
+	 * {
+	 *   "visibility": "members",
+	 *   "addSongs": ["song-789"]
+	 * }
+	 * This example demonstrates partially updating a playlist.
+	 */
 	.patch(
 		passport.authenticate("jwt", { session: false }),
 		wrapAsync(validateGetPlaylist),
@@ -241,23 +180,22 @@ playlistRouter
 		wrapAsync(patchPlaylist)
 	)
 	/**
-	 * DELETE /api/playlist/:id
 	 * Delete a specific playlist.
 	 *
-	 * This function deletes a specific playlist from the database based on its ID.
-	 *
 	 * @param {Object} req - Express request object containing request data
- * @property {string} req.params.id - Playlist ID (required) with explanation of generation method and validation rules
- * @param {Object} res - Express response object for sending responses back to client
- * @returns {Promise<void>} Sends JSON response confirming deletion and success message explaining the complete process flow
- * @throws {NotFoundError} If no playlist matches criteria with specific explanation of why no matches were found
- * @throws {ServerFaultError} If database operation fails due to server-side issues like connection problems or constraint violations
- * @throws {ClientFaultError} If client provides invalid data that doesn't meet validation requirements with clear explanation of what caused the validation failure
- * @example
- * // Example usage:
- * DELETE /api/playlist/playlist-123
- * This example demonstrates deleting a specific playlist.
- */
+	 * @param {string} req.params.id - Playlist identifier (required) used to find the playlist to delete
+	 * @param {Object} res - Express response object for sending responses back to client
+	 * @returns {Promise<void>} Sends JSON response confirming that the playlist was deleted
+	 * @throws {UnauthorizedError} If the request is not authenticated
+	 * @throws {ForbiddenError} If the authenticated user is not allowed to delete the playlist
+	 * @throws {ClientFaultError} If the playlist id parameter fails validation
+	 * @throws {NotFoundError} If the playlist cannot be found
+	 * @throws {ServerFaultError} If playlist deletion fails unexpectedly
+	 * @example
+	 * // Example usage:
+	 * DELETE /api/playlist/playlist-123
+	 * This example demonstrates deleting a specific playlist.
+	 */
 	.delete(
 		passport.authenticate("jwt", { session: false }),
 		wrapAsync(validateGetPlaylist),

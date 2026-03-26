@@ -34,7 +34,10 @@ npm test -- --testPathPattern=song.route
 backend/
 ├── __tests__/
 │   ├── config/              # Config and bootstrap tests
+│   ├── controllers/         # Controller unit tests
+│   ├── init-db/             # Init script tests
 │   ├── middlewares/         # Middleware unit tests
+│   ├── models/              # Model and Joi schema tests
 │   ├── routes/              # Route integration tests with Supertest
 │   └── utils/               # Utility unit tests
 ├── jest/
@@ -55,9 +58,12 @@ backend/
 - Jest runs in a Node environment with Babel transform support.
 - `backend/index.js` exports the Express app so route tests can import the app without starting the HTTP server.
 - Environment defaults such as `NODE_ENV=test` and `JWT_SECRET` are provided by `backend/jest/jest.env.js`.
-- Global mocks for `dotenv`, `fs`, `nodemailer`, `multer`, and `bcrypt` are configured in `backend/jest/jest.setup.js`.
+- Shared setup in `backend/jest/jest.setup.js` configures test doubles for external dependencies such as `dotenv`, `nodemailer`, `multer`, and `bcrypt`.
 - Route integration tests use an in-memory MongoDB instance created by `backend/jest/helpers/integration.helper.js`.
+- Model integration tests also use the in-memory MongoDB instance for schema and hook coverage.
 - Coverage thresholds are enforced globally from `backend/jest/jest.config.js`.
+- Coverage is collected only from runtime source files under `backend/index.js`, `config/`, `controllers/`, `middlewares/`, `models/`, `routes/`, and `utils/`.
+- Coverage excludes `backend/__tests__/`, `backend/jest/`, and `backend/init-db/`, so helpers and fixtures no longer appear in the report.
 
 ## Writing Tests
 
@@ -146,6 +152,7 @@ describe("GET /api/user/favorites", () => {
 - `resetDatabase()` - clears test collections between tests
 - `teardownDb()` - closes Mongoose and stops the in-memory server
 - `seedAuthUsers()` - creates public/member/admin/super-admin test users
+- `createUser()` - creates a single test user document with overridable defaults
 - `loginUser(email, password)` - logs in through the real auth route
 - `authHeader(token)` - returns a Bearer auth header object
 - `createSong()`, `createAlbum()`, `createPlaylist()`, `createOtp()` - direct model seeding helpers
@@ -166,6 +173,8 @@ describe("GET /api/user/favorites", () => {
 6. Cover happy paths and failure branches, especially validation and authorization cases.
 7. Use descriptive test names that explain the expected behavior.
 8. Keep examples aligned with real routes and helper APIs.
+9. Add direct controller, model, and Joi schema tests when route coverage alone would miss important branches.
+10. Prefer route tests for end-to-end request behavior and focused unit tests for branching business logic.
 
 ## Environment Variables for Testing
 
@@ -187,7 +196,13 @@ Note: integration tests do not rely on a preconfigured `DB_URI`; the in-memory d
 
 - Jest enforces global coverage thresholds of 80% for statements, branches, lines, and functions.
 - Use `npm run test:coverage` to generate the HTML report in `backend/coverage/`.
+- Coverage is intentionally scoped to runtime source files; test support code under `backend/jest/`, `backend/__tests__/`, and `backend/init-db/` is excluded.
 - When coverage drops, prioritize uncovered controller branches and error paths.
+
+## Current Coverage Scope
+
+- Included in coverage: `backend/index.js`, `backend/config/`, `backend/controllers/`, `backend/middlewares/`, `backend/models/`, `backend/routes/`, and `backend/utils/`
+- Excluded from coverage: `backend/__tests__/`, `backend/jest/`, and `backend/init-db/`
 
 ## Troubleshooting
 

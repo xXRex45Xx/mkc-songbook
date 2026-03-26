@@ -154,7 +154,7 @@ userRouter
 	 *
 	 * @param {Object} req - Express request object containing request data
 	 * @param {string} req.body.email - Email address associated with the OTP
-	 * @param {number} req.body.otp - Verification code to validate
+	 * @param {number|string} req.body.otp - Verification code to validate, accepted as a six-digit number or numeric string
 	 * @param {Object} res - Express response object for sending responses back to client
 	 * @returns {Promise<void>} Sends JSON response confirming that the OTP is valid
 	 * @throws {ClientFaultError} If the payload is invalid or the OTP does not match
@@ -276,11 +276,10 @@ userRouter
 	 * @param {Object} req - Express request object containing request data
 	 * @param {string} req.body.email - Email address for the account being updated
 	 * @param {string} req.body.password - New password to store for the user
-	 * @param {number} req.body.otp - Verification code required to authorize the reset
+	 * @param {number|string} req.body.otp - Verification code required to authorize the reset, accepted as a six-digit number or numeric string
 	 * @param {Object} res - Express response object for sending responses back to client
 	 * @returns {Promise<void>} Sends JSON response confirming the password reset
 	 * @throws {ClientFaultError} If the payload is invalid or the OTP cannot be verified
-	 * @throws {NotFoundError} If the user account cannot be found
 	 * @throws {ServerFaultError} If the password reset fails unexpectedly
 	 * @example
 	 * // Example usage:

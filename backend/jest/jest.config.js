@@ -3,8 +3,26 @@ export const jestConfig = {
   testTimeout: 10000,
   verbose: true,
   collectCoverage: true,
+  collectCoverageFrom: [
+    '<rootDir>/index.js',
+    '<rootDir>/config/**/*.js',
+    '<rootDir>/controllers/**/*.js',
+    '<rootDir>/middlewares/**/*.js',
+    '<rootDir>/models/**/*.js',
+    '<rootDir>/routes/**/*.js',
+    '<rootDir>/utils/**/*.js',
+    '!<rootDir>/models/validation-schemas/**/*.test.js',
+  ],
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html'],
+  coveragePathIgnorePatterns: [
+    '/node_modules/',
+    '/coverage/',
+    '/uploads/',
+    '<rootDir>/__tests__/',
+    '<rootDir>/jest/',
+    '<rootDir>/init-db/',
+  ],
   coverageThreshold: {
     global: {
       branches: 80,

@@ -86,6 +86,7 @@ npm test -- __tests__/middlewares/local-auth.middleware.test.js
 - Include `@module` declaration at top of each file
 - Document parameters, return values, and usage examples
 - Explain error conditions and edge cases
+- When creating or editing JSDoc, follow `backend/STYLE_GUIDE.md` and `backend/TEMPLATES.md` for formatting, required tags, and example structure
 
 ## Development Environment
 

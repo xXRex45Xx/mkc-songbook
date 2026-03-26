@@ -41,7 +41,7 @@ logBookRouter
 	 * @param {Object} req - Express request object containing query parameters
 	 * @param {string} [req.query.q] - Search query string used with a matching search type
 	 * @param {number} [req.query.page] - Page number for paginated results
-	 * @param {string} [req.query.type] - Search type used to match service date, location, id, or all fields
+	 * @param {string} [req.query.type] - Search type used to match `location` or `date`
 	 * @param {Object} res - Express response object for sending responses back to client
 	 * @returns {Promise<void>} Sends JSON response with logbook entries and pagination metadata
 	 * @throws {UnauthorizedError} If the request is not authenticated

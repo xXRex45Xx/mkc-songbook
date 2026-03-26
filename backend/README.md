@@ -75,6 +75,7 @@ backend/
 
 - `GET /api/song` - Get all songs or search songs
   - Query params: `q`, `page`, `type` (`all`, `title`, `lyrics`, `id`), `all`, `sortBy`
+  - `type=all` returns grouped title and lyrics matches; `all=true` returns the full song list without pagination metadata
 - `POST /api/song` - Create new song (admin only)
   - Requires: JWT authentication, admin/super-admin role
   - Body: `id`, `title`, `lyrics`, `chord`, `tempo`, `rythm`, `albums`, `video-link` (optional)
@@ -95,7 +96,7 @@ backend/
 ### Albums
 
 - `GET /api/album` - Get all albums or search albums
-  - Query params: `q`, `names`, `page`
+  - Query params: `q`, `names`
 - `POST /api/album` - Create new album (admin only)
   - Requires: JWT authentication, admin/super-admin role
   - Body: `id`, `title`, `songs`, `createdAt` (optional)
@@ -114,7 +115,7 @@ backend/
   - Authentication: optional; visibility rules still apply
 - `POST /api/playlist` - Create new playlist
   - Requires: JWT authentication
-  - Body: `name`, `songs` (optional), `visibility` (`public`, `private`, `members`)
+  - Body: `name`, `songs`, `visibility` (`public`, `private`, `members`)
 - `GET /api/playlist/:id` - Get playlist by ID
   - Authentication: optional; access depends on visibility and ownership
 - `PUT /api/playlist/:id` - Update playlist
@@ -132,9 +133,6 @@ backend/
   - Requires: JWT authentication, member/admin/super-admin role
   - Query params: `q`, `page`, `type` (`location`, `date`)
 - `POST /api/logbook` - Create new logbook entry (admin only)
-  - Requires: JWT authentication, admin/super-admin role
-  - Body: `location`, `timestamp`, `songs`
-- `PUT /api/logbook/:id` - Update logbook entry (admin only)
   - Requires: JWT authentication, admin/super-admin role
   - Body: `location`, `timestamp`, `songs`
 
@@ -334,6 +332,7 @@ npm run dev
 - Run `npm test` for the full suite with coverage.
 - See `backend/TESTING.md` for the current testing workflow, helpers, and integration test patterns.
 - In test mode, `backend/index.js` exports the Express app without starting the HTTP server.
+- Coverage is collected for runtime source files only; test support code under `backend/jest/`, `backend/__tests__/`, and `backend/init-db/` is excluded from the coverage report.
 
 ## Contributing
 

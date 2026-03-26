@@ -50,7 +50,8 @@ songRouter
 	 * @param {Object} req - Express request object containing query parameters
 	 * @param {string} [req.query.q] - Search query string used with a matching search type
 	 * @param {number} [req.query.page] - Page number for paginated results
-	 * @param {string} [req.query.type] - Search type used to match title, lyrics, id, or all fields
+	 * @param {string} [req.query.type] - Search type used to match `title`, `lyrics`, `id`, or grouped `all` search results
+	 * @param {boolean} [req.query.all] - Flag that returns the full song list without paginated metadata when truthy
 	 * @param {("A-Z"|"Number"|"Recently Added")} [req.query.sortBy] - Sort option applied before returning results
 	 * @param {Object} res - Express response object for sending responses back to client
 	 * @returns {Promise<void>} Sends JSON response with songs and pagination metadata
