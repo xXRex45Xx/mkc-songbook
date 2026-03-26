@@ -80,6 +80,49 @@ describe("service logbook routes", () => {
 
       expect(response.status).toBe(400);
     });
+
+    it("should search by service date", async () => {
+      await seedAuthUsers();
+      await LogBookModel.create({
+        churchName: "Saint Mark",
+        serviceDate: new Date("2099-01-01T10:00:00.000Z"),
+        songList: ["song-001"],
+      });
+      await LogBookModel.create({
+        churchName: "Saint John",
+        serviceDate: new Date("2099-02-01T10:00:00.000Z"),
+        songList: ["song-001"],
+      });
+      const loginResponse = await loginUser("member@mkc.com", "member123");
+
+      const response = await request(app)
+        .get("/api/logbook?q=2099-01-01T10:00:00.000Z&type=date")
+        .set(authHeader(loginResponse.body.token));
+
+      expect(response.status).toBe(200);
+      expect(response.body.logBook).toHaveLength(1);
+      expect(response.body.logBook[0].churchName).toBe("Saint Mark");
+    });
+
+    it("should paginate logbook entries", async () => {
+      await seedAuthUsers();
+      await LogBookModel.insertMany(
+        Array.from({ length: 101 }, (_, index) => ({
+          churchName: `Church ${index}`,
+          serviceDate: new Date(`2099-01-${String((index % 28) + 1).padStart(2, "0")}T10:00:00.000Z`),
+          songList: ["song-001"],
+        })),
+      );
+      const loginResponse = await loginUser("member@mkc.com", "member123");
+
+      const response = await request(app)
+        .get("/api/logbook?page=2")
+        .set(authHeader(loginResponse.body.token));
+
+      expect(response.status).toBe(200);
+      expect(response.body.totalPages).toBe(2);
+      expect(response.body.logBook).toHaveLength(1);
+    });
   });
 
   describe("POST /api/logbook", () => {
@@ -117,6 +160,35 @@ describe("service logbook routes", () => {
         });
 
       expect(response.status).toBe(403);
+    });
+
+    it("should reject unauthenticated logbook creation", async () => {
+      const response = await request(app)
+        .post("/api/logbook")
+        .send({
+          location: "Saint Mark",
+          timestamp: "2099-01-01T10:00:00.000Z",
+          songs: ["song-001"],
+        });
+
+      expect(response.status).toBe(401);
+    });
+
+    it("should reject missing referenced songs", async () => {
+      await seedAuthUsers();
+      const loginResponse = await loginUser("admin-route@mkc.com", "admin123");
+
+      const response = await request(app)
+        .post("/api/logbook")
+        .set(authHeader(loginResponse.body.token))
+        .send({
+          location: "Saint Mark",
+          timestamp: "2099-01-01T10:00:00.000Z",
+          songs: ["song-404"],
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe("The following songs don't exist: song-404");
     });
   });
 

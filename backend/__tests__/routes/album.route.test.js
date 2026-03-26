@@ -59,6 +59,17 @@ describe("album routes", () => {
 
       expect(response.status).toBe(400);
     });
+
+    it("should search albums by query", async () => {
+      await createAlbum({ _id: "album-001", name: "Classic Hymns" });
+      await createAlbum({ _id: "album-002", name: "Modern Worship" });
+
+      const response = await request(app).get("/api/album?q=Classic");
+
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveLength(1);
+      expect(response.body[0].name).toBe("Classic Hymns");
+    });
   });
 
   describe("GET /api/album/:id", () => {
@@ -111,6 +122,42 @@ describe("album routes", () => {
 
       expect(response.status).toBe(403);
     });
+
+    it("should reject unauthenticated album creation", async () => {
+      const response = await request(app)
+        .post("/api/album")
+        .send({ id: "album-001", title: "Classic Hymns", songs: ["song-001"] });
+
+      expect(response.status).toBe(401);
+    });
+
+    it("should reject duplicate album ids", async () => {
+      await seedAuthUsers();
+      await createAlbum({ _id: "album-001" });
+      await createSong({ _id: "song-001", albums: [] });
+      const loginResponse = await loginUser("admin-route@mkc.com", "admin123");
+
+      const response = await request(app)
+        .post("/api/album")
+        .set(authHeader(loginResponse.body.token))
+        .send({ id: "album-001", title: "Classic Hymns", songs: ["song-001"] });
+
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe("Album with id album-001 already exists.");
+    });
+
+    it("should reject missing referenced songs", async () => {
+      await seedAuthUsers();
+      const loginResponse = await loginUser("admin-route@mkc.com", "admin123");
+
+      const response = await request(app)
+        .post("/api/album")
+        .set(authHeader(loginResponse.body.token))
+        .send({ id: "album-001", title: "Classic Hymns", songs: ["song-404"] });
+
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe("The following songs don't exist: song-404");
+    });
   });
 
   describe("PUT /api/album/:id", () => {
@@ -145,6 +192,39 @@ describe("album routes", () => {
 
       expect(response.status).toBe(404);
       expect(response.body.message).toBe("Album with id missing-album does not exist.");
+    });
+
+    it("should support changing the album id", async () => {
+      await seedAuthUsers();
+      await createSong({ _id: "song-001", albums: ["album-001"] });
+      await createAlbum({ _id: "album-001", name: "Classic Hymns", songs: ["song-001"] });
+      const loginResponse = await loginUser("admin-route@mkc.com", "admin123");
+
+      const response = await request(app)
+        .put("/api/album/album-001")
+        .set(authHeader(loginResponse.body.token))
+        .send({ id: "album-002", title: "Updated Hymns", songs: ["song-001"] });
+
+      expect(response.status).toBe(200);
+      expect(await AlbumModel.findById("album-001")).toBeNull();
+      expect(await AlbumModel.findById("album-002")).toBeTruthy();
+      expect((await SongModel.findById("song-001")).albums).toContain("album-002");
+    });
+
+    it("should reject changing the album id to one that already exists", async () => {
+      await seedAuthUsers();
+      await createSong({ _id: "song-001", albums: ["album-001"] });
+      await createAlbum({ _id: "album-001", songs: ["song-001"] });
+      await createAlbum({ _id: "album-002", songs: [] });
+      const loginResponse = await loginUser("admin-route@mkc.com", "admin123");
+
+      const response = await request(app)
+        .put("/api/album/album-001")
+        .set(authHeader(loginResponse.body.token))
+        .send({ id: "album-002", title: "Updated Hymns", songs: ["song-001"] });
+
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe("Album with id album-002 already exists.");
     });
   });
 
