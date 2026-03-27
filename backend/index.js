@@ -7,6 +7,7 @@
 
 import { config } from "dotenv";
 import { connect } from "./config/db.js";
+import compression from "compression";
 import express from "express";
 import apiRouter from "./routes/index.js";
 import cors from "cors";
@@ -58,11 +59,27 @@ morgan.token("error", (req) => req.error?.message || "");
 morgan.token("fileerror", (req) => req.fileDeleteError?.message || "");
 
 /**
+ * Determines whether a response should be compressed.
+ * Skips compression for audio byte-range streaming while delegating all other
+ * responses to the compression middleware's default filter.
+ *
+ * @param {Request} req - Express request object
+ * @param {Response} res - Express response object
+ * @returns {boolean} True when the response should be compressed
+ */
+export const shouldCompress = (req, res) => {
+	if (req.path.startsWith("/api/song/") && req.path.endsWith("/audio")) return false;
+
+	return compression.filter(req, res);
+};
+
+/**
  * Express application setup with security and utility middleware.
  * Configures the core middleware stack for the application:
  * - Helmet for security headers (X-Content-Type-Options, X-Frame-Options, etc.)
  * - Morgan for request logging with custom error tokens
  * - CORS with configured allowed origins from environment variables
+ * - Compression for compressible API and text responses
  * - JSON body parser for request bodies
  * - API routes mounted at /api prefix
  *
@@ -70,9 +87,10 @@ morgan.token("fileerror", (req) => req.fileDeleteError?.message || "");
  * 1. Helmet must be first for security headers
  * 2. Morgan logs all requests before they are processed
  * 3. CORS must be before route handlers for proper preflight handling
- * 4. Static file middleware serves album images
- * 5. JSON parser handles request bodies
- * 6. API router handles all REST endpoints
+ * 4. Compression wraps compressible responses before handlers run
+ * 5. Static file middleware serves album images
+ * 6. JSON parser handles request bodies
+ * 7. API router handles all REST endpoints
  *
  * @example
  * // Example request flow:
@@ -111,6 +129,12 @@ app.use(
 app.use(
 	cors({
 		origin: process.env.ALLOWED_ORIGINS.split(","),
+	})
+);
+app.use(
+	compression({
+		threshold: "1kb",
+		filter: shouldCompress,
 	})
 );
 

@@ -18,6 +18,7 @@ This is the backend server for the MKC Choir Song Book, built with Node.js, Expr
 - **UUID** - Unique ID generation
 - **bcrypt** - Password hashing
 - **cors** - Cross-origin resource sharing
+- **compression** - Gzip compression for eligible responses
 
 ## Project Structure
 
@@ -186,6 +187,13 @@ Configure allowed origins for CORS:
 - Development: `http://localhost:5173`
 - Production: your deployed frontend origin
 - Multiple origins can be comma-separated
+
+## Response Compression
+
+- The Express app uses the `compression` middleware for compressible text and JSON responses.
+- Compression is applied before static and API handlers so regular API responses can be gzipped when clients send `Accept-Encoding` headers.
+- The audio streaming endpoint at `GET /api/song/:id/audio` is excluded from compression because it serves ranged byte responses for playback.
+- Frontend asset compression is handled by the separate static host, such as Cloudflare Pages, rather than this backend.
 
 ## Database Models
 

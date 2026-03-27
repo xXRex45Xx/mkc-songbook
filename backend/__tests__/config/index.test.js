@@ -1,16 +1,22 @@
-import { afterEach, describe, expect, it, jest } from "@jest/globals";
+import { afterEach, beforeAll, describe, expect, it, jest } from "@jest/globals";
 import fs from "fs";
 import fsPromises from "fs/promises";
 import path from "path";
 import request from "supertest";
 import { MulterError } from "multer";
 
-import app from "../../index.js";
+import app, { shouldCompress } from "../../index.js";
 
 describe("app bootstrap and error handling", () => {
   const errorHandler = app._router.stack[app._router.stack.length - 1].handle;
   const staticDir = path.join(process.cwd(), "uploads", "images", "albums");
   const staticFile = path.join(staticDir, "index-test.txt");
+
+  beforeAll(() => {
+    app.get("/__compression-test__", (_req, res) => {
+      res.status(200).json({ message: "x".repeat(2048) });
+    });
+  });
 
   afterEach(async () => {
     jest.restoreAllMocks();
@@ -110,5 +116,27 @@ describe("app bootstrap and error handling", () => {
 
     expect(response.status).toBe(204);
     expect(response.headers["access-control-allow-origin"]).toBe("http://localhost:3000");
+  });
+
+  it("should gzip compress eligible JSON responses when requested", async () => {
+    const response = await request(app)
+      .get("/__compression-test__")
+      .set("Accept-Encoding", "gzip");
+
+    expect(response.status).toBe(200);
+    expect(response.headers["content-encoding"]).toBe("gzip");
+    expect(response.headers.vary).toContain("Accept-Encoding");
+  });
+
+  it("should skip compression for audio streaming routes", () => {
+    const req = {
+      path: "/api/song/song-001/audio",
+      headers: {},
+    };
+    const res = {
+      getHeader: jest.fn().mockReturnValue("audio/mpeg"),
+    };
+
+    expect(shouldCompress(req, res)).toBe(false);
   });
 });
