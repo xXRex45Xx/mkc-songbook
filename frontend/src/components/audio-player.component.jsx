@@ -5,7 +5,6 @@
 
 import { useState, useRef } from "react";
 import AudioControls from "./audio-controls.component";
-import tmpAudio from "../assets/tmp-audio.mp3";
 
 import CustomSlider from "./custom-slider.component";
 import AudioPlayerToolbox from "./audio-player-toolbox.component";
