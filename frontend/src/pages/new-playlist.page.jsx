@@ -7,24 +7,28 @@ import { redirect, useSearchParams } from "react-router-dom";
 import MainBodyContainer from "../components/main-body-container.component";
 import PlaylistForm from "../components/playlist-form.component";
 import { addOrEditPlaylist } from "../utils/api/playlist-api.util";
+import { useSelector } from "react-redux";
 
 /**
  * New Playlist Page Component
  *
  * Displays playlist creation form
  * Optionally pre-populates with a song if passed via search params
+ * Unauthenticated users save playlists locally
  *
  * @component
  * @returns {JSX.Element} Playlist creation form
  */
 const NewPlaylistPage = () => {
 	const [searchParams, _setSearchParams] = useSearchParams();
+	const user = useSelector((state) => state.user.currentUser);
 
 	return (
 		<MainBodyContainer title="Create Playlist">
 			<PlaylistForm
 				method="POST"
 				action="/playlists/new"
+				isLocal={!user}
 				playlist={
 					searchParams.get("songId")
 						? {

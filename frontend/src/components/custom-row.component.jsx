@@ -109,7 +109,7 @@ const SongsTableRow = ({
 							draggable && isDragging ? "tranform scale-105" : ""
 						}
 					>
-						{song.albums.map((song) => song.name).join(", ")}
+						{(song.albums || []).map((album) => album.name).join(", ")}
 					</Table.Cell>
 				)}
 				<Table.Cell

@@ -10,6 +10,8 @@ import AudioPlayer from "./components/audio-player.component";
 import store from "./store/store";
 import { getCurrentLoggedInUser } from "./utils/api/user-api.util";
 import { setAdminType, setCurrentUser } from "./store/slices/user.slice";
+import { setLocalPlaylists } from "./store/slices/local-playlists.slice";
+import { getAllLocalPlaylists } from "./utils/api/local-playlist-api.util";
 import { Suspense } from "react";
 import CustomTailSpin from "./components/custom-tail-spin.component";
 import { useSelector } from "react-redux";
@@ -57,7 +59,21 @@ export default App;
  */
 export const loader = async () => {
 	const token = localStorage.getItem("_s");
-	if (!token || store.getState().user.currentUser) return null;
+
+	const loadLocalPlaylists = async () => {
+		try {
+			const localPlaylists = await getAllLocalPlaylists();
+			store.dispatch(setLocalPlaylists(localPlaylists));
+		} catch (error) {
+			console.error("Failed to load local playlists:", error);
+		}
+	};
+
+	if (!token || store.getState().user.currentUser) {
+		await loadLocalPlaylists();
+		return null;
+	}
+
 	const getUser = async () => {
 		try {
 			const data = await getCurrentLoggedInUser(token);
@@ -67,10 +83,12 @@ export const loader = async () => {
 			} else {
 				store.dispatch(setAdminType(null));
 			}
+			await loadLocalPlaylists();
 			return null;
 		} catch (error) {
 			if (error.status === 401) {
 				localStorage.removeItem("_s");
+				await loadLocalPlaylists();
 				return null;
 			}
 			throw error;

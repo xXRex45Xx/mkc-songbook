@@ -7,6 +7,7 @@ import { configureStore } from "@reduxjs/toolkit";
 import configsReducer from "./slices/configs.slice";
 import userReducer from "./slices/user.slice";
 import playlistReducer from "./slices/playlist.slice";
+import localPlaylistsReducer from "./slices/local-playlists.slice";
 
 /**
  * Main Redux store instance
@@ -30,5 +31,10 @@ export default configureStore({
 		 * Manages song queue and playback state
 		 */
 		playlist: playlistReducer,
+		/**
+		 * Local playlists state reducer
+		 * Manages playlists stored in IndexedDB
+		 */
+		localPlaylists: localPlaylistsReducer,
 	},
 });

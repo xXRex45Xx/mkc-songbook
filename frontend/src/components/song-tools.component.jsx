@@ -6,11 +6,9 @@
 import { Button, Dropdown, Modal } from "flowbite-react";
 import {
 	createSearchParams,
-	Form,
 	Link,
 	useLocation,
 	useNavigate,
-	useNavigation,
 	useRevalidator,
 } from "react-router-dom";
 import OptionsSvg from "../assets/options.svg?react";
@@ -32,14 +30,23 @@ import CustomTailSpin from "./custom-tail-spin.component";
 import { deleteSong } from "../utils/api/songs-api.util";
 import PlaylistCard from "./playlist-card.component";
 import { getAllPlaylists, patchPlaylist } from "../utils/api/playlist-api.util";
+import {
+	getAllLocalPlaylists,
+	createLocalPlaylist,
+	addSongToLocalPlaylist,
+} from "../utils/api/local-playlist-api.util";
 import { updateFavoriteSongs } from "../utils/api/user-api.util";
 import { setUserFavorites } from "../store/slices/user.slice";
 import { addSongToQueue, playNext } from "../store/slices/playlist.slice";
+import { addLocalPlaylist } from "../store/slices/local-playlists.slice";
 
 /**
- * Component for song interaction tools and options
+ * Song Tools Component
+ *
  * Provides different functionality based on user role (admin/regular user)
  * Includes options for song management, playback control, and sharing
+ *
+ * @component
  * @param {Object} props - Component props
  * @param {Object} props.song - Song to manage
  * @param {boolean} [props.showDelete] - Whether to show delete option
@@ -47,7 +54,17 @@ import { addSongToQueue, playNext } from "../store/slices/playlist.slice";
  * @param {Function} [props.onDelete] - Delete callback function
  * @param {boolean} [props.showPlayButton] - Whether to show play button
  * @param {Function} [props.onPlay] - Play callback function
- * @returns {JSX.Element} Song tools component
+ * @returns {JSX.Element} Song tools dropdown menu
+ * @example
+ * ```jsx
+ * <SongTools
+ *   song={song}
+ *   showDelete={user?.role === 'admin'}
+ *   onDelete={handleDelete}
+ *   showPlayButton={true}
+ *   onPlay={() => playSong(song)}
+ * />
+ * ```
  */
 const SongTools = ({
 	song,
@@ -98,13 +115,17 @@ const SongTools = ({
 	};
 
 	const handleOpenAddToPlaylistModal = async () => {
-		if (!user) return navigate(`/auth?redirect=${location.pathname}`);
 		setOpenAddToPlaylistModal(true);
 		setPlaylistModalLoading(true);
 		setAddToPlaylistModalError("");
 		try {
-			const playlists = await getAllPlaylists(null, null, true);
-			setMyPlaylists(playlists);
+			if (user) {
+				const playlists = await getAllPlaylists(null, null, true);
+				setMyPlaylists(playlists);
+			} else {
+				const localPlaylists = await getAllLocalPlaylists();
+				setMyPlaylists(localPlaylists);
+			}
 		} catch (error) {
 			setAddToPlaylistModalError(error.message);
 		} finally {
@@ -115,7 +136,11 @@ const SongTools = ({
 		setPlaylistModalLoading(true);
 		setAddToPlaylistModalError("");
 		try {
-			await patchPlaylist(playlistId, null, [song._id]);
+			if (user) {
+				await patchPlaylist(playlistId, null, [song._id]);
+			} else {
+				await addSongToLocalPlaylist(playlistId, song);
+			}
 			alert("Song added to playlist successfully.");
 			setMyPlaylists([]);
 			setOpenAddToPlaylistModal(false);
@@ -325,22 +350,28 @@ const SongTools = ({
 					setAddToPlaylistModalError("");
 				}}
 			>
-				<Modal.Header>Choose Playlist</Modal.Header>
+				<Modal.Header>{user ? "Choose Playlist" : "Choose Local Playlist"}</Modal.Header>
 				<Modal.Body>
 					{playlistModalLoading ? (
 						<CustomTailSpin />
+					) : myPlaylists.length === 0 ? (
+						<p className="text-neutrals-500 text-center py-4">
+							{user
+								? "You haven't created any playlists yet."
+								: "You haven't created any local playlists yet. Create one to get started!"}
+						</p>
 					) : (
 						<div className="flex flex-wrap gap-6">
 							{myPlaylists.map((playlist) => (
 								<PlaylistCard
-									key={playlist._id}
-									id={playlist._id}
+									key={playlist._id || playlist.id}
+									id={playlist._id || playlist.id}
 									title={playlist.name}
-									numOfSongs={playlist.numOfSongs}
+									numOfSongs={playlist.numOfSongs || playlist.songs?.length}
 									imgSrc={playlistIcon}
 									onClick={handleSelectPlaylist.bind(
 										null,
-										playlist._id
+										playlist._id || playlist.id
 									)}
 								/>
 							))}

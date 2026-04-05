@@ -151,11 +151,11 @@ const router = createBrowserRouter([
 			},
 			{
 				path: "playlists/new",
-				lazy: () =>
-					lazyProtectedRoute(
-						() => import("./pages/new-playlist.page.jsx"),
-						["public", "member", "admin", "super-admin"]
-					),
+				lazy: () => lazyRoute(() => import("./pages/new-playlist.page.jsx")),
+			},
+			{
+				path: "local-playlists",
+				lazy: () => lazyRoute(() => import("./pages/local-playlists.page.jsx")),
 			},
 			{
 				path: "playlists/:playlistId",
@@ -163,11 +163,7 @@ const router = createBrowserRouter([
 			},
 			{
 				path: "playlists/:playlistId/edit",
-				lazy: () =>
-					lazyProtectedRoute(
-						() => import("./pages/edit-playlist.page.jsx"),
-						["public", "member", "admin", "super-admin"]
-					),
+				lazy: () => lazyRoute(() => import("./pages/edit-playlist.page.jsx")),
 			},
 			{
 				path: "schedule",
