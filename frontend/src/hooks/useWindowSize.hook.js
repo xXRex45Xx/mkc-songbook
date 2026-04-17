@@ -1,25 +1,39 @@
+/**
+ * @fileoverview Window size tracking hook
+ * Monitors window resize events and updates Redux store with current width
+ */
+
 import { useLayoutEffect } from "react";
 import { setWindowInnerWidth } from "../store/slices/configs.slice";
 import { useDispatch } from "react-redux";
 
 /**
- * Custom hook to track and update window width in Redux store
- * Uses useLayoutEffect to avoid visual flickering during resize
+ * useWindowSize
+ *
+ * Custom hook that tracks window resize events and dispatches
+ * the current window width to the Redux store. Uses useLayoutEffect
+ * to ensure DOM updates occur before paint, preventing visual flickering.
+ *
  * @returns {void}
+ * @example
+ * ```jsx
+ * // Call in component body to enable window size tracking
+ * function MyComponent() {
+ *   useWindowSize();
+ *   // Component can now access window width from Redux store
+ *   return <div>Content</div>;
+ * }
+ * ```
  */
 const useWindowSize = () => {
-    const dispatch = useDispatch();
+  const dispatch = useDispatch();
 
-    /**
-     * Sets up window resize event listener and cleanup
-     * Updates Redux store with current window width on resize
-     */
-    useLayoutEffect(() => {
-        const updateSize = (e) =>
-            dispatch(setWindowInnerWidth(e.target.innerWidth));
-        window.addEventListener("resize", updateSize);
-        return () => window.removeEventListener("resize", updateSize);
-    }, []);
+  useLayoutEffect(() => {
+    const updateSize = (e) =>
+      dispatch(setWindowInnerWidth(e.target.innerWidth));
+    window.addEventListener("resize", updateSize);
+    return () => window.removeEventListener("resize", updateSize);
+  }, []);
 };
 
 export default useWindowSize;

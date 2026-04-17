@@ -1,5 +1,18 @@
 import backendURL from "../../config/backend-url.config";
 
+/**
+ * @fileoverview Logbook API utility functions
+ * Contains functions for interacting with the logbook endpoints
+ */
+
+/**
+ * Fetches all logbook entries with pagination
+ * Marks recently added/changed entries based on timestamps
+ * @param {number} page - Page number for pagination
+ * @param {string} token - Authentication token (defaults to token in localStorage)
+ * @returns {Promise<Object>} Logbook data with enhanced timestamp info
+ * @throws {Object} Error with message and status if request fails
+ */
 export const getAllOrSearchLogBook = async (
 	page = 1,
 	token = localStorage.getItem("_s")

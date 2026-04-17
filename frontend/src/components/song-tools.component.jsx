@@ -1,19 +1,23 @@
+/**
+ * @fileoverview Song tools component for song interaction and management
+ * Provides options menu with playback, sharing, and admin actions
+ */
+
 import { Button, Dropdown, Modal } from "flowbite-react";
 import {
 	createSearchParams,
-	Form,
 	Link,
 	useLocation,
 	useNavigate,
-	useNavigation,
 	useRevalidator,
 } from "react-router-dom";
 import OptionsSvg from "../assets/options.svg?react";
 import HeartSvg from "../assets/heart.svg?react";
+import PlaySmallSvg from "../assets/play-small.svg?react";
 // import DownloadSvg from "../assets/download.svg?react";
 // import videoSmallIcon from "../assets/video-small.svg";
-// import queueSmallIcon from "../assets/queue-small.svg";
-// import nextSmallIcon from "../assets/next-small.svg";
+import queueSmallIcon from "../assets/queue-small.svg";
+import nextSmallIcon from "../assets/next-small.svg";
 import playlistIcon from "../assets/playlist.png";
 import shareSmallIcon from "../assets/share-small.svg";
 import addSmallIcon from "../assets/add-small.svg";
@@ -26,23 +30,55 @@ import CustomTailSpin from "./custom-tail-spin.component";
 import { deleteSong } from "../utils/api/songs-api.util";
 import PlaylistCard from "./playlist-card.component";
 import { getAllPlaylists, patchPlaylist } from "../utils/api/playlist-api.util";
+import {
+	getAllLocalPlaylists,
+	createLocalPlaylist,
+	addSongToLocalPlaylist,
+} from "../utils/api/local-playlist-api.util";
 import { updateFavoriteSongs } from "../utils/api/user-api.util";
 import { setUserFavorites } from "../store/slices/user.slice";
+import { addSongToQueue, playNext } from "../store/slices/playlist.slice";
+import { addLocalPlaylist } from "../store/slices/local-playlists.slice";
 
 /**
- * Component for song interaction tools and options
+ * Song Tools Component
+ *
  * Provides different functionality based on user role (admin/regular user)
  * Includes options for song management, playback control, and sharing
+ *
+ * @component
  * @param {Object} props - Component props
- * @param {Object} props.song- song to manage
- * @returns {JSX.Element} Song tools component
+ * @param {Object} props.song - Song to manage
+ * @param {boolean} [props.showDelete] - Whether to show delete option
+ * @param {string} [props.deleteDescription] - Description for delete action
+ * @param {Function} [props.onDelete] - Delete callback function
+ * @param {boolean} [props.showPlayButton] - Whether to show play button
+ * @param {Function} [props.onPlay] - Play callback function
+ * @returns {JSX.Element} Song tools dropdown menu
+ * @example
+ * ```jsx
+ * <SongTools
+ *   song={song}
+ *   showDelete={user?.role === 'admin'}
+ *   onDelete={handleDelete}
+ *   showPlayButton={true}
+ *   onPlay={() => playSong(song)}
+ * />
+ * ```
  */
-const SongTools = ({ song, showDelete, deleteDescription, onDelete }) => {
+const SongTools = ({
+	song,
+	showDelete,
+	deleteDescription,
+	onDelete,
+	showPlayButton,
+	onPlay,
+}) => {
 	const navigate = useNavigate();
 	const location = useLocation();
 	const dispatch = useDispatch();
 	const revalidator = useRevalidator();
-	const windowWidth = useSelector((state) => state.configs.windowWidth);
+	// const windowWidth = useSelector((state) => state.configs.windowWidth);
 	const user = useSelector((state) => state.user.currentUser);
 	const [openDeleteModal, setOpenDeleteModal] = useState(false);
 	const [isDeleting, setIsDeleting] = useState(false);
@@ -79,13 +115,17 @@ const SongTools = ({ song, showDelete, deleteDescription, onDelete }) => {
 	};
 
 	const handleOpenAddToPlaylistModal = async () => {
-		if (!user) return navigate(`/auth?redirect=${location.pathname}`);
 		setOpenAddToPlaylistModal(true);
 		setPlaylistModalLoading(true);
 		setAddToPlaylistModalError("");
 		try {
-			const playlists = await getAllPlaylists(null, null, true);
-			setMyPlaylists(playlists);
+			if (user) {
+				const playlists = await getAllPlaylists(null, null, true);
+				setMyPlaylists(playlists);
+			} else {
+				const localPlaylists = await getAllLocalPlaylists();
+				setMyPlaylists(localPlaylists);
+			}
 		} catch (error) {
 			setAddToPlaylistModalError(error.message);
 		} finally {
@@ -96,7 +136,11 @@ const SongTools = ({ song, showDelete, deleteDescription, onDelete }) => {
 		setPlaylistModalLoading(true);
 		setAddToPlaylistModalError("");
 		try {
-			await patchPlaylist(playlistId, null, [song._id]);
+			if (user) {
+				await patchPlaylist(playlistId, null, [song._id]);
+			} else {
+				await addSongToLocalPlaylist(playlistId, song);
+			}
 			alert("Song added to playlist successfully.");
 			setMyPlaylists([]);
 			setOpenAddToPlaylistModal(false);
@@ -132,6 +176,13 @@ const SongTools = ({ song, showDelete, deleteDescription, onDelete }) => {
 		}
 	};
 
+	const handleAddToQueue = () => {
+		if (song?.hasAudio) dispatch(addSongToQueue(song));
+	};
+	const handlePlayNext = () => {
+		if (song?.hasAudio) dispatch(playNext(song));
+	};
+
 	const favoriteIconStyle = useMemo(() => {
 		let style =
 			"hover:first:fill-primary-400 active:first:fill-primary-700 cursor-pointer ";
@@ -146,32 +197,49 @@ const SongTools = ({ song, showDelete, deleteDescription, onDelete }) => {
 			onClick={(e) => e.stopPropagation()}
 			className="flex gap-7 items-center w-fit"
 		>
-			{windowWidth >= 768 &&
-				!["admin", "super-admin"].includes(user?.role) && (
-					<>
-						{isAddingToFavorite ? (
-							<CustomTailSpin xs />
-						) : (
-							<div onClick={handleToggleFavorite}>
-								<HeartSvg className={favoriteIconStyle} />
-							</div>
-						)}
-						{/* <div>
+			{!["admin", "super-admin"].includes(user?.role) && (
+				<>
+					{showPlayButton && song?.hasAudio && (
+						<button className="cursor-pointer" onClick={onPlay}>
+							<PlaySmallSvg className="hover:first:fill-secondary-600 active:first:fill-secondary-700" />
+						</button>
+					)}
+					{isAddingToFavorite ? (
+						<CustomTailSpin xs />
+					) : (
+						<button
+							className="cursor-pointer"
+							onClick={handleToggleFavorite}
+						>
+							<HeartSvg className={favoriteIconStyle} />
+						</button>
+					)}
+
+					{/* <div>
 							<DownloadSvg className="hover:first:fill-success-200 active:first:fill-success-300 cursor-pointer" />
 						</div> */}
-					</>
-				)}
+				</>
+			)}
 			{["admin", "super-admin"].includes(user?.role) ? (
 				<>
 					<Link to={`/songs/${song._id}/edit`} className="cursor-pointer">
 						<img src={editIcon} alt="edit" />
 					</Link>
-					<button
-						className="cursor-pointer"
-						onClick={() => setOpenDeleteModal(true)}
-					>
-						<img src={deleteIcon} alt="delete" />
-					</button>
+					{onDelete && showDelete ? (
+						<button
+							className="cursor-pointer"
+							onClick={onDelete.bind(null, song._id)}
+						>
+							<img src={deleteIcon} alt="delete" />
+						</button>
+					) : (
+						<button
+							className="cursor-pointer"
+							onClick={() => setOpenDeleteModal(true)}
+						>
+							<img src={deleteIcon} alt="delete" />
+						</button>
+					)}
 					<Modal
 						show={openDeleteModal}
 						size="sm"
@@ -215,17 +283,23 @@ const SongTools = ({ song, showDelete, deleteDescription, onDelete }) => {
 						<OptionsSvg className="text-basewhite hover:text-neutrals-400 active:text-baseblack cursor-pointer" />
 					}
 				>
+					{song?.hasAudio && (
+						<Dropdown.Item
+							className="flex gap-1.5"
+							onClick={handleAddToQueue}
+						>
+							<img src={queueSmallIcon} alt="" />
+							Add To Queue
+						</Dropdown.Item>
+					)}
 					{/* <Dropdown.Item className="flex gap-1.5">
 						<img src={videoSmallIcon} alt=""></img>Play Video
-					</Dropdown.Item>
-					<Dropdown.Item className="flex gap-1.5">
-						<img src={queueSmallIcon} alt="" />
-						Add To Queue
-					</Dropdown.Item>
-					<Dropdown.Item className="flex gap-1.5">
+					</Dropdown.Item> */}
+
+					<Dropdown.Item className="flex gap-1.5" onClick={handlePlayNext}>
 						<img src={nextSmallIcon} alt="" />
 						Play Next
-					</Dropdown.Item> */}
+					</Dropdown.Item>
 					<Dropdown.Item className="flex gap-1.5" onClick={handleShare}>
 						<img src={shareSmallIcon} alt="" />
 						Share
@@ -276,22 +350,28 @@ const SongTools = ({ song, showDelete, deleteDescription, onDelete }) => {
 					setAddToPlaylistModalError("");
 				}}
 			>
-				<Modal.Header>Choose Playlist</Modal.Header>
+				<Modal.Header>{user ? "Choose Playlist" : "Choose Local Playlist"}</Modal.Header>
 				<Modal.Body>
 					{playlistModalLoading ? (
 						<CustomTailSpin />
+					) : myPlaylists.length === 0 ? (
+						<p className="text-neutrals-500 text-center py-4">
+							{user
+								? "You haven't created any playlists yet."
+								: "You haven't created any local playlists yet. Create one to get started!"}
+						</p>
 					) : (
 						<div className="flex flex-wrap gap-6">
 							{myPlaylists.map((playlist) => (
 								<PlaylistCard
-									key={playlist._id}
-									id={playlist._id}
+									key={playlist._id || playlist.id}
+									id={playlist._id || playlist.id}
 									title={playlist.name}
-									numOfSongs={playlist.numOfSongs}
+									numOfSongs={playlist.numOfSongs || playlist.songs?.length}
 									imgSrc={playlistIcon}
 									onClick={handleSelectPlaylist.bind(
 										null,
-										playlist._id
+										playlist._id || playlist.id
 									)}
 								/>
 							))}

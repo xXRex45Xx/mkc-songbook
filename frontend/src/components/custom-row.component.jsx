@@ -1,7 +1,18 @@
+/**
+ * @fileoverview Custom row component for songs table with drag-and-drop support
+ * Displays song information with responsive layout and action buttons
+ */
+
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { Table } from "flowbite-react";
 import SongTools from "./song-tools.component";
+import { useDraggable, useDroppable } from "@dnd-kit/core";
+import { CSS } from "@dnd-kit/utilities";
+import FirstDroppableRow from "./first-droppable-row.component";
+import { removeSong, setCurrentSongIdx } from "../store/slices/playlist.slice";
+import PlaySmallSvg from "../assets/play-small.svg?react";
+import deleteIcon from "../assets/delete.svg";
 
 /**
  * Songs Table Row Component
@@ -20,6 +31,14 @@ import SongTools from "./song-tools.component";
  * @param {string} props.song.title - Song title
  * @param {Array<{name: string}>} props.song.albums - List of albums the song belongs to
  * @param {boolean} props.highlight - Whether to include search term in navigation
+ * @param {boolean} [props.showDelete] - Whether to show delete button
+ * @param {string} [props.deleteDescription] - Description for delete action
+ * @param {Function} [props.onDelete] - Delete callback function
+ * @param {boolean} [props.draggable] - Whether row is draggable
+ * @param {number} [props.idx] - Row index for drag operations
+ * @param {boolean} [props.showPlayButton] - Whether to show play button
+ * @param {Function} [props.onPlay] - Play callback function
+ * @param {boolean} [props.queueTools] - Whether to show queue management tools
  */
 const SongsTableRow = ({
 	song,
@@ -27,47 +46,116 @@ const SongsTableRow = ({
 	showDelete,
 	deleteDescription,
 	onDelete,
+	draggable,
+	idx,
+	showPlayButton,
+	onPlay,
+	queueTools,
 }) => {
+	const dispatch = useDispatch();
 	const navigate = useNavigate();
 	const [searchParams, _setSearchParams] = useSearchParams();
+	const { setNodeRef: setDroppableRef, isOver } = useDroppable({
+		id: idx + 1,
+	});
+	const {
+		setNodeRef: setDraggableRef,
+		attributes,
+		listeners,
+		transform,
+		isDragging,
+	} = useDraggable({ id: idx });
 
+	const dragTransformStyles = {
+		transform: CSS.Translate.toString(transform),
+	};
 	/**
 	 * Window width from Redux store for responsive layout decisions
 	 */
 	const windowWidth = useSelector((state) => state.configs.windowWidth);
 
 	return (
-		<Table.Row
-			onClick={() =>
-				navigate({
-					pathname: `/songs/${song._id.toString()}`,
-					search: highlight ? `?q=${searchParams.get("q")}` : null,
-				})
-			}
-			key={song._id}
-			className="cursor-pointer"
-		>
-			<Table.Cell>{song._id}</Table.Cell>
-			<Table.Cell>
-				{song.title}
-				{windowWidth < 768 && <br />}
-				{windowWidth < 768 &&
-					song.albums.map((song) => song.name).join(", ")}
-			</Table.Cell>
-			{windowWidth >= 768 && (
-				<Table.Cell>
-					{song.albums.map((song) => song.name).join(", ")}
-				</Table.Cell>
+		<>
+			{idx === 0 && draggable && (
+				<FirstDroppableRow disabled={idx === 0 && isDragging} />
 			)}
-			<Table.Cell className="text-end flex justify-end">
-				<SongTools
-					song={song}
-					showDelete={showDelete}
-					deleteDescription={deleteDescription}
-					onDelete={onDelete}
-				/>
-			</Table.Cell>
-		</Table.Row>
+			<Table.Row
+				key={song._id}
+				className={"cursor-pointer touch-manipulation"}
+				ref={draggable ? setDraggableRef : undefined}
+				{...(draggable ? attributes : {})}
+				{...(draggable ? listeners : {})}
+				onClick={() =>
+					navigate({
+						pathname: `/songs/${song._id.toString()}`,
+						search: highlight ? `?q=${searchParams.get("q")}` : null,
+					})
+				}
+				style={draggable ? dragTransformStyles : undefined}
+			>
+				<Table.Cell
+					className={draggable && isDragging ? "tranform scale-105" : ""}
+				>
+					{song._id}
+				</Table.Cell>
+				<Table.Cell
+					className={draggable && isDragging ? "tranform scale-105" : ""}
+				>
+					{song.title}
+				</Table.Cell>
+				{windowWidth >= 768 && (
+					<Table.Cell
+						className={
+							draggable && isDragging ? "tranform scale-105" : ""
+						}
+					>
+						{(song.albums || []).map((album) => album.name).join(", ")}
+					</Table.Cell>
+				)}
+				<Table.Cell
+					className={
+						draggable && isDragging
+							? "text-end flex justify-end tranform scale-105"
+							: "text-end flex justify-end"
+					}
+				>
+					{queueTools ? (
+						<div
+							onClick={(e) => e.stopPropagation()}
+							className="flex gap-7 items-center w-fit"
+						>
+							<button
+								className="cursor-pointer"
+								onClick={() => dispatch(setCurrentSongIdx(idx))}
+							>
+								<PlaySmallSvg className="hover:first:fill-secondary-600 active:first:fill-secondary-700" />
+							</button>
+							<button
+								className="cursor-pointer"
+								onClick={() => dispatch(removeSong(song._id))}
+							>
+								<img src={deleteIcon} alt="delete" />
+							</button>
+						</div>
+					) : (
+						<SongTools
+							song={song}
+							showDelete={showDelete}
+							deleteDescription={deleteDescription}
+							onDelete={onDelete}
+							showPlayButton={showPlayButton}
+							onPlay={onPlay}
+						/>
+					)}
+				</Table.Cell>
+			</Table.Row>
+			{draggable && (
+				<Table.Row
+					ref={setDroppableRef}
+					className={isOver && !isDragging ? "h-10" : "h-0.5"}
+				></Table.Row>
+			)}
+		</>
 	);
 };
 

@@ -1,14 +1,27 @@
+/**
+ * @fileoverview Songs table component for displaying paginated song lists
+ * Supports multiple table views for title and lyrics search results
+ */
+
 import { useRef } from "react";
 import {
 	useSearchParams,
 	useNavigation,
 	useRevalidator,
 } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import useWindowSize from "../hooks/useWindowSize.hook";
 import CustomTable from "./custom-table.component";
 import SongsTableRow from "./custom-row.component";
 import CustomTailSpin from "./custom-tail-spin.component";
+import {
+	DndContext,
+	useSensors,
+	useSensor,
+	MouseSensor,
+	TouchSensor,
+} from "@dnd-kit/core";
+import { setCurrentSongIdx, setPlaylist } from "../store/slices/playlist.slice";
 
 /**
  * Songs Table Component
@@ -20,11 +33,21 @@ import CustomTailSpin from "./custom-tail-spin.component";
  * - Pagination with smooth scroll to top
  * - Loading states during navigation and revalidation
  * - Highlight support for lyrics search matches
+ * - Drag and drop support for queue management
+ * - Conditional display of play buttons and delete actions
  *
  * @component
  * @param {Object} props - Component props
  * @param {Array<Object>} props.songs - Array of song objects to display
  * @param {number} props.totalPages - Total number of pages for pagination
+ * @param {boolean} [props.showOverflow] - Whether to show overflow menu
+ * @param {boolean} [props.showDelete] - Whether to show delete button
+ * @param {string} [props.deleteDescription] - Delete action description
+ * @param {Function} [props.onDelete] - Delete callback function
+ * @param {Function} [props.onDragEnd] - Drag and drop end callback
+ * @param {boolean} [props.showPlayButton] - Whether to show play button
+ * @param {boolean} [props.singleSongQueue] - Whether queue contains single song
+ * @param {boolean} [props.queueTools] - Whether to show queue management tools
  */
 const SongsTable = ({
 	songs,
@@ -33,6 +56,10 @@ const SongsTable = ({
 	showDelete,
 	deleteDescription,
 	onDelete,
+	onDragEnd,
+	showPlayButton,
+	singleSongQueue,
+	queueTools,
 }) => {
 	/**
 	 * Refs for table scroll behavior
@@ -40,6 +67,7 @@ const SongsTable = ({
 	const neutralTableRef = useRef();
 	const titleTableRef = useRef();
 
+	const dispatch = useDispatch();
 	/**
 	 * Window width from Redux store for responsive layout
 	 */
@@ -49,6 +77,14 @@ const SongsTable = ({
 	const { state: navState } = useNavigation();
 	const { state: revalidateState } = useRevalidator();
 
+	const sensors = useSensors(
+		useSensor(MouseSensor, {
+			activationConstraint: { delay: 150 },
+		}),
+		useSensor(TouchSensor, {
+			activationConstraint: { delay: 150, tolerance: 5 },
+		})
+	);
 	/**
 	 * Table headers configuration based on screen width
 	 * Shows headers only on desktop (>= 768px)
@@ -63,6 +99,18 @@ const SongsTable = ({
 			  ]
 			: [];
 
+	const handlePlaySong = (song) => {
+		if (!song.hasAudio) return;
+		if (singleSongQueue) return dispatch(setPlaylist([song]));
+
+		const queue = songs.filter((song) => song.hasAudio);
+		dispatch(setPlaylist(queue));
+		dispatch(
+			setCurrentSongIdx(
+				queue.findIndex((songInQueue) => songInQueue._id === song._id)
+			)
+		);
+	};
 	return (
 		<>
 			{(navState === "loading" || revalidateState === "loading") && (
@@ -92,16 +140,38 @@ const SongsTable = ({
 						}
 						ref={neutralTableRef}
 					>
-						{songs.map((song) => (
-							<SongsTableRow
-								key={song._id + song.title}
-								song={song}
-								highlight={searchParams.get("type") === "lyrics"}
-								showDelete={showDelete}
-								deleteDescription={deleteDescription}
-								onDelete={onDelete}
-							/>
-						))}
+						{onDragEnd ? (
+							<DndContext sensors={sensors} onDragEnd={onDragEnd}>
+								{songs.map((song, idx) => (
+									<SongsTableRow
+										key={song._id + song.title}
+										song={song}
+										highlight={searchParams.get("type") === "lyrics"}
+										showDelete={showDelete}
+										deleteDescription={deleteDescription}
+										onDelete={onDelete}
+										draggable
+										idx={idx}
+										showPlayButton={showPlayButton}
+										onPlay={handlePlaySong.bind(null, song)}
+										queueTools={queueTools}
+									/>
+								))}
+							</DndContext>
+						) : (
+							songs.map((song) => (
+								<SongsTableRow
+									key={song._id + song.title}
+									song={song}
+									highlight={searchParams.get("type") === "lyrics"}
+									showDelete={showDelete}
+									deleteDescription={deleteDescription}
+									onDelete={onDelete}
+									showPlayButton={showPlayButton}
+									onPlay={handlePlaySong.bind(null, song)}
+								/>
+							))
+						)}
 					</CustomTable>
 				)}
 
@@ -120,6 +190,8 @@ const SongsTable = ({
 										key={song._id + song.title}
 										song={song}
 										highlight={false}
+										showPlayButton={showPlayButton}
+										onPlay={handlePlaySong.bind(null, song)}
 									/>
 								))}
 							</CustomTable>
@@ -150,6 +222,8 @@ const SongsTable = ({
 										key={song._id + song.title}
 										song={song}
 										highlight={true}
+										showPlayButton={showPlayButton}
+										onPlay={handlePlaySong.bind(null, song)}
 									/>
 								))}
 							</CustomTable>

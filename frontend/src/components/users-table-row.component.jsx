@@ -7,6 +7,24 @@ import { useNavigate } from "react-router-dom";
 import { updateUserRole } from "../utils/api/user-api.util";
 import CustomTailSpin from "./custom-tail-spin.component";
 
+/**
+ * User Table Row Component
+ *
+ * A table row for displaying user information with role management actions.
+ * Features:
+ * - User name, email, and role display
+ * - Promote/demote buttons with role-based visibility
+ * - Confirmation modals for role changes
+ * - Permission-based action availability
+ *
+ * @component
+ * @param {Object} props - Component props
+ * @param {Object} props.user - User object to display
+ * @param {string} props.user._id - User identifier
+ * @param {string} props.user.name - User name
+ * @param {string} props.user.email - User email
+ * @param {string} props.user.role - User role
+ */
 const UsersTableRow = ({ user }) => {
     const [openPromoteModal, setOpenPromoteModal] = useState(false);
     const [openDemoteModal, setOpenDemoteModal] = useState(false);

@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Verify email form component for OTP verification
+ * Represents step 2 of both signup and password reset flows
+ */
+
 import { TextInput } from "flowbite-react";
 import { useEffect, useRef } from "react";
 import {
@@ -14,10 +19,25 @@ import { setAuthOtp } from "../store/slices/user.slice";
 import store from "../store/store";
 
 /**
- * Form component for email verification with OTP
- * Represents step 2 of both signup and password reset flows
- * Provides a 6-digit OTP input interface with auto-focus functionality
- * @returns {JSX.Element} Verify email form component
+ * VerifyEmailForm Component
+ *
+ * Form component for email verification with OTP.
+ * Represents step 2 of both signup and password reset flows.
+ * Features:
+ * - 6-digit OTP input fields
+ * - Auto-focus on next input field
+ * - Numeric input validation
+ * - Resend OTP functionality
+ * - Step indicator showing progress
+ * - Error handling and display
+ *
+ * @component
+ * @returns {JSX.Element} Verify email form
+ *
+ * @example
+ * return (
+ *   <VerifyEmailForm />
+ * )
  */
 const VerifyEmailForm = () => {
     const input2 = useRef();
@@ -170,9 +190,11 @@ export default VerifyEmailForm;
 /**
  * Action handler for the verify email form submission
  * Verifies the provided OTP and redirects based on flow type
+ *
  * @param {Object} params - Parameters object containing the request
  * @param {Request} params.request - Form submission request object
  * @returns {Promise<Response>} Redirects to next step on success, returns validation errors otherwise
+ * @throws {Error} 400: Invalid OTP, 500: Server error
  */
 export const action = async ({ request }) => {
     const formData = await request.formData();

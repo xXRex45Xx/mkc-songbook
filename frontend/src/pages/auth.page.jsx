@@ -1,6 +1,21 @@
+/**
+ * @fileoverview Authentication page layout
+ * Wraps login/register forms with branding and promotional content
+ */
+
 import { Outlet, redirect } from "react-router-dom";
 import AuthMainContainer from "../components/auth-main-container.component";
 
+/**
+ * Auth Page Component
+ *
+ * Main authentication layout wrapping login/register sub-routes
+ * Displays marketing content for non-authenticated users
+ * Redirects to home if already logged in
+ *
+ * @component
+ * @returns {JSX.Element} Auth layout with outlet for child routes
+ */
 const Auth = () => (
     <div className="flex h-full w-full min-w-[22.5rem] flex-col items-stretch md:flex-row">
         <AuthMainContainer>
@@ -20,6 +35,12 @@ const Auth = () => (
 
 export default Auth;
 
+/**
+ * Auth page loader
+ * Redirects to home if user is already authenticated
+ *
+ * @returns {null|Response} null for authenticated users, redirect for logged-in users
+ */
 export const loader = () => {
     if (localStorage.getItem("_s")) return redirect("/");
     return null;

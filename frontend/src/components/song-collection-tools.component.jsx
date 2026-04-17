@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Song collection tools component for managing album/playlist actions
+ * Provides share, edit, delete, and queue management buttons based on permissions
+ */
+
 import BackSvg from "../assets/back.svg?react";
 import ShareSvg from "../assets/share.svg?react";
 import OptionsSvg from "../assets/v-options.svg?react";
@@ -8,13 +13,61 @@ import queueSmallIcon from "../assets/queue-small.svg";
 import nextSmallIcon from "../assets/next-small.svg";
 import editSmallIcon from "../assets/edit-gray.svg";
 import deleteSmallIcon from "../assets/delete.svg";
+import uploadSmallIcon from "../assets/upload-small.svg";
 
+/**
+ * Song Collection Tools Component
+ *
+ * A toolbar component for managing song collections (albums/playlists).
+ * Provides navigation, sharing, and action menu based on permissions.
+ * Features:
+ * - Back navigation button
+ * - Share functionality (conditional)
+ * - Options dropdown with edit/delete for admins
+ * - Options dropdown with queue/play next for regular users
+ * - Upload to server for local playlists
+ * - Role-based action visibility
+ *
+ * @component
+ * @param {Object} props - Component props
+ * @param {Function} props.handleShare - Share callback function
+ * @param {boolean} props.allowModify - Whether to show edit/delete options
+ * @param {boolean} props.allowShare - Whether to show share button
+ * @param {Function} props.handleEdit - Edit callback function
+ * @param {Function} props.handleDelete - Delete callback function
+ * @param {Function} props.handleAddToQueue - Add to queue callback
+ * @param {Function} props.handlePlayNext - Play next callback
+ * @param {boolean} props.showPlayerTools - Whether to show player-related tools
+ * @param {boolean} [props.synced=true] - Whether playlist has been synced to server
+ * @param {Function} [props.handleUploadToServer] - Upload local playlist to server
+ * @returns {JSX.Element} Song collection tools toolbar
+ * @example
+ * ```jsx
+ * <SongCollectionTools
+ *   handleShare={handleShare}
+ *   allowModify={true}
+ *   allowShare={true}
+ *   handleEdit={() => navigate('edit')}
+ *   handleDelete={() => setShowDelete(true)}
+ *   handleAddToQueue={addToQueue}
+ *   handlePlayNext={playNext}
+ *   showPlayerTools={true}
+ *   synced={false}
+ *   handleUploadToServer={uploadToServer}
+ * />
+ * ```
+ */
 const SongCollectionTools = ({
 	handleShare,
 	allowModify,
 	allowShare,
 	handleEdit,
 	handleDelete,
+	handleAddToQueue,
+	handlePlayNext,
+	showPlayerTools,
+	synced = true,
+	handleUploadToServer,
 }) => {
 	const navigate = useNavigate();
 
@@ -45,14 +98,24 @@ const SongCollectionTools = ({
 					<OptionsSvg className="stroke-neutrals-700 hover:stroke-neutrals-500 active:stroke-neutrals-600" />
 				}
 			>
-				<Dropdown.Item className="flex gap-1.5">
-					<img src={queueSmallIcon} alt="" />
-					Add To Queue
-				</Dropdown.Item>
-				<Dropdown.Item className="flex gap-1.5">
-					<img src={nextSmallIcon} alt="" />
-					Play Next
-				</Dropdown.Item>
+				{showPlayerTools && (
+					<>
+						<Dropdown.Item
+							className="flex gap-1.5"
+							onClick={handleAddToQueue}
+						>
+							<img src={queueSmallIcon} alt="" />
+							Add To Queue
+						</Dropdown.Item>
+						<Dropdown.Item
+							className="flex gap-1.5"
+							onClick={handlePlayNext}
+						>
+							<img src={nextSmallIcon} alt="" />
+							Play Next
+						</Dropdown.Item>
+					</>
+				)}
 				{allowModify && (
 					<>
 						<Dropdown.Item className="flex gap-1.5" onClick={handleEdit}>
@@ -67,6 +130,18 @@ const SongCollectionTools = ({
 							<img src={deleteSmallIcon} alt="" />
 							Delete
 						</Dropdown.Item>
+						{!synced && handleUploadToServer && (
+							<>
+								<Dropdown.Divider />
+								<Dropdown.Item
+									className="flex gap-1.5"
+									onClick={handleUploadToServer}
+								>
+									<img src={uploadSmallIcon} alt="" />
+									Upload to Server
+								</Dropdown.Item>
+							</>
+						)}
 					</>
 				)}
 			</Dropdown>

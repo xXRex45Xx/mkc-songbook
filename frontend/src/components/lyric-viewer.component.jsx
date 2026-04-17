@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Lyric viewer component for displaying song lyrics
+ * Supports search highlighting and font size customization
+ */
+
 import { Card, Button, Tooltip, Popover } from "flowbite-react";
 
 import { buttonTheme } from "../config/button-theme.config";
@@ -6,7 +11,7 @@ import MusicElement from "./music-element.component";
 import BackSvg from "../assets/back.svg?react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { regexBuilder } from "../utils/amharic-map.util";
 import {
 	setHiddenHeader,
@@ -30,6 +35,8 @@ import EnterFullscreenSvg from "../assets/enter-fullscreen.svg?react";
  * - Configurable lyrics font size
  * - Search term highlighting with Amharic character support
  * - Whitespace preservation for lyrics formatting
+ * - Fullscreen mode support
+ * - Redux integration for font size persistence
  *
  * @component
  * @param {Object} props - Component props
@@ -44,11 +51,14 @@ import EnterFullscreenSvg from "../assets/enter-fullscreen.svg?react";
 const LyricViewer = ({ song }) => {
 	const navigate = useNavigate();
 	const [searchParams, _setSearchParams] = useSearchParams();
+	const [isFullScreen, setIsFullScreen] = useState(false);
 	const dispatch = useDispatch();
 
 	useEffect(() => {
+		if (!document.fullscreenEnabled) return;
 		dispatch(setHiddenHeader(true));
 		document.documentElement.requestFullscreen();
+		setIsFullScreen(true);
 		return () => {
 			dispatch(setHiddenHeader(false));
 			document.exitFullscreen();
@@ -73,6 +83,7 @@ const LyricViewer = ({ song }) => {
 
 	const handleToggleFullscreen = () => {
 		dispatch(toggleFullscreen());
+		setIsFullScreen((state) => !state);
 	};
 
 	return (
@@ -94,18 +105,31 @@ const LyricViewer = ({ song }) => {
 					<BackSvg className="stroke-neutrals-700 hover:stroke-neutrals-500 active:stroke-neutrals-600" />
 				</Button>
 
-				<h1 className="text-baseblack font-bold text-2xl ml-auto">
+				<h1 className=" text-baseblack font-bold text-lg md:text-2xl ml-3">
 					{song.title}
 				</h1>
-				<div className="ml-auto flex items-center gap-12">
-					{song.musicElements?.chord && (
-						<MusicElement type="chord" detail={song.musicElements.chord} />
-					)}
-					{song.musicElements?.tempo && (
-						<MusicElement type="tempo" detail={song.musicElements.tempo} />
-					)}
-					{song.musicElements?.rythm && (
-						<MusicElement type="rythm" detail={song.musicElements.rythm} />
+				<div className="flex items-center gap-3 md:gap-12">
+					{!isFullScreen && (
+						<>
+							{song.musicElements?.chord && (
+								<MusicElement
+									type="chord"
+									detail={song.musicElements.chord}
+								/>
+							)}
+							{song.musicElements?.tempo && (
+								<MusicElement
+									type="tempo"
+									detail={song.musicElements.tempo}
+								/>
+							)}
+							{song.musicElements?.rythm && (
+								<MusicElement
+									type="rythm"
+									detail={song.musicElements.rythm}
+								/>
+							)}
+						</>
 					)}
 					<Tooltip content="Font Size">
 						<Popover
@@ -129,6 +153,7 @@ const LyricViewer = ({ song }) => {
 											onChange={(e) =>
 												dispatch(setLyricsFontSize(e.target.value))
 											}
+											show
 										/>
 										<span className="text-baseblack text-center font-medium text-base">
 											{lyricsFontSize}pts
@@ -137,13 +162,19 @@ const LyricViewer = ({ song }) => {
 								</div>
 							}
 						>
-							<Button className="focus:ring-0" theme={buttonTheme} size="xxs">
+							<Button
+								className="focus:ring-0"
+								theme={buttonTheme}
+								size="xxs"
+							>
 								<TextSizeSvg className="*:stroke-baseblack hover:*:stroke-neutrals-1000 active:*:stroke-baseblack" />
 							</Button>
 						</Popover>
 					</Tooltip>
 					<Tooltip
-						content={hiddenHeader ? "Exit Fullscreen" : "Enter Fullscreen"}
+						content={
+							hiddenHeader ? "Exit Fullscreen" : "Enter Fullscreen"
+						}
 					>
 						<Button
 							className="focus:ring-0"
@@ -162,7 +193,7 @@ const LyricViewer = ({ song }) => {
 			</Card>
 			<p
 				style={{ fontSize: `${lyricsFontSize}pt` }}
-				className={`justify-center self-center text-baseblack font-bold whitespace-pre`}
+				className={`justify-center self-center text-baseblack font-bold whitespace-pre text-wrap`}
 			>
 				{searchParams.get("q")
 					? song.lyrics.split(regex).map((part) => {

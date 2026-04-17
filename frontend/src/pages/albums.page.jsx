@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Albums listing page component
+ * Displays all albums with search functionality
+ */
+
 import MainBodyContainer from "../components/main-body-container.component";
 import AlbumCard from "../components/album-card.component";
 import { Await, defer, useLoaderData } from "react-router-dom";
@@ -7,6 +12,15 @@ import CustomTailSpin from "../components/custom-tail-spin.component";
 import backendURL from "../config/backend-url.config";
 import AdminHelper from "../components/admin-helper.component";
 
+/**
+ * Albums Page Component
+ *
+ * Displays a grid of album cards with search functionality
+ * Shows admin helper for authenticated users
+ *
+ * @component
+ * @returns {JSX.Element} Albums listing page
+ */
 const AlbumsPage = () => {
 	const loaderData = useLoaderData();
 
@@ -42,6 +56,15 @@ const AlbumsPage = () => {
 };
 export default AlbumsPage;
 
+/**
+ * Route loader for albums listing page
+ * Fetches all albums with optional search query
+ *
+ * @param {Object} params - Route parameters
+ * @param {Request} params.request - HTTP request
+ * @returns {Promise<{albumData: Array<Object>}>} Resolves to album list
+ * @throws {Error} 401: Unauthenticated
+ */
 export const loader = ({ request }) => {
 	const searchParams = new URL(request.url).searchParams;
 	const searchQuery = { q: searchParams.get("q") };

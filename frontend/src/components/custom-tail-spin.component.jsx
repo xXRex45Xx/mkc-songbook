@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Custom tail spin loading component
+ * Provides styled loading spinner with size and color variants
+ */
+
 import { TailSpin } from "react-loader-spinner";
 
 /**
@@ -10,6 +15,7 @@ import { TailSpin } from "react-loader-spinner";
  * @param {Object} props - Component props
  * @param {boolean} [props.small] - Whether to use small size (30px vs 80px)
  * @param {boolean} [props.white] - Whether to use white color instead of default red
+ * @param {boolean} [props.xs] - Whether to use extra small size (20px)
  */
 const CustomTailSpin = ({ small, white, xs }) => (
 	<TailSpin

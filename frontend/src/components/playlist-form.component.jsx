@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Playlist form component for creating and editing playlists
+ * Handles playlist metadata and song list management
+ */
+
 import { useEffect, useRef, useState } from "react";
 import {
 	Form,
@@ -7,22 +12,66 @@ import {
 	useSubmit,
 } from "react-router-dom";
 import { getSong } from "../utils/api/songs-api.util";
+import {
+	createLocalPlaylist,
+	updateLocalPlaylist,
+} from "../utils/api/local-playlist-api.util";
 import { Accordion, Button, Label, Select, TextInput } from "flowbite-react";
 
 import addIcon from "../assets/add-small.svg";
 import greenTickIcon from "../assets/green.svg";
 import CustomTailSpin from "./custom-tail-spin.component";
 import NewAlbumSong from "./new-album-song.component";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import {
+	addLocalPlaylist,
+	updateLocalPlaylist as updateLocalPlaylistAction,
+} from "../store/slices/local-playlists.slice";
 
-const PlaylistForm = ({ method, action, playlist }) => {
+/**
+ * Playlist Form Component
+ *
+ * A form component for creating and editing playlists.
+ * Features:
+ * - Playlist name and visibility settings
+ * - Dynamic song list with search and validation
+ * - Song finalization workflow
+ * - Drag and drop song ordering
+ * - Local playlist support for unauthenticated users
+ * - Error handling and validation
+ *
+ * @component
+ * @param {Object} props - Component props
+ * @param {string} props.method - HTTP method for form submission (POST/PUT/LOCAL)
+ * @param {string} props.action - Form submission endpoint
+ * @param {Object} [props.playlist] - Existing playlist data for editing (optional)
+ * @param {string} [props.playlist._id] - Playlist identifier
+ * @param {string} [props.playlist.id] - Local playlist identifier
+ * @param {string} [props.playlist.name] - Playlist name
+ * @param {string} [props.playlist.visibility] - Playlist visibility status
+ * @param {Array<Object>} [props.playlist.songs] - Array of songs in playlist
+ * @param {boolean} [props.isLocal=false] - Whether to save to IndexedDB instead of server
+ * @returns {JSX.Element} Playlist form component
+ * @example
+ * ```jsx
+ * <PlaylistForm
+ *   method="POST"
+ *   action="/playlists/new"
+ *   isLocal={false}
+ * />
+ * ```
+ */
+const PlaylistForm = ({ method, action, playlist, isLocal = false }) => {
 	const navigate = useNavigate();
 	const navigation = useNavigation();
 	const submit = useSubmit();
+	const dispatch = useDispatch();
 	const nameRef = useRef();
 	const visibilityRef = useRef();
 	const user = useSelector((state) => state.user.currentUser);
 	const [songList, setSongList] = useState([]);
+	const [isSaving, setIsSaving] = useState(false);
+	const [localError, setLocalError] = useState(null);
 	useEffect(() => {
 		if (!playlist?.songs) return;
 		setSongList(playlist?.songs.map((song) => ({ final: true, song })));
@@ -81,9 +130,10 @@ const PlaylistForm = ({ method, action, playlist }) => {
 		});
 	};
 
-	const handleSubmit = (e) => {
+	const handleSubmit = async (e) => {
 		e.preventDefault();
 		setTrackError(null);
+		setLocalError(null);
 
 		const nonFinalizedSongs = songList
 			.map(({ final }, idx) => ({ idx, final }))
@@ -97,6 +147,44 @@ const PlaylistForm = ({ method, action, playlist }) => {
 				else errorMessage += `#${index + 1}, `;
 			});
 			return setTrackError(errorMessage);
+		}
+
+		const name = nameRef.current.value.trim();
+		if (!name) {
+			return setLocalError("Playlist name is required.");
+		}
+
+		const songs = songList.map(({ song }) => song);
+
+		if (isLocal) {
+			setIsSaving(true);
+			try {
+				if (playlist?.id) {
+					await updateLocalPlaylist(playlist.id, { name, songs });
+					dispatch(
+						updateLocalPlaylistAction({ id: playlist.id, updates: { name, songs } })
+					);
+					navigate(`/local-playlists`);
+				} else {
+					const id = await createLocalPlaylist({ name, songs });
+					const newPlaylist = {
+						id,
+						name,
+						songs,
+						createdAt: new Date(),
+						updatedAt: new Date(),
+						synced: false,
+						remoteId: null,
+					};
+					dispatch(addLocalPlaylist(newPlaylist));
+					navigate(`/local-playlists`);
+				}
+			} catch (err) {
+				setLocalError(err.message || "Failed to save playlist locally.");
+			} finally {
+				setIsSaving(false);
+			}
+			return;
 		}
 
 		const formData = new FormData();
@@ -120,22 +208,24 @@ const PlaylistForm = ({ method, action, playlist }) => {
 						type="text"
 						ref={nameRef}
 						defaultValue={playlist?.name}
-						color={error?.nameMessage ? "failure" : undefined}
+						color={error?.nameMessage || localError ? "failure" : undefined}
 						helperText={
-							<span className="text-sm">{error?.nameMessage}</span>
+							<span className="text-sm">{error?.nameMessage || localError}</span>
 						}
 					/>
 				</div>
-				<div className="flex-1 flex flex-col gap-2.5">
-					<Label htmlFor="visibility" value="Visibility" />
-					<Select id="name" defaultValue="private" ref={visibilityRef}>
-						<option value="private">Private</option>
-						{["member", "admin", "super-admin"].includes(user?.role) && (
-							<option value="members">Members</option>
-						)}
-						<option value="public">Public</option>
-					</Select>
-				</div>
+				{!isLocal && (
+					<div className="flex-1 flex flex-col gap-2.5">
+						<Label htmlFor="visibility" value="Visibility" />
+						<Select id="name" defaultValue="private" ref={visibilityRef}>
+							<option value="private">Private</option>
+							{["member", "admin", "super-admin"].includes(user?.role) && (
+								<option value="members">Members</option>
+							)}
+							<option value="public">Public</option>
+						</Select>
+					</div>
+				)}
 			</div>
 
 			<div className="flex-1 overflow-y-auto flex flex-col items-stretch gap-3.5">
@@ -197,10 +287,14 @@ const PlaylistForm = ({ method, action, playlist }) => {
 						color="failure"
 						className="text-nowrap focus:ring-0 h-full text-lg px-7"
 						type="submit"
-						isProcessing={navigation.state === "submitting"}
+						isProcessing={isSaving || navigation.state === "submitting"}
 						processingSpinner={<CustomTailSpin small white />}
 					>
-						{location.pathname.includes("edit") ? "Update" : "Submit"}
+						{isLocal
+							? "Save Locally"
+							: location.pathname.includes("edit")
+							  ? "Update"
+							  : "Submit"}
 					</Button>
 				</div>
 			</div>

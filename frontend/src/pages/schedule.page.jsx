@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Schedule page component
+ * Displays service schedule with pagination and admin actions
+ */
+
 import MainBodyContainer from "../components/main-body-container.component";
 import { Button, Table } from "flowbite-react";
 import green from "../assets/green.svg";
@@ -21,6 +26,16 @@ import { getAllOrSearchLogBook } from "../utils/api/logbook-api.util";
 import { Suspense } from "react";
 import CustomTailSpin from "../components/custom-tail-spin.component";
 
+/**
+ * Schedule Page Component
+ *
+ * Displays a table of service schedules with pagination
+ * Shows different columns based on user role
+ * Admin users can create new schedules
+ *
+ * @component
+ * @returns {JSX.Element} Schedule list page
+ */
 const SchedulePage = () => {
 	const navigate = useNavigate();
 	const loaderData = useLoaderData();
@@ -153,6 +168,15 @@ const SchedulePage = () => {
 };
 export default SchedulePage;
 
+/**
+ * Route loader for schedule page
+ * Fetches schedule data with pagination
+ *
+ * @param {Object} params - Route parameters
+ * @param {Request} params.request - HTTP request
+ * @returns {Promise<{scheduleData: Object}>} Resolves to schedule data and pagination
+ * @throws {Error} 401: Unauthenticated
+ */
 export const loader = ({ request }) => {
 	const searchParams = new URL(request.url).searchParams;
 	const page = searchParams.get("page");

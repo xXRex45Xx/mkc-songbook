@@ -1,4 +1,9 @@
 /**
+ * @fileoverview Main body container component for page layouts
+ * Provides responsive padding and optional title section
+ */
+
+/**
  * Main Body Container Component
  *
  * A layout component for main content areas with responsive padding.

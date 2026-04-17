@@ -1,0 +1,9 @@
+process.env.NODE_ENV = "test";
+process.env.JWT_SECRET ??= "test-jwt-secret";
+process.env.ALLOWED_ORIGINS ??= "http://localhost:3000";
+process.env.IMAGE_STORAGE ??= "uploads/images";
+process.env.AUDIO_STORAGE ??= "uploads/audio";
+process.env.DEFAULT_ADMIN_EMAIL ??= "admin@mkc.com";
+process.env.DEFAULT_ADMIN_NAME ??= "Admin User";
+process.env.DEFAULT_ADMIN_PHOTO_LINK ??= "https://example.com/admin.jpg";
+process.env.PORT ??= "3001";

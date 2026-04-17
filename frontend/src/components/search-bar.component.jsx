@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Search bar component for filtering content
+ * Provides category selection and search input with URL parameter preservation
+ */
+
 import { TextInput, Select } from "flowbite-react";
 import {
 	numberInputTheme,

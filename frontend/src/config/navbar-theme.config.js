@@ -1,6 +1,7 @@
 /**
  * @fileoverview Navigation bar theme configuration
- * Defines styling for the application's navigation bar components
+ * Defines styling for the application's navigation bar components including
+ * root container, brand/logo area, collapse menu, and navigation links
  */
 
 /**
@@ -8,6 +9,23 @@
  * Contains styling for root, brand, collapse, and link elements
  * Includes responsive design classes for mobile and desktop views
  * @type {Object}
+ * @property {Object} root - Root container configuration
+ * @property {string} root.base - Base padding classes with responsive breakpoints
+ * @property {Object} root.inner - Inner container layout
+ * @property {string} root.inner.base - Flex layout for navbar items
+ * @property {Object} brand - Brand/logo area configuration
+ * @property {string} brand.base - Base classes for brand positioning
+ * @property {Object} collapse - Collapse/collapsible menu configuration
+ * @property {string} collapse.base - Base classes for responsive width
+ * @property {string} collapse.list - Navigation list styling
+ * @property {Object} collapse.hidden - Hidden state configuration
+ * @property {string} collapse.hidden.on - Overflow behavior when hidden
+ * @property {string} collapse.hidden.off - Default state (no overflow)
+ * @property {Object} link - Navigation link styling
+ * @property {string} link.base - Base link classes with responsive text
+ * @property {Object} link.active - Active state variants
+ * @property {string} link.active.on - Active link styling (secondary color)
+ * @property {string} link.active.off - Inactive link styling with hover
  */
 export const navbarTheme = {
     root: {

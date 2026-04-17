@@ -9,7 +9,12 @@
  * Maps Amharic characters to regex patterns containing similar characters.
  * Used for flexible text matching that accounts for character variants.
  * For example, 'ሀ' matches any of '[ሀሃሐሓኀኃኻ]'.
+ * This constant enables fuzzy search functionality by matching Amharic characters
+ * that look or sound similar, improving search robustness for user input.
  * @constant {Object.<string, string>}
+ * @example
+ * // Returns '[ሀሃሐሓኀኃኻ]' for key 'ሀ'
+ * similarRegexMap['ሀ']
  */
 export const similarRegexMap = {
     ሀ: "[ሀሃሐሓኀኃኻ]",

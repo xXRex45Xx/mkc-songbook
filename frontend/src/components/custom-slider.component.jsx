@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Custom slider component for audio progress and font size control
+ * Styled range slider with gradient progress bar
+ */
+
 import { RangeSlider } from "flowbite-react";
 import { rangeSliderTheme } from "../config/forms-theme.config";
 
@@ -17,26 +22,28 @@ import { rangeSliderTheme } from "../config/forms-theme.config";
  * @param {boolean} [props.show] - Whether to show the slider
  */
 const CustomSlider = ({ value, step, min = 0, max, onChange, show }) => {
-    return (
-        <>
-            <RangeSlider
-                size="md"
-                value={value}
-                min={min}
-                max={max}
-                onChange={onChange}
-                theme={rangeSliderTheme}
-                step={step}
-                className="hidden md:flex"
-            />
-            <div
-                style={{
-                    width: ((value - min) * 100) / (max - min) + "%",
-                }}
-                className={`hidden md:block absolute left-0 -translate-y-1/2 h-2 bg-gradient-to-r from-secondary to-primary`}
-            ></div>
-        </>
-    );
+	return (
+		<>
+			<RangeSlider
+				size="md"
+				value={value}
+				min={min}
+				max={max}
+				onChange={onChange}
+				theme={rangeSliderTheme}
+				step={step}
+				className={show ? "" : "hidden md:flex"}
+			/>
+			<div
+				style={{
+					width: ((value - min) * 100) / (max - min) + "%",
+				}}
+				className={`${
+					show ? "block" : "hidden md:block"
+				} absolute left-0 -translate-y-1/2 h-2 bg-gradient-to-r from-secondary to-primary`}
+			></div>
+		</>
+	);
 };
 
 export default CustomSlider;

@@ -9,10 +9,15 @@ import { ClientFaultError } from "../utils/error.util.js";
 
 /**
  * Checks if a song with the provided ID already exists.
- * @param {Object} req - Express request object
- * @param {Object} _res - Express response object
- * @param {Function} next - Express next middleware function
- * @throws {ClientFaultError} If a song with the provided ID already exists
+ *
+ * This middleware validates that no song with the specified ID already exists in the database
+ * before creating a new song. It prevents duplicate song creation and maintains data integrity.
+ *
+ * @param {Object} req - Express request object containing request data
+ * @param {Object} res - Express response object for sending responses back to client
+ * @param {Function} next - Express next middleware function for continuing the request flow
+ * @returns {Promise<void>} Validates song existence with proper database checks explaining the complete validation process flow
+ * @throws {ClientFaultError} If a song with the provided ID already exists with clear explanation of duplicate condition and error context
  */
 export const checkSongNumberExists = async (req, _res, next) => {
 	const { id } = req.body;
@@ -24,12 +29,16 @@ export const checkSongNumberExists = async (req, _res, next) => {
 
 /**
  * Validates that all album IDs in the request exist in the database.
- * If albums are provided in the request, converts the comma-separated album IDs
- * into an array of album objects and attaches them to the request body.
- * @param {Object} req - Express request object
- * @param {Object} _res - Express response object
- * @param {Function} next - Express next middleware function
- * @throws {ClientFaultError} If any of the provided album IDs don't exist
+ *
+ * This middleware validates all album IDs provided in the song creation request against
+ * the database to ensure they exist. It handles comma-separated album IDs and converts them
+ * into an array of album objects for proper processing.
+ *
+ * @param {Object} req - Express request object containing request data
+ * @param {Object} res - Express response object for sending responses back to client
+ * @param {Function} next - Express next middleware function for continuing the request flow
+ * @returns {Promise<void>} Validates album existence with proper database queries explaining the complete validation process flow
+ * @throws {ClientFaultError} If any of the provided album IDs don't exist with detailed error explanation of missing albums
  */
 export const checkAlbumExists = async (req, _res, next) => {
 	const { albums: albumIds } = req.body;

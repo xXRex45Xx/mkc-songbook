@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Reset password form component for completing password reset
+ * Represents step 3 of the password reset flow
+ */
+
 import { Button, Label, TextInput } from "flowbite-react";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
@@ -28,10 +33,24 @@ const eyeWrapper = (onClick, icon) => (
 );
 
 /**
- * Form component for resetting user password
- * Represents step 3 of the password reset flow
- * Allows users to create and confirm a new password
- * @returns {JSX.Element} Reset password form component
+ * ResetPasswordForm Component
+ *
+ * Form component for resetting user password.
+ * Represents step 3 of the password reset flow.
+ * Features:
+ * - Password and confirm password fields with visibility toggle
+ * - Step indicator showing progress
+ * - Help text for password creation
+ * - Form validation and error display
+ * - Loading state during submission
+ *
+ * @component
+ * @returns {JSX.Element} Reset password form
+ *
+ * @example
+ * return (
+ *   <ResetPasswordForm />
+ * )
  */
 const ResetPasswordForm = () => {
     const navigate = useNavigate();
@@ -134,9 +153,11 @@ export default ResetPasswordForm;
 /**
  * Action handler for the reset password form submission
  * Updates user's password with the new password
+ *
  * @param {Object} params - Parameters object containing the request
  * @param {Request} params.request - Form submission request object
  * @returns {Promise<Response>} Redirects to login on success, returns validation errors otherwise
+ * @throws {Error} 400: Invalid input, 500: Server error
  */
 export const action = async ({ request }) => {
     const formData = await request.formData();

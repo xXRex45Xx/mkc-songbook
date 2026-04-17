@@ -90,7 +90,10 @@ export const similarRegexMap = {
  * @param {string} s - Input string containing Amharic characters
  * @returns {string} A regex pattern string that matches similar characters
  * @example
- * // Returns '[ሀሃሐሓኀኃኻ][ኡዑ]' for input 'ሀዑ'
+ * ```javascript
+ * regexBuilder('ሀዑ'); // Returns '[ሀሃሐሓኀኃኻ][ኡዑ]'
+ * regexBuilder('test'); // Returns 'test' (no Amharic characters)
+ * ```
  */
 export const regexBuilder = (s) => {
 	let str = "";

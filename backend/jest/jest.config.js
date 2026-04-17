@@ -1,0 +1,52 @@
+export const jestConfig = {
+  testEnvironment: 'node',
+  testTimeout: 10000,
+  verbose: true,
+  collectCoverage: true,
+  collectCoverageFrom: [
+    '<rootDir>/index.js',
+    '<rootDir>/config/**/*.js',
+    '<rootDir>/controllers/**/*.js',
+    '<rootDir>/middlewares/**/*.js',
+    '<rootDir>/models/**/*.js',
+    '<rootDir>/routes/**/*.js',
+    '<rootDir>/utils/**/*.js',
+    '!<rootDir>/models/validation-schemas/**/*.test.js',
+  ],
+  coverageDirectory: 'coverage',
+  coverageReporters: ['text', 'lcov', 'html'],
+  coveragePathIgnorePatterns: [
+    '/node_modules/',
+    '/coverage/',
+    '/uploads/',
+    '<rootDir>/__tests__/',
+    '<rootDir>/jest/',
+    '<rootDir>/init-db/',
+  ],
+  coverageThreshold: {
+    global: {
+      branches: 80,
+      functions: 80,
+      lines: 80,
+      statements: 80,
+    },
+  },
+  testMatch: [
+    '**/__tests__/**/*.js',
+    '**/*.test.js',
+    '**/*.spec.js',
+  ],
+  testPathIgnorePatterns: ['/node_modules/', '/coverage/', '/uploads/'],
+  moduleFileExtensions: ['js', 'json'],
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/$1',
+  },
+  transform: {
+    '^.+\\.js$': 'babel-jest',
+  },
+  setupFiles: ['<rootDir>/jest/jest.env.js'],
+  setupFilesAfterEnv: ['<rootDir>/jest/jest.setup.js'],
+  globalSetup: '<rootDir>/jest/jest.globalSetup.js',
+  globalTeardown: '<rootDir>/jest/jest.globalTeardown.js',
+  testSequencer: '<rootDir>/jest/jest.sequencer.js',
+};

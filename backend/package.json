@@ -1,41 +1,56 @@
 {
-    "name": "mkc-choir-backend",
-    "version": "1.0.0",
-    "main": "index.js",
-    "scripts": {
-        "start": "node index.js",
-        "dev": "nodemon ."
-    },
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/xXRex45Xx/mkc-songbook.git#main"
-    },
-    "author": "",
-    "license": "ISC",
-    "bugs": {
-        "url": "https://github.com/xXRex45Xx/mkc-songbook/issues"
-    },
-    "homepage": "https://github.com/xXRex45Xx/mkc-songbook/tree/main#readme",
-    "description": "",
-    "dependencies": {
-        "bcrypt": "^5.1.1",
-        "cors": "^2.8.5",
-        "dotenv": "^16.4.5",
-        "express": "^4.19.2",
-        "helmet": "^8.1.0",
-        "joi": "^17.13.3",
-        "jsonwebtoken": "^9.0.2",
-        "mongoose": "^8.5.2",
-        "morgan": "^1.10.0",
-        "multer": "^1.4.5-lts.1",
-        "nodemailer": "^6.9.15",
-        "passport": "^0.7.0",
-        "passport-jwt": "^4.0.1",
-        "passport-local": "^1.0.0",
-        "uuid": "^11.0.3"
-    },
-    "type": "module",
-    "devDependencies": {
-        "nodemon": "^3.1.10"
-    }
+	"name": "mkc-choir-backend",
+	"version": "1.0.0",
+	"main": "index.js",
+	"scripts": {
+		"start": "node index.js",
+		"dev": "nodemon .",
+		"test": "jest --coverage --forceExit",
+		"test:watch": "jest --watch",
+		"test:coverage": "jest --coverage --coverageReporters=text-lcov",
+		"test:unit": "jest --testPathPattern='(utils|middlewares)'",
+		"test:integration": "jest --testPathPattern='(controllers|routes)'",
+		"test:e2e": "jest --testPathPattern='e2e'"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/xXRex45Xx/mkc-songbook.git#main"
+	},
+	"author": "",
+	"license": "ISC",
+	"bugs": {
+		"url": "https://github.com/xXRex45Xx/mkc-songbook/issues"
+	},
+	"homepage": "https://github.com/xXRex45Xx/mkc-songbook/tree/main#readme",
+	"description": "",
+	"dependencies": {
+		"bcrypt": "^5.1.1",
+		"compression": "^1.8.1",
+		"cors": "^2.8.5",
+		"dotenv": "^16.4.5",
+		"express": "^4.19.2",
+		"helmet": "^8.1.0",
+		"joi": "^17.13.3",
+		"jsonwebtoken": "^9.0.2",
+		"mongoose": "^8.5.2",
+		"morgan": "^1.10.0",
+		"multer": "^1.4.5-lts.1",
+		"nodemailer": "^7.0.10",
+		"passport": "^0.7.0",
+		"passport-jwt": "^4.0.1",
+		"passport-local": "^1.0.0",
+		"uuid": "^11.0.3"
+	},
+	"type": "module",
+	"devDependencies": {
+		"@babel/core": "^7.29.0",
+		"@babel/preset-env": "^7.29.0",
+		"@types/jest": "^30.0.0",
+		"babel-jest": "^30.3.0",
+		"jest": "^30.3.0",
+		"jest-mock-extended": "^4.0.0",
+		"mongodb-memory-server": "^11.0.1",
+		"nodemon": "^3.1.10",
+		"supertest": "^7.2.2"
+	}
 }

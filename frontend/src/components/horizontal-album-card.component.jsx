@@ -1,5 +1,28 @@
+/**
+ * @fileoverview Horizontal album card component for displaying album information
+ * Provides album metadata in a horizontal layout with cover image
+ */
+
 import { horizontalCardTheme } from "../config/card-theme.config";
 import { Card } from "flowbite-react";
+
+/**
+ * Horizontal Album Card Component
+ *
+ * A horizontal layout card for displaying album information.
+ * Features:
+ * - Large album cover image
+ * - Album title and artist name
+ * - Release year and song count
+ * - Consistent card styling with theme
+ *
+ * @component
+ * @param {Object} props - Component props
+ * @param {string} props.title - Album title
+ * @param {string} props.year - Release year
+ * @param {number} props.numOfSongs - Number of songs in album
+ * @param {string} props.imgSrc - Album cover image URL
+ */
 const HorizontalAlbumCard = ({ title, year, numOfSongs, imgSrc }) => (
 	<Card className="text-baseblack" theme={horizontalCardTheme}>
 		<div className="flex-1 flex gap-5">

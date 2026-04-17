@@ -1,16 +1,34 @@
+/**
+ * @fileoverview New playlist page component
+ * Allows users to create a new playlist
+ */
+
 import { redirect, useSearchParams } from "react-router-dom";
 import MainBodyContainer from "../components/main-body-container.component";
 import PlaylistForm from "../components/playlist-form.component";
 import { addOrEditPlaylist } from "../utils/api/playlist-api.util";
+import { useSelector } from "react-redux";
 
+/**
+ * New Playlist Page Component
+ *
+ * Displays playlist creation form
+ * Optionally pre-populates with a song if passed via search params
+ * Unauthenticated users save playlists locally
+ *
+ * @component
+ * @returns {JSX.Element} Playlist creation form
+ */
 const NewPlaylistPage = () => {
 	const [searchParams, _setSearchParams] = useSearchParams();
+	const user = useSelector((state) => state.user.currentUser);
 
 	return (
 		<MainBodyContainer title="Create Playlist">
 			<PlaylistForm
 				method="POST"
 				action="/playlists/new"
+				isLocal={!user}
 				playlist={
 					searchParams.get("songId")
 						? {
@@ -30,6 +48,15 @@ const NewPlaylistPage = () => {
 
 export default NewPlaylistPage;
 
+/**
+ * Route action for new playlist page
+ * Handles playlist creation submissions
+ *
+ * @param {Object} params - Action parameters
+ * @param {FormData} params.formData - Form submission data
+ * @returns {Response|Object} Redirect on success, error object on validation failure
+ * @throws {Error} 400: Invalid input, 500: Server error
+ */
 export const action = async ({ request }) => {
 	const formData = await request.formData();
 

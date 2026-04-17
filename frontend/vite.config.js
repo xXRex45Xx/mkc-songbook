@@ -9,8 +9,6 @@ import react from "@vitejs/plugin-react";
 import svgr from "vite-plugin-svgr";
 import { VitePWA } from "vite-plugin-pwa";
 
-const PWAManifest = {};
-
 export default defineConfig({
 	plugins: [
 		react(),
@@ -61,4 +59,27 @@ export default defineConfig({
 			},
 		}),
 	],
+	build: {
+		rollupOptions: {
+			output: {
+				manualChunks(id) {
+					if (!id.includes("node_modules")) return;
+
+					if (id.includes("flowbite-react") || id.includes("flowbite")) {
+						return "ui";
+					}
+
+					if (id.includes("@dnd-kit")) {
+						return "dragdrop";
+					}
+
+					if (id.includes("@react-oauth") || id.includes("react-loader-spinner")) {
+						return "auth-and-feedback";
+					}
+
+					return "vendor";
+				},
+			},
+		},
+	},
 });
