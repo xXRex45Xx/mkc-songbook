@@ -57,9 +57,7 @@ const PlaylistsPage = () => {
 			<Suspense fallback={<CustomTailSpin />}>
 				<Await resolve={loaderData.playlistData}>
 					{({ playlists }) => {
-						const mergedPlaylists = user
-							? [...unsyncedPlaylists, ...playlists]
-							: unsyncedPlaylists;
+						const mergedPlaylists =[...unsyncedPlaylists, ...playlists];
 						return (
 							<div className="flex flex-wrap gap-6">
 								{user && <PlaylistCard favorite id="favorites" />}
