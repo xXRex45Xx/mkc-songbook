@@ -3,7 +3,7 @@
  * Provides playback controls, progress tracking, and favorites management
  */
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import AudioControls from "./audio-controls.component";
 
 import CustomSlider from "./custom-slider.component";
@@ -19,6 +19,7 @@ import {
 import { useLocation, useNavigate } from "react-router-dom";
 import { updateFavoriteSongs } from "../utils/api/user-api.util";
 import { setUserFavorites } from "../store/slices/user.slice";
+import { getOfflineAudioBlob } from "../utils/api/audio-download.util";
 
 /**
  * Audio Player Component
@@ -45,6 +46,7 @@ const AudioPlayer = () => {
 	const [isPlaying, setIsPlaying] = useState(false);
 	const [maxSliderValue, setMaxSliderValue] = useState(0);
 	const [isAddingToFavorite, setIsAddingToFavorite] = useState(false);
+	const [audioSrc, setAudioSrc] = useState("");
 	const location = useLocation();
 	const navigate = useNavigate();
 	const dispatch = useDispatch();
@@ -53,6 +55,38 @@ const AudioPlayer = () => {
 	const repeat = useSelector((state) => state.playlist.repeat);
 	const user = useSelector((state) => state.user.currentUser);
 	const audioRef = useRef(null);
+	// Track the blob URL we created so it can be revoked on track change.
+	const blobUrlRef = useRef("");
+
+	const revokeBlobUrl = () => {
+		if (blobUrlRef.current) {
+			URL.revokeObjectURL(blobUrlRef.current);
+			blobUrlRef.current = "";
+		}
+	};
+
+	useEffect(() => {
+		const loadAudioSrc = async () => {
+			revokeBlobUrl();
+			if (currentSongIdx < 0 || !queue[currentSongIdx]) {
+				setAudioSrc("");
+				return;
+			}
+			const songId = queue[currentSongIdx]._id;
+			if (!navigator.onLine) {
+				const offlineBlob = await getOfflineAudioBlob(songId);
+				if (offlineBlob) {
+					const url = URL.createObjectURL(offlineBlob);
+					blobUrlRef.current = url;
+					setAudioSrc(url);
+					return;
+				}
+			}
+			setAudioSrc(`${backendURL}/api/song/${songId}/audio`);
+		};
+		loadAudioSrc();
+		return revokeBlobUrl;
+	}, [currentSongIdx, queue]);
 
 	const handleTogglePlayPause = () => {
 		if (!audioRef.current || currentSongIdx < 0 || queue.length === 0) return;
@@ -158,12 +192,7 @@ const AudioPlayer = () => {
 			<audio
 				hidden
 				ref={audioRef}
-				src={
-					currentSongIdx >= 0 && currentSongIdx < queue.length
-						? `${backendURL}/api/song/${queue[currentSongIdx]._id}/audio`
-						: undefined
-				}
-				// src={tmpAudio}
+				src={audioSrc || undefined}
 				onPlay={() => setIsPlaying(true)}
 				onPause={() => setIsPlaying(false)}
 				onTimeUpdate={(e) => {

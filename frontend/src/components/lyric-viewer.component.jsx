@@ -23,6 +23,7 @@ import CustomSlider from "./custom-slider.component";
 import TextSizeSvg from "../assets/text-size.svg?react";
 import ExitFullscreenSvg from "../assets/exit-fullscreen.svg?react";
 import EnterFullscreenSvg from "../assets/enter-fullscreen.svg?react";
+import DownloadAudio from "./download-audio.component.jsx";
 
 /**
  * Lyric Viewer Component
@@ -109,6 +110,13 @@ const LyricViewer = ({ song }) => {
 					{song.title}
 				</h1>
 				<div className="flex items-center gap-3 md:gap-12">
+					{song.hasAudio && (
+						<DownloadAudio
+							songId={song._id}
+							songTitle={song.title}
+							hasAudio={song.hasAudio}
+						/>
+					)}
 					{!isFullScreen && (
 						<>
 							{song.musicElements?.chord && (

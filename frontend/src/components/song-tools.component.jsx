@@ -14,8 +14,7 @@ import {
 import OptionsSvg from "../assets/options.svg?react";
 import HeartSvg from "../assets/heart.svg?react";
 import PlaySmallSvg from "../assets/play-small.svg?react";
-// import DownloadSvg from "../assets/download.svg?react";
-// import videoSmallIcon from "../assets/video-small.svg";
+import DownloadAudio from "./download-audio.component.jsx";
 import queueSmallIcon from "../assets/queue-small.svg";
 import nextSmallIcon from "../assets/next-small.svg";
 import playlistIcon from "../assets/playlist.png";
@@ -204,6 +203,11 @@ const SongTools = ({
 							<PlaySmallSvg className="hover:first:fill-secondary-600 active:first:fill-secondary-700" />
 						</button>
 					)}
+					<DownloadAudio
+						songId={song._id}
+						songTitle={song.title}
+						hasAudio={song.hasAudio}
+					/>
 					{isAddingToFavorite ? (
 						<CustomTailSpin xs />
 					) : (
@@ -214,10 +218,6 @@ const SongTools = ({
 							<HeartSvg className={favoriteIconStyle} />
 						</button>
 					)}
-
-					{/* <div>
-							<DownloadSvg className="hover:first:fill-success-200 active:first:fill-success-300 cursor-pointer" />
-						</div> */}
 				</>
 			)}
 			{["admin", "super-admin"].includes(user?.role) ? (

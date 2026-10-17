@@ -43,6 +43,7 @@ const albumSchema = new Schema({
 		minLength: 4,
 		required: true,
 	},
+	updatedAt: { type: Date, default: Date.now },
 	photoPath: { type: String },
 	photoLink: { type: String },
 	songs: [{ type: String, ref: "Song" }],

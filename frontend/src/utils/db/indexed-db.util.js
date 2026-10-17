@@ -16,7 +16,7 @@ const DB_NAME = "mkc-songbook-db";
  * Database version for IndexedDB schema migrations
  * @type {number}
  */
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 /**
  * Schema definitions for all IndexedDB object stores
@@ -31,6 +31,27 @@ const STORE_SCHEMAS = {
       { name: "createdAt", keyPath: "createdAt" },
       { name: "remoteId", keyPath: "remoteId" },
     ],
+  },
+  songs: {
+    keyPath: "_id",
+    indexes: [
+      { name: "updatedAt", keyPath: "updatedAt" },
+      { name: "hasAudio", keyPath: "hasAudio" },
+      { name: "title", keyPath: "title" },
+    ],
+  },
+  albums: {
+    keyPath: "_id",
+    indexes: [
+      { name: "updatedAt", keyPath: "updatedAt" },
+      { name: "name", keyPath: "name" },
+    ],
+  },
+  syncMeta: {
+    keyPath: "key",
+  },
+  audioFiles: {
+    keyPath: "_id",
   },
 };
 

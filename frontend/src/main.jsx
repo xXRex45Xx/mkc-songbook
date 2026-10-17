@@ -15,6 +15,9 @@ import store from "./store/store.js";
 import ProtectedRoute from "./components/protected-route.component.jsx";
 import ErrorPage from "./pages/error.page.jsx";
 import { GoogleOAuthProvider } from "@react-oauth/google";
+import { registerPwa } from "./utils/pwa/pwa-register.util";
+
+registerPwa();
 
 /**
  * Lazily resolves a route module and maps its exports to a route object.

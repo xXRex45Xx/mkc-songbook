@@ -1,10 +1,7 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import fs from "fs";
 
-import {
-  deleteAlbum,
-  updateAlbum,
-} from "../../controllers/album.controller.js";
+import { deleteAlbum, getAllOrSearchAlbums, updateAlbum } from "../../controllers/album.controller.js";
 import AlbumModel from "../../models/album.model.js";
 import SongModel from "../../models/song.model.js";
 
@@ -89,6 +86,7 @@ describe("album controller", () => {
       photoLink: "/static/albums/images/old.jpg",
       songs: [{ _id: "song-002" }, { _id: "song-003" }],
       createdAt: "2024",
+      updatedAt: expect.any(Date),
     });
     expect(SongModel.updateMany).toHaveBeenNthCalledWith(
       1,
@@ -133,5 +131,62 @@ describe("album controller", () => {
     );
     expect(fs.unlink).toHaveBeenCalledWith("/tmp/album.jpg", expect.any(Function));
     expect(res.json).toHaveBeenCalledWith({ deleted: true });
+  });
+
+  describe("getAllOrSearchAlbums with syncSince", () => {
+    it("should return all albums when syncSince is absent", async () => {
+      AlbumModel.find = jest.fn().mockResolvedValue([
+        { _doc: { _id: "a1", name: "Album 1", songs: ["s1"], photoPath: "/tmp/a.jpg" }, songs: ["s1"], songFilePath: null },
+        { _doc: { _id: "a2", name: "Album 2", songs: [], photoPath: null }, songs: [], songFilePath: null },
+      ]);
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+
+      await getAllOrSearchAlbums({ query: {} }, res);
+
+      expect(AlbumModel.find).toHaveBeenCalledWith({}, null);
+      expect(res.status).toHaveBeenCalledWith(200);
+    });
+
+    it("should filter albums by syncSince date", async () => {
+      AlbumModel.find = jest.fn().mockResolvedValue([
+        { _doc: { _id: "a1", name: "Updated Album", songs: ["s1"], photoPath: "/tmp/a.jpg" }, songs: ["s1"], songFilePath: null },
+      ]);
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+      const syncDate = "2025-01-01T00:00:00.000Z";
+
+      await getAllOrSearchAlbums({ query: { syncSince: syncDate } }, res);
+
+      expect(AlbumModel.find).toHaveBeenCalledWith(
+        { updatedAt: { $gte: expect.any(Date) } },
+        null
+      );
+      expect(res.status).toHaveBeenCalledWith(200);
+    });
+
+    it("should return empty array when syncSince is in the future", async () => {
+      AlbumModel.find = jest.fn().mockResolvedValue([]);
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+      const futureDate = new Date(Date.now() + 86400000 * 365).toISOString();
+
+      await getAllOrSearchAlbums({ query: { syncSince: futureDate } }, res);
+
+      expect(AlbumModel.find).toHaveBeenCalledWith(
+        { updatedAt: { $gte: expect.any(Date) } },
+        null
+      );
+      expect(res.json).toHaveBeenCalledWith([]);
+    });
+
+    it("should combine syncSince with search query", async () => {
+      AlbumModel.find = jest.fn().mockResolvedValue([]);
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+
+      await getAllOrSearchAlbums({ query: { q: "Grace", syncSince: "2025-01-01T00:00:00.000Z" } }, res);
+
+      expect(AlbumModel.find).toHaveBeenCalledWith(
+        { name: { $regex: expect.any(RegExp) }, updatedAt: { $gte: expect.any(Date) } },
+        null
+      );
+    });
   });
 });

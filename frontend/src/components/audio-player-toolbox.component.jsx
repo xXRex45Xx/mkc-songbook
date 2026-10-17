@@ -12,6 +12,7 @@ import { buttonTheme } from "../config/button-theme.config";
 import TextSizeSvg from "../assets/text-size.svg?react";
 import PresentationSvg from "../assets/presentation.svg?react";
 import QueueSvg from "../assets/queue.svg?react";
+import DownloadAudio from "./download-audio.component.jsx";
 import { useState } from "react";
 import SongsTable from "./songs-table.component";
 import {
@@ -88,6 +89,13 @@ const AudioPlayerToolbox = () => {
 	return (
 		<>
 			<div className="hidden md:flex px-5 justify-center items-center gap-7">
+				{queue[currentSongIdx]?.hasAudio && (
+					<DownloadAudio
+						songId={queue[currentSongIdx]._id}
+						songTitle={queue[currentSongIdx].title}
+						hasAudio={queue[currentSongIdx].hasAudio}
+					/>
+				)}
 				<Tooltip content="Queue">
 					<Button
 						className="focus:ring-0"

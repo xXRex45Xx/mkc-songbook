@@ -20,6 +20,10 @@ export default defineConfig({
 				"apple-touch-icon.png",
 				"maskable_icon.png",
 			],
+			devOptions: {
+				enabled: false,
+				type: "module"
+			},
 			manifest: {
 				name: "MKC Choir Songbook",
 				short_name: "MKC Songbook",
@@ -29,19 +33,19 @@ export default defineConfig({
 						src: "/android-chrome-192x192.png",
 						sizes: "192x192",
 						type: "image/png",
-						purpose: "favicon",
+						purpose: "any",
 					},
 					{
 						src: "/android-chrome-512x512.png",
 						sizes: "512x512",
 						type: "image/png",
-						purpose: "favicon",
+						purpose: "any",
 					},
 					{
 						src: "/apple-touch-icon.png",
 						sizes: "180x180",
 						type: "image/png",
-						purpose: "apple touch icon",
+						purpose: "any",
 					},
 					{
 						src: "/maskable_icon.png",
@@ -55,7 +59,31 @@ export default defineConfig({
 				display: "standalone",
 				scope: "/",
 				start_url: "/",
-				orientation: "portrait-primary",
+			},
+			workbox: {
+				runtimeCaching: [
+					{
+						urlPattern: /\/api\/song\/.*\/audio/i,
+						handler: "NetworkOnly",
+					},
+					{
+						urlPattern: /\/api\/song.*/i,
+						handler: "NetworkFirst",
+						options: {
+							cacheName: "api-songs",
+							networkTimeoutSeconds: 10,
+						},
+					},
+					{
+						urlPattern: /\/api\/album.*/i,
+						handler: "NetworkFirst",
+						options: {
+							cacheName: "api-albums",
+							networkTimeoutSeconds: 10,
+						},
+					},
+				],
+				navigateFallbackDenylist: [/^\/api/],
 			},
 		}),
 	],

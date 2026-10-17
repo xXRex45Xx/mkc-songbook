@@ -36,10 +36,12 @@ import fs from "fs";
  * @throws {ServerFaultError} If database query fails due to server-side issues or database errors with detailed context
  */
 export const getAllOrSearchSongs = async (req, res) => {
-	const { q, page = 1, all, type, sortBy } = req.query;
+	const { q, page = 1, all, type, sortBy, syncSince } = req.query;
 	let songs, totalPages;
 	const projection = "title songFilePath";
-	if (all) songs = await SongModel.find();
+	let filter = {};
+	if (syncSince) filter.updatedAt = { $gte: new Date(syncSince) };
+	if (all) songs = await SongModel.find(filter);
 	else if (!q) {
 		songs = await SongModel.find({}, projection)
 			.sort(sortBy)

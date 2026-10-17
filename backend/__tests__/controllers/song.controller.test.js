@@ -217,7 +217,7 @@ describe("song controller", () => {
 
     await getAllOrSearchSongs({ query: { all: true } }, res);
 
-    expect(SongModel.find).toHaveBeenCalledWith();
+    expect(SongModel.find).toHaveBeenCalledWith({});
     expect(res.json).toHaveBeenCalledWith({
       songs: [
         { _id: "song-001", title: "Song 1", hasAudio: true, songFilePath: undefined },
@@ -286,5 +286,46 @@ describe("song controller", () => {
 
     expect(req.error.fileDeleteError).toBeInstanceOf(Error);
     expect(songInDb.save).toHaveBeenCalledTimes(1);
+  });
+
+  describe("getAllOrSearchSongs with syncSince", () => {
+    it("should return all songs when syncSince is absent and all=true", async () => {
+      SongModel.find = jest.fn().mockResolvedValue([
+        { _doc: { _id: "song-001", title: "Song 1", songFilePath: "/tmp/a.mp3" }, songFilePath: "/tmp/a.mp3" },
+        { _doc: { _id: "song-002", title: "Song 2", songFilePath: null }, songFilePath: null },
+      ]);
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+
+      await getAllOrSearchSongs({ query: { all: true } }, res);
+
+      expect(SongModel.find).toHaveBeenCalledWith({});
+    });
+
+    it("should filter songs by syncSince when all=true and syncSince is provided", async () => {
+      SongModel.find = jest.fn().mockResolvedValue([
+        { _doc: { _id: "song-001", title: "Updated Song", songFilePath: "/tmp/a.mp3" }, songFilePath: "/tmp/a.mp3" },
+      ]);
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+      const syncDate = "2025-01-01T00:00:00.000Z";
+
+      await getAllOrSearchSongs({ query: { all: true, syncSince: syncDate } }, res);
+
+      expect(SongModel.find).toHaveBeenCalledWith(
+        { updatedAt: { $gte: expect.any(Date) } }
+      );
+    });
+
+    it("should return empty array when syncSince is in the future", async () => {
+      SongModel.find = jest.fn().mockResolvedValue([]);
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+      const futureDate = new Date(Date.now() + 86400000 * 365).toISOString();
+
+      await getAllOrSearchSongs({ query: { all: true, syncSince: futureDate } }, res);
+
+      expect(SongModel.find).toHaveBeenCalledWith(
+        { updatedAt: { $gte: expect.any(Date) } }
+      );
+      expect(res.json).toHaveBeenCalledWith({ songs: [], totalPages: undefined });
+    });
   });
 });

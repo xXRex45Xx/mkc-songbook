@@ -102,6 +102,21 @@ export const getAlbum = async (id) => {
 };
 
 /**
+ * Fetches albums updated since a given timestamp for delta sync
+ * @param {string} timestamp - ISO date string for syncSince filter
+ * @returns {Promise<Array>} Updated albums data from the server
+ * @throws {Object} Error with message and status if request fails
+ */
+export const getAlbumsSince = async (timestamp) => {
+	const response = await fetch(
+		`${backendURL}/api/album?syncSince=${encodeURIComponent(timestamp)}`
+	);
+	const data = await response.json();
+	if (!response.ok) throw { message: data.message, status: response.status };
+	return data;
+};
+
+/**
  * Deletes an album by ID
  * @param {string} id - ID of album to delete
  * @param {string} token - Authentication token (defaults to token in localStorage)

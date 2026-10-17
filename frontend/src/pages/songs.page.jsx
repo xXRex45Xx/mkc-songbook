@@ -1,6 +1,7 @@
 /**
  * @fileoverview Songs listing page component
  * Displays all songs with sorting and search functionality
+ * Uses IndexedDB-first loading with background network sync
  */
 
 import MainBodyContainer from "../components/main-body-container.component";
@@ -11,6 +12,8 @@ import { Suspense } from "react";
 import SongsTable from "../components/songs-table.component";
 import CustomTailSpin from "../components/custom-tail-spin.component";
 import AdminHelper from "../components/admin-helper.component";
+import { songIdbService } from "../utils/db/song-idb-service.util";
+import { syncSongs } from "../utils/pwa/sync-service.util";
 
 /**
  * Songs Page Component
@@ -53,14 +56,14 @@ export default SongsPage;
 
 /**
  * Route loader for songs listing page
- * Fetches songs with optional search query, type filter, and sorting
+ * Uses IndexedDB-first approach: returns local data immediately, syncs in background
+ * Falls back to network-only for search/sort queries that IndexedDB can't handle
  *
  * @param {Object} params - Route parameters
  * @param {Request} params.request - HTTP request
  * @returns {Promise<{songData: Object}>} Resolves to songs and pagination data
- * @throws {Error} 401: Unauthenticated
  */
-export const loader = ({ request }) => {
+export const loader = async ({ request }) => {
 	const searchParams = new URL(request.url).searchParams;
 	const page = searchParams.get("page");
 	const searchQuery = {
@@ -68,6 +71,33 @@ export const loader = ({ request }) => {
 		type: searchParams.get("type"),
 		sortBy: searchParams.get("sortby"),
 	};
+
+	const hasSearchParams = searchQuery.q || searchQuery.sortBy;
+
+	if (hasSearchParams) {
+		return defer({
+			songData: getAllOrSearchSongs(searchQuery, page ? page : 1),
+		});
+	}
+
+	try {
+		const localSongs = await songIdbService.getAll();
+		if (localSongs && localSongs.length > 0) {
+			syncSongs().catch(() => {});
+			return defer({
+				songData: {
+					songs: localSongs.map((song) => ({
+						...song,
+						songFilePath: undefined,
+					})),
+					totalPages: 1,
+				},
+			});
+		}
+	} catch (e) {
+		console.error("Failed to load songs from IndexedDB:", e);
+	}
+
 	return defer({
 		songData: getAllOrSearchSongs(searchQuery, page ? page : 1),
 	});

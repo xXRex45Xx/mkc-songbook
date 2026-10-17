@@ -165,6 +165,33 @@ export const patchSong = async (
 };
 
 /**
+ * Fetches all songs for PWA sync
+ * @returns {Promise<Object>} All songs data from the server
+ * @throws {Object} Error with message and status if request fails
+ */
+export const getAllSongs = async () => {
+	const response = await fetch(`${backendURL}/api/song?all=true`);
+	const data = await response.json();
+	if (!response.ok) throw { message: data.message, status: response.status };
+	return data;
+};
+
+/**
+ * Fetches songs updated since a given timestamp for delta sync
+ * @param {string} timestamp - ISO date string for syncSince filter
+ * @returns {Promise<Object>} Updated songs data from the server
+ * @throws {Object} Error with message and status if request fails
+ */
+export const getSongsSince = async (timestamp) => {
+	const response = await fetch(
+		`${backendURL}/api/song?all=true&syncSince=${encodeURIComponent(timestamp)}`
+	);
+	const data = await response.json();
+	if (!response.ok) throw { message: data.message, status: response.status };
+	return data;
+};
+
+/**
  * Deletes a song by ID
  * @param {string} songId - ID of song to delete
  * @param {string} token - Authentication token (defaults to token in localStorage)

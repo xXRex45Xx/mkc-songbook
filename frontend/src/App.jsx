@@ -7,6 +7,7 @@ import { Await, Outlet, defer, useLoaderData } from "react-router-dom";
 import "./App.css";
 import Header from "./components/header.component";
 import AudioPlayer from "./components/audio-player.component";
+import PwaStatus from "./components/pwa-status.component";
 import store from "./store/store";
 import { getCurrentLoggedInUser } from "./utils/api/user-api.util";
 import { setAdminType, setCurrentUser } from "./store/slices/user.slice";
@@ -37,6 +38,7 @@ function App() {
 		<Suspense fallback={<CustomTailSpin />}>
 			<Await resolve={data?.user}>
 				{!hiddenHeader && <Header />}
+				<PwaStatus />
 				<Outlet />
 				{!["admin", "super-admin"].includes(user?.role) &&
 					queue &&

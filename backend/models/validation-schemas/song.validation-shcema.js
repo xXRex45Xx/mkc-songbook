@@ -28,6 +28,7 @@ export const getAllSongsQuerySchema = Joi.object({
 	type: Joi.string().allow("all", "title", "lyrics", "id").only().optional(),
 	all: Joi.boolean().optional(),
 	sortBy: Joi.string().valid("A-Z", "Number", "Recently Added").optional(),
+	syncSince: Joi.string().isoDate().optional(),
 })
 	.oxor("q", "all")
 	.and("q", "type")

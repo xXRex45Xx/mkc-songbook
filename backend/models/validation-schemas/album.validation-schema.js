@@ -58,4 +58,5 @@ export const getAlbumParamsSchema = Joi.object({
 export const getAllAlbumsQuerySchema = Joi.object({
 	q: Joi.string().max(100).optional(),
 	names: Joi.bool().optional(),
+	syncSince: Joi.string().isoDate().optional(),
 }).required();

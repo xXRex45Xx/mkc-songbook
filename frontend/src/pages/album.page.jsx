@@ -1,6 +1,7 @@
 /**
  * @fileoverview Album detail page component
  * Displays detailed view of a single album with its songs
+ * Uses IndexedDB-first loading with background network sync
  */
 
 import { Await, defer, useLoaderData } from "react-router-dom";
@@ -9,6 +10,7 @@ import { getAlbum } from "../utils/api/album-api.util";
 import { Suspense } from "react";
 import CustomTailSpin from "../components/custom-tail-spin.component";
 import AlbumViewer from "../components/album-viewer.component";
+import { albumIdbService } from "../utils/db/album-idb-service.util";
 
 /**
  * Album Page Component
@@ -37,13 +39,32 @@ export default AlbumPage;
 
 /**
  * Route loader for album detail page
- * Fetches album data by album ID
+ * Uses IndexedDB-first approach: tries local data first, then fetches fresh data
  *
  * @param {Object} params - Route parameters
  * @param {string} params.albumId - The album identifier
  * @returns {Promise<{album: Object}>} Resolves to album data
- * @throws {Error} 404: Album not found
  */
-export const loader = ({ params }) => {
-	return defer({ album: getAlbum(params.albumId) });
+export const loader = async ({ params }) => {
+	const refreshAlbum = () =>
+		getAlbum(params.albumId)
+			.then((freshAlbum) => albumIdbService.bulkPut([freshAlbum]))
+			.catch(() => {});
+
+	try {
+		const localAlbum = await albumIdbService.getById(params.albumId);
+		// The album store is seeded from the list endpoint, which strips the
+		// `songs` array. Only serve from cache when it is complete enough to
+		// render the detail page without throwing.
+		if (localAlbum && Array.isArray(localAlbum.songs)) {
+			refreshAlbum();
+			return defer({ album: localAlbum });
+		}
+	} catch (e) {
+		console.error("Failed to load album from IndexedDB:", e);
+	}
+
+	const freshAlbum = getAlbum(params.albumId);
+	refreshAlbum();
+	return defer({ album: freshAlbum });
 };

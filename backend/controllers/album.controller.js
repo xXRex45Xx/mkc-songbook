@@ -37,11 +37,14 @@ import fs from "fs";
  * This example retrieves album names matching "Amazing" with pagination.
  */
 export const getAllOrSearchAlbums = async (req, res) => {
-	const { names, q } = req.query;
+	const { names, q, syncSince } = req.query;
 	let regex;
 	if (q) regex = new RegExp(regexBuilder(q), "i");
+	const filter = {};
+	if (q) filter.name = { $regex: regex };
+	if (syncSince) filter.updatedAt = { $gte: new Date(syncSince) };
 	let albums = await AlbumModel.find(
-		q ? { name: { $regex: regex } } : {},
+		filter,
 		names ? { name: true } : null
 	);
 	if (!names)
@@ -198,6 +201,7 @@ export const updateAlbum = async (req, res) => {
 	albumInDb.name = album.title;
 	albumInDb.songs = album.songs;
 	albumInDb.createdAt = album.createdAt ?? albumInDb.createdAt;
+	albumInDb.updatedAt = new Date();
 
 	if (id != album.id) {
 		await AlbumModel.findByIdAndDelete(albumInDb._id);
@@ -211,6 +215,7 @@ export const updateAlbum = async (req, res) => {
 				: albumInDb.photoLink,
 			songs: album.songs,
 			createdAt: albumInDb.createdAt,
+			updatedAt: new Date(),
 		});
 	} else await albumInDb.save();
 

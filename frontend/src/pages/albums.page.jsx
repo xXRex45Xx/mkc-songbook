@@ -1,6 +1,7 @@
 /**
  * @fileoverview Albums listing page component
  * Displays all albums with search functionality
+ * Uses IndexedDB-first loading with background network sync
  */
 
 import MainBodyContainer from "../components/main-body-container.component";
@@ -11,6 +12,8 @@ import { Suspense } from "react";
 import CustomTailSpin from "../components/custom-tail-spin.component";
 import backendURL from "../config/backend-url.config";
 import AdminHelper from "../components/admin-helper.component";
+import { albumIdbService } from "../utils/db/album-idb-service.util";
+import { syncAlbums } from "../utils/pwa/sync-service.util";
 
 /**
  * Albums Page Component
@@ -58,15 +61,30 @@ export default AlbumsPage;
 
 /**
  * Route loader for albums listing page
- * Fetches all albums with optional search query
+ * Uses IndexedDB-first approach: returns local data immediately, syncs in background
+ * Falls back to network-only for search queries
  *
  * @param {Object} params - Route parameters
  * @param {Request} params.request - HTTP request
  * @returns {Promise<{albumData: Array<Object>}>} Resolves to album list
- * @throws {Error} 401: Unauthenticated
  */
-export const loader = ({ request }) => {
+export const loader = async ({ request }) => {
 	const searchParams = new URL(request.url).searchParams;
 	const searchQuery = { q: searchParams.get("q") };
+
+	if (searchQuery.q) {
+		return defer({ albumData: getAllAlbums(false, searchQuery) });
+	}
+
+	try {
+		const localAlbums = await albumIdbService.getAll();
+		if (localAlbums && localAlbums.length > 0) {
+			syncAlbums().catch(() => {});
+			return defer({ albumData: localAlbums });
+		}
+	} catch (e) {
+		console.error("Failed to load albums from IndexedDB:", e);
+	}
+
 	return defer({ albumData: getAllAlbums(false, searchQuery) });
 };
