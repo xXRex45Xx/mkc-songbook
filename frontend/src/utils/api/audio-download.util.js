@@ -1,26 +1,63 @@
 /**
  * @fileoverview Audio download utility
- * Provides functions for downloading and caching audio files for offline playback
+ * Provides the single save-and-download entry point for the download button,
+ * plus read helpers for the offline audio player.
  */
 
 import backendURL from "../../config/backend-url.config";
 import { audioIdbService } from "../db/audio-idb-service.util";
+import { songIdbService } from "../db/song-idb-service.util";
 
 /**
- * Downloads an audio file for a song and triggers a device download
- * Uses File System Access API (showSaveFilePicker) when available for better UX
- * Falls back to blob URL + anchor click for other browsers
+ * Fetches a song's audio as a Blob
  *
  * @param {string} songId - Song identifier
- * @param {string} songTitle - Song title used for the downloaded filename
- * @returns {Promise<void>}
- * @throws {Error} If fetch fails or download cannot be initiated
+ * @returns {Promise<{blob: Blob, mimeType: string}>} Audio bytes and content type
+ * @throws {Error} If the request fails
+ * @private
  */
-export const downloadAudioFile = async (songId, songTitle) => {
+const fetchAudioBlob = async (songId) => {
 	const response = await fetch(`${backendURL}/api/song/${songId}/audio`);
 	if (!response.ok) throw new Error("Failed to fetch audio file");
 	const blob = await response.blob();
+	return {
+		blob,
+		mimeType: blob.type || response.headers.get("content-type") || "",
+	};
+};
 
+/**
+ * Reads the song record's remote updatedAt at save time so staleness can be
+ * checked against the song record later.
+ *
+ * @param {string} songId - Song identifier
+ * @returns {Promise<string>} Remote updatedAt, or "" when it cannot be read
+ * @private
+ */
+const lookupRemoteUpdatedAt = async (songId) => {
+	try {
+		const song = await songIdbService.getById(songId);
+		return song?.updatedAt || "";
+	} catch (err) {
+		console.warn("Could not look up song updatedAt for audio cache:", err);
+		return "";
+	}
+};
+
+/**
+ * Writes a Blob to the device. Uses the File System Access API
+ * (showSaveFilePicker) when available, falls back to blob URL + anchor click.
+ *
+ * Resolves "aborted" when the user dismisses the save dialog; the caller keeps
+ * the offline copy in that case.
+ *
+ * @param {Blob} blob - Audio bytes to write
+ * @param {string} songTitle - Song title used for the filename
+ * @returns {Promise<"saved"|"aborted"|"fallback">} Outcome of the device write
+ * @throws {Error} If the fallback write cannot be initiated
+ * @private
+ */
+const saveBlobToDevice = async (blob, songTitle) => {
 	if (window.showSaveFilePicker) {
 		try {
 			const handle = await window.showSaveFilePicker({
@@ -35,9 +72,9 @@ export const downloadAudioFile = async (songId, songTitle) => {
 			const writable = await handle.createWritable();
 			await writable.write(blob);
 			await writable.close();
-			return;
+			return "saved";
 		} catch (err) {
-			if (err.name === "AbortError") return;
+			if (err.name === "AbortError") return "aborted";
 		}
 	}
 
@@ -49,20 +86,40 @@ export const downloadAudioFile = async (songId, songTitle) => {
 	a.click();
 	document.body.removeChild(a);
 	URL.revokeObjectURL(url);
+	return "fallback";
 };
 
 /**
- * Fetches audio blob from server and caches it in IndexedDB for offline playback
+ * Saves a song's audio for offline playback and downloads it to the device.
+ *
+ * Single entry point for the download button: one fetch serves both outcomes.
+ * The IndexedDB copy is written first, so in-app offline playback survives even
+ * when the user dismisses the device save dialog.
  *
  * @param {string} songId - Song identifier
- * @returns {Promise<void>}
- * @throws {Error} If fetch fails or caching fails
+ * @param {string} songTitle - Song title used for the downloaded filename
+ * @returns {Promise<{device: "saved"|"aborted"|"fallback"}>} Device write outcome
+ * @throws {Error} If the fetch or the IndexedDB write fails
+ * @example
+ * ```javascript
+ * const { device } = await saveAndDownloadAudio(song._id, song.title);
+ * ```
  */
-export const cacheAudioForOffline = async (songId) => {
-	const response = await fetch(`${backendURL}/api/song/${songId}/audio`);
-	if (!response.ok) throw new Error("Failed to fetch audio file");
-	const blob = await response.blob();
-	await audioIdbService.store(songId, blob);
+export const saveAndDownloadAudio = async (songId, songTitle) => {
+	const { blob, mimeType } = await fetchAudioBlob(songId);
+	const remoteUpdatedAt = await lookupRemoteUpdatedAt(songId);
+
+	await audioIdbService.store(songId, {
+		_id: songId,
+		songId,
+		blob,
+		updatedAt: remoteUpdatedAt,
+		size: typeof blob.size === "number" ? blob.size : 0,
+		mimeType,
+	});
+
+	const device = await saveBlobToDevice(blob, songTitle);
+	return { device };
 };
 
 /**
@@ -72,5 +129,40 @@ export const cacheAudioForOffline = async (songId) => {
  * @returns {Promise<Blob|null>} Audio Blob or null if not cached
  */
 export const getOfflineAudioBlob = async (songId) => {
-	return audioIdbService.get(songId);
+	const entry = await audioIdbService.getWithMeta(songId);
+	return entry ? entry.blob : null;
+};
+
+/**
+ * Retrieves cached audio metadata (including stored updatedAt) for a song
+ *
+ * @param {string} songId - Song identifier
+ * @returns {Promise<Object|null>} Metadata object or null if not cached
+ */
+export const getOfflineAudioMeta = async (songId) => {
+	return audioIdbService.getWithMeta(songId);
+};
+
+/**
+ * Determines whether a cached audio file is stale relative to the song record
+ * A copy is stale when the song record's updatedAt is newer than the stored
+ * updatedAt recorded at save time.
+ *
+ * @param {string} songId - Song identifier
+ * @returns {Promise<boolean>} True if a local copy exists but is stale
+ */
+export const isAudioStale = async (songId) => {
+	const meta = await audioIdbService.getWithMeta(songId);
+	if (!meta) return false;
+	if (!meta.updatedAt) return false;
+	let remoteUpdatedAt = "";
+	try {
+		const song = await songIdbService.getById(songId);
+		if (song && song.updatedAt) remoteUpdatedAt = song.updatedAt;
+	} catch (err) {
+		console.warn("Could not look up song updatedAt for staleness check:", err);
+		return false;
+	}
+	if (!remoteUpdatedAt) return false;
+	return new Date(remoteUpdatedAt) > new Date(meta.updatedAt);
 };

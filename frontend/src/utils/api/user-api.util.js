@@ -1,4 +1,5 @@
 import backendURL from "../../config/backend-url.config";
+import { sendMutation } from "../pwa/write-queue.util";
 import { emailRegex } from "../regex.util";
 
 /**
@@ -318,7 +319,8 @@ export const updateFavoriteSongs = async (
 		throw { message: "Invalid request.", status: 400 };
 	if (typeof removeSongs === "string") removeSongs = [removeSongs];
 	if (typeof addSongs === "string") addSongs = [addSongs];
-	const response = await fetch(`${backendURL}/api/user/update-favorites`, {
+	const data = await sendMutation({
+		url: `${backendURL}/api/user/update-favorites`,
 		method: "PATCH",
 		body: JSON.stringify({
 			favorites: favorites ? favorites : undefined,
@@ -329,11 +331,13 @@ export const updateFavoriteSongs = async (
 			Authorization: `Bearer ${token}`,
 			"Content-Type": "application/json",
 		},
+		label: "Update favorites",
 	});
 
-	const data = await response.json();
-	if (!response.ok) throw { message: data.message, status: response.status };
-	if (!data.updated) throw { message: "An unexpected error occurred." };
+	// Queued offline: the local Redux state already carries the change, and
+	// the replay happens on the next sync.
+	if (data?.queued) return;
+	if (!data?.updated) throw { message: "An unexpected error occurred." };
 };
 
 /**

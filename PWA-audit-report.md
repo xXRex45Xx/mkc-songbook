@@ -604,3 +604,37 @@ Correct `PWA-architecture.md` §5.1, §7.2, and §12 to match the code.
 - Workbox documentation: https://developer.chrome.com/docs/workbox
 - Web app manifest spec: https://www.w3.org/TR/appmanifest/
 - Project docs: `PWA-architecture.md`, `PWA-plan.md`
+
+---
+
+## Appendix D — Post-Audit Remediation (2026-10-17)
+
+This section records the changes made after the audit ran against commit `fa2f32c`. It is not a re-audit: the findings above remain accurate for that commit. The remediation targeted the critical flaws and the logic defects that were still open after the initial PWA commit (`3e5e3a3`).
+
+### Critical flaws closed
+
+| Flaw | Where | What changed |
+|------|-------|--------------|
+| C2 — songs/playlist query strings | `frontend/src/utils/api/songs-api.util.js`, `playlist-api.util.js` | Hand-built `&q=`/`&type=`/`&page=` replaced with `URLSearchParams`. |
+| C4 — album cover images | `frontend/vite.config.js` | `CacheFirst` rule for `/static/albums/images` (120 entries, 30 days, `cacheableResponse`). |
+| C5 — playlists & favourites offline | `frontend/vite.config.js` | `NetworkFirst` rules for `/api/playlist`, `/api/playlist/:id`, `/api/user/favorites`. |
+| C6 — local playlist auto-upload | `frontend/src/utils/api/local-playlist-api.util.js`, `pwa-register.util.js` | `createLocalPlaylist` enqueues the id; `performSync` drains unsynced playlists via `syncAllUnsyncedPlaylists` before the delta sync. |
+| C7 — service worker in dev | `frontend/vite.config.js` | `devOptions.enabled: true`. Verified `/dev-sw.js?dev-sw` and `/manifest.webmanifest` respond under `npm run dev`. |
+| C9 — offline audio messaging, blob lifetime, `crossOrigin` | `frontend/src/components/audio-player.component.jsx` | `audioUnavailable` state + message; `safePlay()` wraps `play()`; previous blob URL revoked only after `onCanPlay`; `crossOrigin` applied only to streamed URLs. |
+| C11 — install UI & manifest | `frontend/src/utils/pwa/install.util.js`, `install-prompt.component.jsx`, `header.component.jsx`, `vite.config.js`, `index.html` | `beforeinstallprompt`/`appinstalled` capture, Install button, iOS Add-to-Home-Screen line; manifest gains `id`, `display_override`, `orientation`, `categories`, `shortcuts`, `?source=pwa`, separate `any`/`maskable` 192+512 icons; ICO/PNG favicon links. |
+
+### Logic defects closed
+
+`L1` `totalPages` off-by-one → `Math.max(1, Math.ceil(...))` at three call sites in `song.controller.js`. `L2` offline pagination → `songs.page.jsx` slices the local result by `page` and reports `totalPages` from the slice length. `L6` `onRegisterError` → new `setSwError` reducer, reported separately from `setSyncError`. `L7` update poll → cleared on `visibilitychange` hidden, restored on visible. `L9` `getMaxUpdatedAt` → index cursor in descending order for both songs and albums. `L10` blob URL race → hold-alive `pendingBlobUrlRef`, release on `onCanPlay`. `L11` `autoPlay` → removed, `safePlay()` catches `NotSupportedError`. `L13`/`L14`/`L16` CORS → `getAllowedOrigins()` defaults to `[]`, normalizes trailing slashes, echoes the request origin, logs rejections; static-image route echoes a single valid origin. `L15` `crossOrigin` → dropped for `blob:` URLs. `L19` `bulkPut` → batched in 50 for both songs and albums. `L21` `album-viewer` → `hasAudio: song.hasAudio ?? Boolean(song.songFilePath)`. `L22` → `createdAt` index added to the `songs` store.
+
+### Deliberately left open
+
+- **C12 (no HTTPS/deploy config):** the beta frontend runs on Cloudflare Pages and the backend runs in Docker on a server, with HTTPS provided by the platform. Plain HTTP in the repo is only for local development, so the item is not applicable to the repository as committed.
+- **L8 (cursor record re-fetched forever):** kept at `$gte` because the existing backend tests assert a `$gte` filter and the duplicate record is idempotent on upsert. The cost is bandwidth, not correctness; a migration to `$gt` needs the tests changed in the same commit.
+- **B14, B19, B20 (performance budget, frontend tests, stale docs):** out of scope for this remediation pass. `PWA-architecture.md` §5.1, §7.2 and §12 were corrected to match the code.
+
+### Verification
+
+- `npm run build` (frontend) — 61 precache entries, `dist/manifest.webmanifest` carries the new manifest fields.
+- `npm run lint` (frontend) — diffed against the pre-change baseline: zero new findings.
+- `npm test` (backend) — 48 suites, 563 tests passing, including the `syncSince` and `idsOnly` controller tests.

@@ -189,4 +189,35 @@ describe("album controller", () => {
       );
     });
   });
+
+  describe("getAllOrSearchAlbums with idsOnly", () => {
+    it("should return only album ids when idsOnly is set", async () => {
+      const lean = jest.fn().mockResolvedValue([{ _id: "a1" }, { _id: "a2" }]);
+      AlbumModel.find = jest.fn().mockReturnValue({ lean });
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+
+      await getAllOrSearchAlbums({ query: { idsOnly: true } }, res);
+
+      expect(AlbumModel.find).toHaveBeenCalledWith({}, "_id");
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({ albumIds: ["a1", "a2"] });
+    });
+
+    it("should apply the syncSince filter when idsOnly is combined with syncSince", async () => {
+      const lean = jest.fn().mockResolvedValue([{ _id: "a1" }]);
+      AlbumModel.find = jest.fn().mockReturnValue({ lean });
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+
+      await getAllOrSearchAlbums(
+        { query: { idsOnly: true, syncSince: "2025-01-01T00:00:00.000Z" } },
+        res
+      );
+
+      expect(AlbumModel.find).toHaveBeenCalledWith(
+        { updatedAt: { $gte: expect.any(Date) } },
+        "_id"
+      );
+      expect(res.json).toHaveBeenCalledWith({ albumIds: ["a1"] });
+    });
+  });
 });

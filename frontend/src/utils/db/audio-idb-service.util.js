@@ -18,14 +18,34 @@ export const audioIdbService = {
   /**
    * Stores an audio Blob for a song
    *
-   * @param {string} songId - Song identifier
-   * @param {Blob} blob - Audio Blob to store
+   * Accepts either (songId, blob) or a full record object for backward
+   * compatibility. When a record object is passed it must include _id/songId.
+   *
+   * @param {string|Object} songIdOrRecord - Song identifier or full record
+   * @param {Blob} [blob] - Audio Blob to store (ignored when record passed)
    * @returns {Promise<void>}
    * @throws {Error} If database operation fails
    */
-  async store(songId, blob) {
+  async store(songIdOrRecord, blob) {
     const db = await getDB();
-    await db.put(STORE_NAME, { _id: songId, blob });
+    if (typeof songIdOrRecord === "object" && songIdOrRecord !== null) {
+      const record = songIdOrRecord;
+      await db.put(STORE_NAME, {
+        _id: record._id || record.songId,
+        songId: record.songId || record._id,
+        blob: record.blob,
+        updatedAt: record.updatedAt,
+        size: record.size,
+        mimeType: record.mimeType,
+      });
+    } else {
+      await db.put(STORE_NAME, {
+        _id: songIdOrRecord,
+        songId: songIdOrRecord,
+        blob,
+        updatedAt: new Date().toISOString(),
+      });
+    }
   },
 
   /**
@@ -64,6 +84,46 @@ export const audioIdbService = {
     const db = await getDB();
     const entry = await db.get(STORE_NAME, songId);
     return !!entry;
+  },
+
+  /**
+   * Retrieves a cached audio file for a song along with its metadata
+   *
+   * @param {string} songId - Song identifier
+   * @returns {Promise<Object|null>} Object with {_id, songId, blob, updatedAt, size, mimeType} or null
+   * @throws {Error} If database operation fails
+   */
+  async getWithMeta(songId) {
+    const db = await getDB();
+    const entry = await db.get(STORE_NAME, songId);
+    if (!entry) return null;
+    return {
+      _id: entry._id,
+      songId: entry.songId || entry._id,
+      blob: entry.blob,
+      updatedAt: entry.updatedAt || null,
+      size: typeof entry.size === "number" ? entry.size : null,
+      mimeType: entry.mimeType || "",
+    };
+  },
+
+  /**
+   * Retrieves metadata for all cached audio files
+   *
+   * @returns {Promise<Array<Object>>} Array of metadata objects
+   * @throws {Error} If database operation fails
+   */
+  async getAllMeta() {
+    const db = await getDB();
+    const entries = await db.getAll(STORE_NAME);
+    return entries.map((entry) => ({
+      _id: entry._id,
+      songId: entry.songId || entry._id,
+      blob: entry.blob,
+      updatedAt: entry.updatedAt || null,
+      size: typeof entry.size === "number" ? entry.size : null,
+      mimeType: entry.mimeType || "",
+    }));
   },
 
   /**

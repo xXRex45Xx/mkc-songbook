@@ -27,6 +27,7 @@ export const getAllSongsQuerySchema = Joi.object({
 	page: Joi.number().integer().min(1).optional(),
 	type: Joi.string().allow("all", "title", "lyrics", "id").only().optional(),
 	all: Joi.boolean().optional(),
+	idsOnly: Joi.boolean().optional(),
 	sortBy: Joi.string().valid("A-Z", "Number", "Recently Added").optional(),
 	syncSince: Joi.string().isoDate().optional(),
 })

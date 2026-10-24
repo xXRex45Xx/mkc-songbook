@@ -101,7 +101,10 @@ const AlbumViewer = ({ album }) => {
 				imgSrc={backendURL + album.photoLink}
 			/>
 			<SongsTable
-				songs={album.songs.map((song) => ({ ...song, hasAudio: true }))}
+				songs={album.songs.map((song) => ({
+					...song,
+					hasAudio: song.hasAudio ?? Boolean(song.songFilePath),
+				}))}
 				showOverflow
 				showPlayButton
 			/>

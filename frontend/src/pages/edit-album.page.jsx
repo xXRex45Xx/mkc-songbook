@@ -79,7 +79,9 @@ export const action = async ({ request, params }) => {
     const formData = await request.formData();
     try {
         const data = await addOrEditAlbum(formData, true, params.albumId);
-        if (!data || !data.updated)
+        // Queued while offline: the local cache still holds the previous
+        // version until the queue flushes, so treat it as a successful save.
+        if (!data?.queued && (!data || !data.updated))
             throw { status: 500, message: "An unexpected error occurred." };
         return redirect(`/albums/${formData.get("id")}`);
     } catch (error) {

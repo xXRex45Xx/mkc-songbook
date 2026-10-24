@@ -1,4 +1,5 @@
 import backendURL from "../../config/backend-url.config";
+import { sendMutation } from "../pwa/write-queue.util";
 
 /**
  * @fileoverview Playlist API utility functions
@@ -26,11 +27,13 @@ export const getAllPlaylists = async (
 		response = await fetch(`${backendURL}/api/playlist?myPlaylists=true`, {
 			headers: { Authorization: `Bearer ${token}` },
 		});
-	else
+	else {
+		const params = new URLSearchParams();
+		params.set("page", String(page));
+		if (searchQuery?.q) params.set("q", searchQuery.q);
+
 		response = await fetch(
-			`${backendURL}/api/playlist?page=${page}${
-				searchQuery?.q ? "&q=" + searchQuery.q : ""
-			}`,
+			`${backendURL}/api/playlist?${params.toString()}`,
 			{
 				headers: token
 					? {
@@ -39,6 +42,7 @@ export const getAllPlaylists = async (
 					: undefined,
 			}
 		);
+	}
 	const data = await response.json();
 	if (!response.ok) throw { message: data.message, status: response.status };
 	return data;
@@ -69,23 +73,20 @@ export const addOrEditPlaylist = async (
 
 	if (errorOccured) throw error;
 
-	const response = await fetch(
-		`${backendURL}/api/playlist${edit ? "/" + playlistId : ""}`,
-		{
-			method: edit ? "PUT" : "POST",
-			body: JSON.stringify({
-				name: formData.get("name"),
-				visibility: formData.get("visibility"),
-				songs: formData.getAll("songs"),
-			}),
-			headers: {
-				Authorization: `Bearer ${token}`,
-				"Content-Type": "application/json",
-			},
-		}
-	);
-	const data = await response.json();
-	if (!response.ok) throw { message: data.message, status: response.status };
+	const data = await sendMutation({
+		url: `${backendURL}/api/playlist${edit ? "/" + playlistId : ""}`,
+		method: edit ? "PUT" : "POST",
+		body: JSON.stringify({
+			name: formData.get("name"),
+			visibility: formData.get("visibility"),
+			songs: formData.getAll("songs"),
+		}),
+		headers: {
+			Authorization: `Bearer ${token}`,
+			"Content-Type": "application/json",
+		},
+		label: edit ? `Update playlist ${playlistId}` : "Create playlist",
+	});
 
 	return data;
 };
@@ -110,7 +111,8 @@ export const patchPlaylist = async (
 	if (!visibility && !addSongs && !removeSongs)
 		throw { message: "Invalid request.", status: 400 };
 	if (typeof removeSongs === "string") removeSongs = [removeSongs];
-	const response = await fetch(`${backendURL}/api/playlist/${playlistId}`, {
+	const data = await sendMutation({
+		url: `${backendURL}/api/playlist/${playlistId}`,
 		method: "PATCH",
 		body: JSON.stringify({
 			visibility: visibility ? visibility : undefined,
@@ -121,11 +123,11 @@ export const patchPlaylist = async (
 			Authorization: `Bearer ${token}`,
 			"Content-Type": "application/json",
 		},
+		label: `Update playlist ${playlistId}`,
 	});
 
-	const data = await response.json();
-	if (!response.ok) throw { message: data.message, status: response.status };
-	if (!data.updated) throw { message: "An unexpected error occurred." };
+	if (data?.queued) return;
+	if (!data?.updated) throw { message: "An unexpected error occurred." };
 };
 
 /**
@@ -165,18 +167,16 @@ export const deletePlaylist = async (
 ) => {
 	if (id.length === 0)
 		throw { message: "Playlist id is required.", status: 400 };
-	const response = await fetch(`${backendURL}/api/playlist/${id}`, {
+	const data = await sendMutation({
+		url: `${backendURL}/api/playlist/${id}`,
 		method: "DELETE",
 		headers: {
 			Authorization: `Bearer ${token}`,
 		},
+		label: `Delete playlist ${id}`,
 	});
-	const data = await response.json();
-	if (!response.ok)
-		throw {
-			message: "An unexpected error occurred.",
-			status: response.status,
-		};
-	if (!data.deleted)
+
+	if (data?.queued) return;
+	if (!data?.deleted)
 		throw { message: "An unexpected error occurred.", status: 500 };
 };

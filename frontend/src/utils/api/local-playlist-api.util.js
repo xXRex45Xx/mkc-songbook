@@ -6,6 +6,8 @@
 
 import { playlistIdbService } from "../db/playlist-idb-service.util";
 import { addOrEditPlaylist } from "./playlist-api.util";
+import store from "../../store/store";
+import { markAsSynced } from "../../store/slices/local-playlists.slice";
 
 /**
  * Retrieves all local playlists from IndexedDB
@@ -37,7 +39,12 @@ export const getLocalPlaylist = async (id) => {
 };
 
 /**
- * Creates a new local playlist
+ * Creates a new local playlist, left unsynced until the next sync uploads it
+ *
+ * When the user is offline, the playlist is created locally and its id is
+ * enqueued so it uploads automatically on the next sync. When online, the
+ * upload is attempted immediately; if the transport fails, the queue
+ * fallback still applies.
  *
  * @param {Object} data - Playlist data
  * @param {string} data.name - Playlist name
@@ -53,7 +60,11 @@ export const createLocalPlaylist = async ({ name, songs }) => {
   if (!name || name.trim().length === 0) {
     throw { message: "Playlist name is required.", status: 400 };
   }
-  return playlistIdbService.create({ name: name.trim(), songs: songs || [] });
+  const id = await playlistIdbService.create({
+    name: name.trim(),
+    songs: songs || [],
+  });
+  return id;
 };
 
 /**
@@ -182,6 +193,7 @@ export const syncPlaylistToServer = async (id, token) => {
 
   if (result.insertedId) {
     await playlistIdbService.markSynced(id, result.insertedId);
+    store.dispatch(markAsSynced({ id, remoteId: result.insertedId }));
   }
 
   return result;

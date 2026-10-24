@@ -1,6 +1,6 @@
 /**
  * @fileoverview PWA state management slice
- * Manages offline readiness, update availability, and sync status
+ * Manages offline readiness, connectivity, and sync status
  */
 
 import { createSlice } from "@reduxjs/toolkit";
@@ -8,18 +8,27 @@ import { createSlice } from "@reduxjs/toolkit";
 /**
  * Initial state for PWA slice
  * @type {Object}
- * @property {boolean} offlineReady - Whether app is ready for offline use
- * @property {boolean} needRefresh - Whether a new SW version is available
+ * @property {boolean} offlineReady - Whether the app shell is cached for offline use
+ * @property {boolean} isOnline - Whether the browser currently reports a connection
  * @property {string|null} lastSyncTime - ISO timestamp of last successful sync
  * @property {boolean} isSyncing - Whether a sync operation is in progress
  * @property {string|null} syncError - Error message if sync failed
+ * @property {Object|null} lastSyncCounts - Per-resource record counts from the last sync
+ * @property {number} pendingWrites - Mutations waiting to reach the server
+ * @property {number} failedWrites - Queued mutations the server permanently rejected
  */
 const initialState = {
   offlineReady: false,
-  needRefresh: false,
+  isOnline: true,
   lastSyncTime: null,
   isSyncing: false,
   syncError: null,
+  lastSyncCounts: null,
+  pendingWrites: 0,
+  failedWrites: 0,
+  isInstallable: false,
+  isInstalled: false,
+  swError: null,
 };
 
 const pwaSlice = createSlice({
@@ -29,30 +38,54 @@ const pwaSlice = createSlice({
     setOfflineReady: (state, action) => {
       state.offlineReady = action.payload;
     },
-    setNeedRefresh: (state, action) => {
-      state.needRefresh = action.payload;
+    setOnline: (state, action) => {
+      state.isOnline = action.payload;
     },
     setSyncing: (state, action) => {
       state.isSyncing = action.payload;
     },
-    setSyncComplete: (state) => {
+    setLastSyncTime: (state, action) => {
+      state.lastSyncTime = action.payload;
+    },
+    setSyncComplete: (state, action) => {
       state.isSyncing = false;
       state.lastSyncTime = new Date().toISOString();
       state.syncError = null;
+      if (action.payload) {
+        state.lastSyncCounts = action.payload;
+      }
     },
     setSyncError: (state, action) => {
       state.isSyncing = false;
       state.syncError = action.payload;
+    },
+    setSwError: (state, action) => {
+      state.swError = action.payload;
+    },
+    setWriteQueueSummary: (state, action) => {
+      state.pendingWrites = action.payload?.pending || 0;
+      state.failedWrites = action.payload?.failed || 0;
+    },
+    setInstallable: (state, action) => {
+      state.isInstallable = action.payload;
+    },
+    setInstalled: (state, action) => {
+      state.isInstalled = action.payload;
     },
   },
 });
 
 export const {
   setOfflineReady,
-  setNeedRefresh,
+  setOnline,
   setSyncing,
+  setLastSyncTime,
   setSyncComplete,
   setSyncError,
+  setSwError,
+  setWriteQueueSummary,
+  setInstallable,
+  setInstalled,
 } = pwaSlice.actions;
 
 export default pwaSlice.reducer;

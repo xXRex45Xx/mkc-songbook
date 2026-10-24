@@ -1,4 +1,5 @@
 import backendURL from "../../config/backend-url.config";
+import { sendMutation } from "../pwa/write-queue.util";
 
 /**
  * @fileoverview Songs API utility functions
@@ -16,13 +17,13 @@ import backendURL from "../../config/backend-url.config";
  * @throws {Object} Error with message and status if request fails
  */
 export const getAllOrSearchSongs = async (searchQuery = null, page = 1) => {
-	const response = await fetch(
-		`${backendURL}/api/song?page=${page}${
-			searchQuery.q ? "&q=" + searchQuery.q : ""
-		}${searchQuery.type ? "&type=" + searchQuery.type : ""}${
-			searchQuery.sortBy ? "&sortBy=" + searchQuery.sortBy : ""
-		}`
-	);
+	const params = new URLSearchParams();
+	params.set("page", String(page));
+	if (searchQuery?.q) params.set("q", searchQuery.q);
+	if (searchQuery?.type) params.set("type", searchQuery.type);
+	if (searchQuery?.sortBy) params.set("sortBy", searchQuery.sortBy);
+
+	const response = await fetch(`${backendURL}/api/song?${params.toString()}`);
 	const data = await response.json();
 	if (!response.ok) throw { message: data.message, status: response.status };
 
@@ -106,21 +107,17 @@ export const addOrEditSong = async (
 			albums.filter((a) => a)
 		);
 
-	const response = await fetch(
-		`${backendURL}/api/song${edit ? "/" + songId : ""}`,
-		{
-			method: edit ? "PUT" : "POST",
-			body: formData,
-			headers: {
-				Authorization: `Bearer ${token}`,
-			},
-		}
-	);
+	const response = await sendMutation({
+		url: `${backendURL}/api/song${edit ? "/" + songId : ""}`,
+		method: edit ? "PUT" : "POST",
+		body: formData,
+		headers: {
+			Authorization: `Bearer ${token}`,
+		},
+		label: edit ? `Update song ${songId}` : `Add song ${formData.get("id")}`,
+	});
 
-	const data = await response.json();
-	if (!response.ok) throw { message: data.message, status: response.status };
-
-	return data;
+	return response;
 };
 
 /**
@@ -152,16 +149,15 @@ export const patchSong = async (
 
 	if (errorOccured) throw error;
 
-	const response = await fetch(`${backendURL}/api/song/${songId}`, {
+	const response = await sendMutation({
+		url: `${backendURL}/api/song/${songId}`,
 		method: "PATCH",
 		body: formData,
 		headers: { Authorization: `Bearer ${token}` },
+		label: `Patch song ${songId}`,
 	});
 
-	const data = await response.json();
-	if (!response.ok) throw { message: data.message, status: response.status };
-
-	return data;
+	return response;
 };
 
 /**
@@ -192,6 +188,22 @@ export const getSongsSince = async (timestamp) => {
 };
 
 /**
+ * Fetches the IDs of every song on the server
+ *
+ * Used to reconcile local deletions, which delta sync cannot detect: a
+ * deleted song never reappears in the `syncSince` window.
+ *
+ * @returns {Promise<string[]>} All song IDs known to the server
+ * @throws {Object} Error with message and status if request fails
+ */
+export const getAllSongIds = async () => {
+	const response = await fetch(`${backendURL}/api/song?all=true&idsOnly=true`);
+	const data = await response.json();
+	if (!response.ok) throw { message: data.message, status: response.status };
+	return data.songIds || [];
+};
+
+/**
  * Deletes a song by ID
  * @param {string} songId - ID of song to delete
  * @param {string} token - Authentication token (defaults to token in localStorage)
@@ -202,18 +214,15 @@ export const deleteSong = async (
 	songId,
 	token = localStorage.getItem("_s")
 ) => {
-	const response = await fetch(`${backendURL}/api/song/${songId}`, {
+	const data = await sendMutation({
+		url: `${backendURL}/api/song/${songId}`,
 		method: "DELETE",
 		headers: {
 			Authorization: `Bearer ${token}`,
 		},
+		label: `Delete song ${songId}`,
 	});
 
-	const data = await response.json();
-	if (!response.ok)
-		throw {
-			message: "An unexpected error occurred.",
-			status: response.status,
-		};
-	if (!data.deleted) throw { message: "An unexpected error occurred." };
+	if (data?.queued) return;
+	if (!data?.deleted) throw { message: "An unexpected error occurred." };
 };

@@ -41,17 +41,25 @@ export const songIdbService = {
   /**
    * Upserts an array of songs into IndexedDB
    *
+   * Writes in batches of 50 so a single transaction cannot be aborted by
+   * the quota limit when the catalog is large. Each batch commits before
+   * the next starts, so partial progress is retained.
+   *
    * @param {Array} songs - Array of song objects to upsert
+   * @param {number} [batchSize=50] - Songs per transaction
    * @returns {Promise<void>}
-   * @throws {Error} If database operation fails
+   * @throws {Error} If a database operation fails
    */
-  async bulkPut(songs) {
+  async bulkPut(songs, batchSize = 50) {
     const db = await getDB();
-    const tx = db.transaction(STORE_NAME, "readwrite");
-    for (const song of songs) {
-      tx.store.put(song);
+    for (let i = 0; i < songs.length; i += batchSize) {
+      const batch = songs.slice(i, i + batchSize);
+      const tx = db.transaction(STORE_NAME, "readwrite");
+      for (const song of batch) {
+        tx.store.put(song);
+      }
+      await tx.done;
     }
-    await tx.done;
   },
 
   /**
@@ -69,18 +77,29 @@ export const songIdbService = {
   /**
    * Returns the maximum updatedAt value across all stored songs
    *
+   * Uses the updatedAt index in descending order and stops at the first
+   * record, so it reads a single entry instead of scanning the whole store
+   * (including full lyrics) on every sync.
+   *
    * @returns {Promise<string|null>} ISO timestamp of most recent song, or null if no songs
    * @throws {Error} If database operation fails
    */
   async getMaxUpdatedAt() {
     const db = await getDB();
-    const songs = await db.getAll(STORE_NAME);
-    if (!songs || songs.length === 0) return null;
-    const maxDate = songs.reduce((max, song) => {
-      const updated = new Date(song.updatedAt);
-      return updated > max ? updated : max;
-    }, new Date(0));
-    return maxDate.toISOString();
+    const tx = db.transaction(STORE_NAME, "readonly");
+    const index = tx.store.index("updatedAt");
+    let max = null;
+    let cursor = await index.openCursor(null, "prev");
+    while (cursor) {
+      const updated = new Date(cursor.value.updatedAt);
+      if (!isNaN(updated.getTime())) {
+        max = updated;
+        break;
+      }
+      cursor = await cursor.continue();
+    }
+    await tx.done;
+    return max ? max.toISOString() : null;
   },
 };
 

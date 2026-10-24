@@ -12,7 +12,7 @@
 import AlbumModel from "../models/album.model.js";
 import SongModel from "../models/song.model.js";
 import { regexBuilder } from "../utils/amharic-map.util.js";
-import { NotFoundError } from "../utils/error.util.js";
+import { ClientFaultError, NotFoundError } from "../utils/error.util.js";
 import fs from "fs";
 
 /**
@@ -37,12 +37,27 @@ import fs from "fs";
  * This example retrieves album names matching "Amazing" with pagination.
  */
 export const getAllOrSearchAlbums = async (req, res) => {
-	const { names, q, syncSince } = req.query;
+	const { names, q, syncSince, idsOnly } = req.query;
 	let regex;
 	if (q) regex = new RegExp(regexBuilder(q), "i");
 	const filter = {};
 	if (q) filter.name = { $regex: regex };
-	if (syncSince) filter.updatedAt = { $gte: new Date(syncSince) };
+	if (syncSince) {
+		const parsedDate = new Date(syncSince);
+		if (isNaN(parsedDate.getTime()))
+			throw new ClientFaultError(
+				"Invalid syncSince date. Expected ISO 8601 date string."
+			);
+		filter.updatedAt = { $gte: parsedDate };
+	}
+	// ID-only response used by clients to reconcile local deletions, which a
+	// delta sync cannot detect on its own.
+	if (idsOnly) {
+		const albumsWithIds = await AlbumModel.find(filter, "_id").lean();
+		return res.status(200).json({
+			albumIds: albumsWithIds.map((album) => album._id),
+		});
+	}
 	let albums = await AlbumModel.find(
 		filter,
 		names ? { name: true } : null

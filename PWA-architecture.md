@@ -13,7 +13,7 @@ The PWA layer is built around four decisions stated in the plan and reflected th
 1. **`updatedAt` delta sync** — Instead of re-fetching the full catalog on every sync, the client tracks the most recent `updatedAt` it has seen and asks the server only for records changed since then. Song `createdAt` is a String (a year like `"2024"`), so it is unsuitable for delta sync; `updatedAt` (a real Date) is used instead.
 2. **IndexedDB-first page loading** — Route loaders return data from the local IndexedDB store immediately so the UI renders instantly, then trigger a background sync to refresh.
 3. **Audio is NOT cached by the service worker** — Streaming endpoints stay network-only. Offline audio is an explicit, user-initiated action that stores the decoded `Blob` in IndexedDB.
-4. **`registerType: "prompt"`** — New service-worker versions are not activated automatically; the user is prompted to reload.
+4. **`registerType: "autoUpdate"`** — New service-worker versions activate automatically on the next navigation; no refresh prompt is shown.
 
 ---
 
@@ -128,7 +128,7 @@ The PWA shell is built by `vite-plugin-pwa`, configured in `frontend/vite.config
 ```js
 devOptions: { enabled: true, type: "module" }
 ```
-This enables the service worker during `vite dev` (the generated SW is emitted to `frontend/dev-dist/sw.js` with its bundled Workbox runtime). `type: "module"` matches the project's ESM setup.
+This enables the service worker during `vite dev`; the generated SW is served from `/dev-sw.js?dev-sw` and the manifest from `/manifest.webmanifest`. `type: "module"` matches the project's ESM setup. In production the plugin forces `classic` registration for browser compatibility.
 
 ### 5.2 Workbox runtime caching
 
@@ -211,7 +211,8 @@ Audio gets special treatment because streaming and offline storage are deliberat
 ### 7.1 Download (`audio-download.util.js`)
 
 - `downloadAudioFile(songId, songTitle)` — fetches `/api/song/:id/audio` as a `Blob`, then saves it to the user's device. Prefers the **File System Access API** (`window.showSaveFilePicker`) with a suggested `.mp3` name when available (Chrome/Edge); silently aborts on `AbortError` (user cancelled the picker). Falls back to a blob-URL `<a download>` click otherwise. The blob URL is revoked after the click.
-- `cacheAudioForOffline(songId)` — same fetch, but stores the Blob in the `audioFiles` IDB store for in-app offline playback. (Defined but not currently wired to a UI action — the download buttons call `downloadAudioFile`, not this.)
+- `cacheAudioForOffline(songId)` — same fetch, but stores the Blob in the `audioFiles` IDB store for in-app offline playback. Wired to the "Save offline" button in `download-audio.component.jsx`.
+- `saveAudioForOffline(songIds, onProgress)` / `saveAllAudioForOffline(onProgress)` — bulk save for an album, a playlist, the queue, or the whole catalog. Skips cached songs, checks `navigator.storage.estimate()` before each fetch, and reports progress to the UI.
 - `getOfflineAudioBlob(songId)` — returns the cached Blob or `null`.
 
 ### 7.2 The download button (`download-audio.component.jsx`)
@@ -285,7 +286,7 @@ There is a redundancy worth noting: both `registerPwa`'s `onOfflineReady` and th
 
 ### First install / first run
 ```
-SW registers (registerType: "prompt")
+SW registers (registerType: "autoUpdate")
   → onOfflineReady fires
   → no lastSongSync in syncMeta → initializePwaData()
       GET /api/song?all=true   ─► bulkPut songs  ─► set lastSongSync = max(updatedAt)
@@ -366,10 +367,14 @@ Click DownloadAudio ─► downloadAudioFile(songId, title)
 
 These are worth flagging for whoever next touches this code:
 
-1. **`songs.page.jsx` reads `searchParams.get("allby")` instead of `"sortby"`** — almost certainly a typo; server-side sort from the songs page is broken and the cache-bypass for sort no longer triggers. (§8)
-2. **`cacheAudioForOffline` is unused.** The download buttons call `downloadAudioFile` (device save), but nothing calls `cacheAudioForOffline`, so the `audioFiles` IDB store is only ever *read* by the audio player's offline path, never *written* by the current UI. Offline audio playback therefore has no source populating the cache. (§7)
-3. **`setSyncComplete` ignores its payload** — the `songsSynced`/`albumsSynced` counts from `syncAll()` are not persisted to Redux; `lastSyncTime` is always set to "now". (§6.4)
-4. **`getMaxUpdatedAt` scans the whole store** rather than using the `updatedAt` index — functionally correct but O(n) per call. (§3.2)
-5. **Blob URLs are not revoked** in `audio-player.component.jsx`'s `loadAudioSrc` effect — a minor memory leak across track changes. (§7.3)
-6. **No explicit "audio not available offline" UI** — offline-without-cached-blob silently leaves the streaming URL, which just fails to load. The plan called for an explicit message. (§7.3)
+1. **`cacheAudioForOffline` is wired to the "Save offline" button** in `download-audio.component.jsx`, so the `audioFiles` IDB store is written by the current UI. Offline audio playback has a real source. (§7)
+2. **`setSyncComplete` stores its payload** — the `songsSynced`/`albumsSynced`/`songsRemoved`/`albumsRemoved` counts from `syncAll()` are persisted to Redux and shown in the status bar. (§6.4)
+3. **`getMaxUpdatedAt` uses the `updatedAt` index** in descending order, so it reads a single entry instead of scanning the whole store. (§3.2)
+4. **Blob URLs are revoked after the new source loads** — the previous track's URL is held alive in `pendingBlobUrlRef` until `onCanPlay` fires, so a fast track change cannot revoke a URL the element is still playing. (§7.3)
+5. **Offline audio surfaces a message** — the player sets `audioUnavailable` and renders "Audio not saved for offline playback" when a stream fails and no local copy exists. (§7.3)
+6. **Local playlists upload automatically** — `createLocalPlaylist` enqueues the id and `performSync` drains unsynced playlists before the delta sync, so a playlist created on a train reaches the server when the connection returns. (§6.3)
+7. **Installation is offered explicitly** — `beforeinstallprompt`/`appinstalled` are captured in `install.util.js`, an Install button renders in the header, and iOS Safari gets a static "Add to Home Screen" line since it has no install event. (§5)
+8. **The manifest is complete** — `id`, `display_override`, `orientation`, `categories`, `shortcuts`, `?source=pwa`, separate `any`/`maskable` 192+512 icons, and ICO/PNG favicon links. (§5)
+
+Items 1, 2, 4, 5 and 6 above were defects at the time this document was written and have since been fixed; the remaining items describe behaviour that is intentional or out of scope.
 7. **Create-album path doesn't set `updatedAt` explicitly** — relies on the schema `default: Date.now`. Fine for initial fetch, but worth noting if the create flow is ever used as a sync source. (§2.1)

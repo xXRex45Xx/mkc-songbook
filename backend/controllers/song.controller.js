@@ -13,7 +13,7 @@
 import AlbumModel from "../models/album.model.js";
 import SongModel from "../models/song.model.js";
 import { regexBuilder } from "../utils/amharic-map.util.js";
-import { NotFoundError, ServerFaultError } from "../utils/error.util.js";
+import { ClientFaultError, NotFoundError, ServerFaultError } from "../utils/error.util.js";
 import fs from "fs";
 
 /**
@@ -36,12 +36,27 @@ import fs from "fs";
  * @throws {ServerFaultError} If database query fails due to server-side issues or database errors with detailed context
  */
 export const getAllOrSearchSongs = async (req, res) => {
-	const { q, page = 1, all, type, sortBy, syncSince } = req.query;
+	const { q, page = 1, all, type, sortBy, syncSince, idsOnly } = req.query;
 	let songs, totalPages;
 	const projection = "title songFilePath";
 	let filter = {};
-	if (syncSince) filter.updatedAt = { $gte: new Date(syncSince) };
-	if (all) songs = await SongModel.find(filter);
+	if (syncSince) {
+		const parsedDate = new Date(syncSince);
+		if (isNaN(parsedDate.getTime()))
+			throw new ClientFaultError(
+				"Invalid syncSince date. Expected ISO 8601 date string."
+			);
+		filter.updatedAt = { $gte: parsedDate };
+	}
+	// ID-only response used by clients to reconcile local deletions, which a
+	// delta sync cannot detect on its own.
+	if (all && idsOnly) {
+		const songsWithIds = await SongModel.find(filter, "_id").lean();
+		return res.status(200).json({
+			songIds: songsWithIds.map((song) => song._id),
+		});
+	}
+	if (all) songs = await SongModel.find(filter).populate("albums", "name");
 	else if (!q) {
 		songs = await SongModel.find({}, projection)
 			.sort(sortBy)
@@ -50,7 +65,7 @@ export const getAllOrSearchSongs = async (req, res) => {
 			.skip((page - 1) * 100)
 			.limit(100);
 		const totalDocuments = await SongModel.find({}).countDocuments();
-		totalPages = Math.floor(totalDocuments / 100) + 1;
+		totalPages = Math.max(1, Math.ceil(totalDocuments / 100));
 	} else {
 		const regex = new RegExp(regexBuilder(q), "i");
 		let query = {};
@@ -87,12 +102,14 @@ export const getAllOrSearchSongs = async (req, res) => {
 				lyricsMatch,
 				lyricsTotalDocuments,
 			] = await Promise.all(queryPromises);
-			totalPages =
-				Math.floor(
+			totalPages = Math.max(
+				1,
+				Math.ceil(
 					titleTotalDocuments > lyricsTotalDocuments
 						? titleTotalDocuments / 100
 						: lyricsTotalDocuments / 100
-				) + 1;
+				)
+			);
 			songs = {
 				titleMatch: titleMatch.map((song) => ({
 					...song._doc,
@@ -122,7 +139,7 @@ export const getAllOrSearchSongs = async (req, res) => {
 			SongModel.find(query).countDocuments(),
 		];
 		const [songsFromDb, totalDocuments] = await Promise.all(queryPromises);
-		totalPages = Math.floor(totalDocuments / 100) + 1;
+		totalPages = Math.max(1, Math.ceil(totalDocuments / 100));
 		songs = songsFromDb;
 	}
 	songs = songs.map((song) => ({
@@ -387,6 +404,7 @@ export const streamSongAudio = async (req, res) => {
 			"Accept-Ranges": "bytes",
 			"Content-Length": contentLength,
 			"Content-Type": "audio/mpeg",
+			"Cache-Control": "no-store",
 		});
 		const stream = fs.createReadStream(song.songFilePath, { start, end });
 		stream.pipe(res);
@@ -426,6 +444,7 @@ export const streamSongAudio = async (req, res) => {
 		"Accept-Ranges": "bytes",
 		"Content-Length": contentLength,
 		"Content-Type": "audio/mpeg",
+		"Cache-Control": "no-store",
 	});
 
 	const stream = fs.createReadStream(song.songFilePath, { start, end });

@@ -11,6 +11,7 @@ import Bell from "../assets/active-bell.svg?react";
 import heart from "../assets/heart.svg";
 import SearchBar from "./search-bar.component";
 import SearchToggleSvg from "../assets/search-toggle.svg?react";
+import InstallPrompt from "./install-prompt.component";
 import { useMemo, useState } from "react";
 import { buttonTheme } from "../config/button-theme.config";
 import { useDispatch, useSelector } from "react-redux";
@@ -19,6 +20,7 @@ import {
 	setAdminType,
 	toggleRole,
 } from "../store/slices/user.slice";
+import { userIdbService } from "../utils/db/user-idb-service.util";
 
 /**
  * Header Component
@@ -78,12 +80,20 @@ const Header = () => {
 	}, [pathname]);
 
 	/**
-	 * Handles user logout by clearing Redux store and local storage
+	 * Handles user logout by clearing Redux store, the offline user cache,
+	 * and local storage
+	 *
+	 * @returns {Promise<void>}
 	 */
-	const handleLogout = () => {
+	const handleLogout = async () => {
 		dispatch(resetCurrentUser());
 		dispatch(setAdminType(null));
 		localStorage.removeItem("_s");
+		try {
+			await userIdbService.clear();
+		} catch (error) {
+			console.error("Failed to clear the cached user:", error);
+		}
 	};
 	return (
 		<>
@@ -99,6 +109,7 @@ const Header = () => {
 					</span>
 				</Navbar.Brand>
 				<div className="pb-6 flex gap-5">
+					<InstallPrompt />
 					<Button
 						onClick={toggleSearch}
 						className="focus:ring-0 *:p-0"

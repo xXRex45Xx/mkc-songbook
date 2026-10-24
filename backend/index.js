@@ -126,9 +126,35 @@ app.use(
  *   })
  * );
  */
+/**
+ * Parses the ALLOWED_ORIGINS environment variable into a normalized list.
+ * Defaults to an empty list when the variable is unset, so the process does
+ * not crash at boot. Each entry is trimmed and stripped of a trailing slash so
+ * `http://example.com/` and `http://example.com` compare equal.
+ *
+ * @returns {string[]} Normalized list of allowed origins
+ */
+const getAllowedOrigins = () => {
+	const raw = process.env.ALLOWED_ORIGINS;
+	if (!raw || typeof raw !== "string") return [];
+	return raw
+		.split(",")
+		.map((origin) => origin.trim().replace(/\/+$/, ""))
+		.filter(Boolean);
+};
+
 app.use(
 	cors({
-		origin: process.env.ALLOWED_ORIGINS.split(","),
+		origin: (origin, cb) => {
+			const allowed = getAllowedOrigins();
+			// No Origin header = same-origin or non-browser request; allow.
+			if (!origin) return cb(null, true);
+			if (allowed.length === 0) return cb(null, true);
+			const normalized = origin.replace(/\/+$/, "");
+			if (allowed.includes(normalized)) return cb(null, true);
+			console.warn(`CORS rejected origin: ${origin}`);
+			return cb(new Error(`Not allowed by CORS: ${origin}`));
+		},
 	})
 );
 app.use(
@@ -173,10 +199,19 @@ app.use(
 app.use(
 	"/static/albums/images",
 	wrapAsync(async (req, res, next) => {
-		res.header(
-			"Access-Control-Allow-Origin",
-			process.env.ALLOWED_ORIGINS.split(",")
-		);
+		const origin = req.headers.origin;
+		const allowed = getAllowedOrigins();
+		if (origin) {
+			const normalized = origin.replace(/\/+$/, "");
+			if (allowed.length === 0 || allowed.includes(normalized)) {
+				res.header("Access-Control-Allow-Origin", normalized);
+			}
+		} else if (allowed.length > 0) {
+			// No Origin header (same-origin or script request): echo the first
+			// configured origin so the header is present for clients that
+			// check it unconditionally.
+			res.header("Access-Control-Allow-Origin", allowed[0]);
+		}
 		res.header("Cross-Origin-Resource-Policy", "cross-origin");
 		next();
 	}),

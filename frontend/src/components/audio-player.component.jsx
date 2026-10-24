@@ -19,7 +19,10 @@ import {
 import { useLocation, useNavigate } from "react-router-dom";
 import { updateFavoriteSongs } from "../utils/api/user-api.util";
 import { setUserFavorites } from "../store/slices/user.slice";
-import { getOfflineAudioBlob } from "../utils/api/audio-download.util";
+import {
+	getOfflineAudioMeta,
+	isAudioStale,
+} from "../utils/api/audio-download.util";
 
 /**
  * Audio Player Component
@@ -47,6 +50,7 @@ const AudioPlayer = () => {
 	const [maxSliderValue, setMaxSliderValue] = useState(0);
 	const [isAddingToFavorite, setIsAddingToFavorite] = useState(false);
 	const [audioSrc, setAudioSrc] = useState("");
+	const [audioUnavailable, setAudioUnavailable] = useState(false);
 	const location = useLocation();
 	const navigate = useNavigate();
 	const dispatch = useDispatch();
@@ -55,43 +59,129 @@ const AudioPlayer = () => {
 	const repeat = useSelector((state) => state.playlist.repeat);
 	const user = useSelector((state) => state.user.currentUser);
 	const audioRef = useRef(null);
-	// Track the blob URL we created so it can be revoked on track change.
+	// Blob URL currently assigned to the <audio> element.
 	const blobUrlRef = useRef("");
+	// Blob URL from the previous track, kept alive until the new source has
+	// loaded so the element never loses its active URL mid-swap.
+	const pendingBlobUrlRef = useRef("");
 
-	const revokeBlobUrl = () => {
-		if (blobUrlRef.current) {
-			URL.revokeObjectURL(blobUrlRef.current);
-			blobUrlRef.current = "";
+	/**
+	 * Resolve the audio source for the current track.
+	 * Always checks IndexedDB first (local-first), regardless of online state.
+	 * Falls back to remote streaming when no local copy exists or the local
+	 * copy is stale relative to the song record's updatedAt.
+	 */
+	const resolveAudioSrc = async (songId) => {
+		// 1. Try local blob first (always, even offline).
+		try {
+			const meta = await getOfflineAudioMeta(songId);
+			if (meta && meta.blob) {
+				// 2. Check staleness against the song record's remote updatedAt.
+				let stale = false;
+				try {
+					stale = await isAudioStale(songId);
+				} catch (err) {
+					console.warn("Staleness check failed, using local copy:", err);
+				}
+				if (!stale) {
+					return URL.createObjectURL(meta.blob);
+				}
+			}
+		} catch (err) {
+			console.warn("Local audio lookup failed, falling back to stream:", err);
+		}
+
+		// 3. Fall back to remote streaming (Range-supported, no full download).
+		return `${backendURL}/api/song/${songId}/audio`;
+	};
+
+	/**
+	 * When a remote stream fails (network error), prefer a local cached copy
+	 * if one exists. Used as a recovery path for the audio element's
+	 * onError/onStalled handlers.
+	 *
+	 * @param {number} idx - Current song index in the queue
+	 */
+	const fallbackToLocalOnStreamError = async (idx) => {
+		if (idx < 0 || !queue[idx]) return;
+		const songId = queue[idx]._id;
+		try {
+			const meta = await getOfflineAudioMeta(songId);
+			if (meta && meta.blob) {
+				const url = URL.createObjectURL(meta.blob);
+				// Hold the old blob alive until the new src is applied, so the
+				// <audio> element never loses its active URL mid-swap.
+				pendingBlobUrlRef.current = blobUrlRef.current;
+				blobUrlRef.current = url;
+				setAudioSrc(url);
+			} else {
+				setAudioUnavailable(true);
+			}
+		} catch (err) {
+			console.warn("Stream error recovery failed:", err);
+			setAudioUnavailable(true);
 		}
 	};
 
+	const safePlay = () => {
+		if (!audioRef.current) return;
+		audioRef.current.play().catch((err) => {
+			// Autoplay without a gesture is blocked by the browser; the play
+			// button is the gesture, so this only surfaces real failures.
+			if (err.name === "NotSupportedError") {
+				setAudioUnavailable(true);
+			}
+		});
+	};
+
+	const onSrcLoaded = () => {
+		// The new source is in use; revoke the blob URL that was held alive
+		// during the swap, not the one the element is currently using.
+		if (pendingBlobUrlRef.current) {
+			URL.revokeObjectURL(pendingBlobUrlRef.current);
+			pendingBlobUrlRef.current = "";
+		}
+	};
+
+	// Revoke any blob URL still held alive when the player unmounts or the
+	// queue drains, so a remote->blob swap that never fires onCanPlay cannot
+	// leak the old URL.
+	useEffect(() => {
+		return () => {
+			if (pendingBlobUrlRef.current) {
+				URL.revokeObjectURL(pendingBlobUrlRef.current);
+				pendingBlobUrlRef.current = "";
+			}
+			if (blobUrlRef.current) {
+				URL.revokeObjectURL(blobUrlRef.current);
+				blobUrlRef.current = "";
+			}
+		};
+	}, []);
+
 	useEffect(() => {
 		const loadAudioSrc = async () => {
-			revokeBlobUrl();
 			if (currentSongIdx < 0 || !queue[currentSongIdx]) {
 				setAudioSrc("");
+				setAudioUnavailable(false);
 				return;
 			}
 			const songId = queue[currentSongIdx]._id;
-			if (!navigator.onLine) {
-				const offlineBlob = await getOfflineAudioBlob(songId);
-				if (offlineBlob) {
-					const url = URL.createObjectURL(offlineBlob);
-					blobUrlRef.current = url;
-					setAudioSrc(url);
-					return;
-				}
-			}
-			setAudioSrc(`${backendURL}/api/song/${songId}/audio`);
+			setAudioUnavailable(false);
+			const url = await resolveAudioSrc(songId);
+			// Hold the old blob alive until onCanPlay fires, so the element
+			// never loses its active URL mid-swap.
+			pendingBlobUrlRef.current = blobUrlRef.current;
+			blobUrlRef.current = url;
+			setAudioSrc(url);
 		};
 		loadAudioSrc();
-		return revokeBlobUrl;
 	}, [currentSongIdx, queue]);
 
 	const handleTogglePlayPause = () => {
 		if (!audioRef.current || currentSongIdx < 0 || queue.length === 0) return;
 		audioRef.current.paused
-			? audioRef.current.play()
+			? safePlay()
 			: audioRef.current.pause();
 	};
 
@@ -175,7 +265,7 @@ const AudioPlayer = () => {
 								if (audioRef.current.currentTime < 3)
 									return dispatch(prevSong());
 								setSliderValue(0);
-								if (audioRef.current.paused) audioRef.current.play();
+								if (audioRef.current.paused) safePlay();
 							}}
 							onToggleFav={handleToggleFavorite}
 							toggleFavProcessing={isAddingToFavorite}
@@ -187,6 +277,12 @@ const AudioPlayer = () => {
 						/>
 						<AudioPlayerToolbox />
 					</div>
+					{audioUnavailable && (
+						<div className="text-xs text-error-300 mt-2">
+							Audio not saved for offline playback. Save it from the
+							download button to listen while offline.
+						</div>
+					)}
 				</div>
 			</div>
 			<audio
@@ -195,22 +291,37 @@ const AudioPlayer = () => {
 				src={audioSrc || undefined}
 				onPlay={() => setIsPlaying(true)}
 				onPause={() => setIsPlaying(false)}
+				onCanPlay={onSrcLoaded}
 				onTimeUpdate={(e) => {
 					setSliderValue(Math.floor(e.target.currentTime));
 				}}
 				onEnded={() => {
 					setIsPlaying(false);
-					if (repeat === "repeat-current") return audioRef.current.play();
+					if (repeat === "repeat-current") return safePlay();
 					if (currentSongIdx < queue.length - 1)
 						return dispatch(nextSong());
 					if (repeat === "repeat-all") dispatch(setCurrentSongIdx(0));
 				}}
-				onStalled={() => setIsPlaying(false)}
+				onStalled={() => {
+					setIsPlaying(false);
+					// If streaming failed and a local copy exists, prefer it.
+					if (audioSrc && audioSrc.startsWith(backendURL)) {
+						fallbackToLocalOnStreamError(currentSongIdx);
+					}
+				}}
+				onError={() => {
+					setIsPlaying(false);
+					// If streaming failed and a local copy exists, prefer it.
+					if (audioSrc && audioSrc.startsWith(backendURL)) {
+						fallbackToLocalOnStreamError(currentSongIdx);
+					}
+				}}
 				onDurationChange={(e) => {
 					setMaxSliderValue(Math.floor(e.target.duration));
 				}}
-				crossOrigin="anonymous"
-				autoPlay
+				{...(audioSrc && !audioSrc.startsWith("blob:")
+					? { crossOrigin: "anonymous" }
+					: {})}
 			/>
 		</div>
 	);

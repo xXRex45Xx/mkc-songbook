@@ -14,6 +14,7 @@ import backendURL from "../config/backend-url.config";
 import AdminHelper from "../components/admin-helper.component";
 import { albumIdbService } from "../utils/db/album-idb-service.util";
 import { syncAlbums } from "../utils/pwa/sync-service.util";
+import { filterLocalAlbums } from "../utils/offline-search.util";
 
 /**
  * Albums Page Component
@@ -60,9 +61,21 @@ const AlbumsPage = () => {
 export default AlbumsPage;
 
 /**
+ * Searches the locally cached albums
+ *
+ * @param {Object} searchQuery - Search parameters
+ * @returns {Promise<Array<Object>>} Matching albums
+ */
+const searchLocalAlbumsForPage = async (searchQuery) => {
+	const localAlbums = await albumIdbService.getAll();
+	return filterLocalAlbums(localAlbums, searchQuery);
+};
+
+/**
  * Route loader for albums listing page
- * Uses IndexedDB-first approach: returns local data immediately, syncs in background
- * Falls back to network-only for search queries
+ * Uses IndexedDB-first approach: returns local data immediately, syncs in background.
+ * Search queries the local cache when offline, and falls back to it when an online
+ * search fails.
  *
  * @param {Object} params - Route parameters
  * @param {Request} params.request - HTTP request
@@ -73,18 +86,30 @@ export const loader = async ({ request }) => {
 	const searchQuery = { q: searchParams.get("q") };
 
 	if (searchQuery.q) {
-		return defer({ albumData: getAllAlbums(false, searchQuery) });
+		if (navigator.onLine) {
+			return defer({
+				albumData: getAllAlbums(false, searchQuery).catch(() =>
+					searchLocalAlbumsForPage(searchQuery)
+				),
+			});
+		}
+
+		return defer({ albumData: searchLocalAlbumsForPage(searchQuery) });
 	}
 
 	try {
 		const localAlbums = await albumIdbService.getAll();
 		if (localAlbums && localAlbums.length > 0) {
-			syncAlbums().catch(() => {});
+			if (navigator.onLine) syncAlbums().catch(() => {});
 			return defer({ albumData: localAlbums });
 		}
 	} catch (e) {
 		console.error("Failed to load albums from IndexedDB:", e);
 	}
 
-	return defer({ albumData: getAllAlbums(false, searchQuery) });
+	return defer({
+		albumData: getAllAlbums(false, searchQuery).catch(() =>
+			searchLocalAlbumsForPage(searchQuery)
+		),
+	});
 };

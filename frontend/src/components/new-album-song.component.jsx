@@ -97,7 +97,9 @@ const NewAlbumSong = ({
 				formData.set("video-link", videoLink.trim());
 				if (audioFile) formData.set("audio-file", audioFile);
 				const data = await patchSong(formData, song._id);
-				if (!data || !data.updated)
+				// Queued while offline: the change is stored and will replay,
+				// so it is not an error.
+				if (!data?.queued && (!data || !data.updated))
 					throw { status: 500, message: "An unexpected error occurred." };
 			}
 			onSave(song);

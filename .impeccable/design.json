@@ -1,0 +1,206 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-18T03:25:00-05:00",
+  "title": "Design System: MKC Choir Songbook",
+  "extensions": {
+    "colorMeta": {
+      "vestment-gold": {
+        "role": "primary",
+        "displayName": "Vestment Gold",
+        "canonical": "#FABE1F",
+        "tonalRamp": ["#6B4F03", "#9D7504", "#CB9505", "#EFAF05", "#FABE1F", "#FBC944", "#FCD46A", "#FEF9E7"]
+      },
+      "sanctuary-crimson": {
+        "role": "primary",
+        "displayName": "Sanctuary Crimson",
+        "canonical": "#C9184A",
+        "tonalRamp": ["#4A0819", "#700D29", "#AB143F", "#C9184A", "#E5255B", "#EE6E92", "#FCE4EC", "#FFF1F5"]
+      },
+      "cool-paper": {
+        "role": "neutral",
+        "displayName": "Cool Paper",
+        "canonical": "#FCFDFE",
+        "tonalRamp": ["#4B5364", "#55637A", "#5F7392", "#6B84A6", "#7C96B6", "#8EA7C5", "#A2B9D3", "#FCFDFE"]
+      },
+      "slate-ink": {
+        "role": "neutral",
+        "displayName": "Slate Ink",
+        "canonical": "#40444F",
+        "tonalRamp": ["#2A2D35", "#40444F", "#4B5364", "#55637A", "#5F7392", "#6B84A6", "#8EA7C5", "#CCDBEB"]
+      },
+      "slate-400": {
+        "role": "neutral",
+        "displayName": "Cool Slate 400",
+        "canonical": "#A2B9D3",
+        "tonalRamp": ["#4B5364", "#55637A", "#5F7392", "#6B84A6", "#7C96B6", "#8EA7C5", "#A2B9D3", "#E4ECF5"]
+      },
+      "liturgical-teal": {
+        "role": "tertiary",
+        "displayName": "Liturgical Teal",
+        "canonical": "#15B097",
+        "tonalRamp": ["#021D18", "#032B23", "#064639", "#0B7B69", "#15B097", "#A4F4E7", "#D7FAF3", "#EEFCFA"]
+      },
+      "signal-coral": {
+        "role": "semantic",
+        "displayName": "Signal Coral",
+        "canonical": "#E4626F",
+        "tonalRamp": ["#5C1017", "#8C1823", "#E4626F", "#EF8089", "#ECABB1", "#F6CCD1", "#FBE7EA", "#FFF5F6"]
+      },
+      "ochre-200": {
+        "role": "semantic",
+        "displayName": "Ochre",
+        "canonical": "#EDA145",
+        "tonalRamp": ["#8A510D", "#CC7914", "#EDA145", "#F4C790", "#FFFAEC", "#FFFDF8", "#FEF9E7", "#FFFFFF"]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Page titles and the MKC Choir wordmark. Bold, tight, left-aligned." },
+      "headline": { "displayName": "Headline", "purpose": "Card titles: album names, playlist names, song titles in the lyric header." },
+      "body": { "displayName": "Body", "purpose": "General reading at 1rem, line-height 1.5." },
+      "label": { "displayName": "Label", "purpose": "Uppercase table headers, badges, status chips. The system's only uppercase voice." },
+      "lyrics": { "displayName": "Lyrics", "purpose": "Amharic content voice. Ethiopic-first stack, user-controlled size, line-height 1.6." },
+      "metadata": { "displayName": "Metadata", "purpose": "Year + song count, album names under a title, timestamps. Slate 700-800, 12-14px, always subordinate." }
+    },
+    "shadows": [
+      { "name": "hover-lift", "value": "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)", "purpose": "Card hover only, over a 300ms transition. Paired with a border that stays put." },
+      { "name": "container-shadow", "value": "0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)", "purpose": "The table wrapper only." },
+      { "name": "brand-lift", "value": "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)", "purpose": "The header logo image only. Never reused." }
+    ],
+    "gradients": [
+      { "name": "player-strip", "value": "linear-gradient(to right, #C9184A, #FABE1F)", "purpose": "The 1px full-width strip above the audio player panel. Signature gesture, reserved." },
+      { "name": "progress-fill", "value": "linear-gradient(to right, #C9184A, #FABE1F)", "purpose": "The range slider progress fill under a gold thumb." }
+    ],
+    "motion": [
+      { "name": "state-transition", "value": "200ms ease", "purpose": "Button color and background transitions." },
+      { "name": "card-hover", "value": "300ms ease", "purpose": "Shadow appearance on card hover." },
+      { "name": "search-collapse", "value": "300ms ease", "purpose": "Search row animates open/closed via max-height + padding." },
+      { "name": "drag-lift", "value": "transform: scale(1.05)", "purpose": "A dragged song row scales 105%; drop zones grow from 0.5 to 10 height on hover." }
+    ],
+    "breakpoints": [
+      { "name": "md", "value": "768px", "purpose": "The real mobile/desktop boundary. JS reads windowWidth >= 768 to drop table columns and shrink player glyphs." },
+      { "name": "lg", "value": "1024px", "purpose": "Content padding widens to py-10 px-20." }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Crimson fill, white text. The affirmative action: search submit, selected date, confirm.",
+      "html": "<button class=\"ds-btn-primary\">Search</button>",
+      "css": ".ds-btn-primary { background: #C9184A; color: #FFFFFF; padding: 10px 28px; font-family: Inter, Helvetica, Arial, sans-serif; font-size: 1rem; font-weight: 600; border: none; border-radius: 8px; transition: background 200ms ease; cursor: pointer; } .ds-btn-primary:hover { background: #E5255B; } .ds-btn-primary:active { background: #AB143F; } .ds-btn-primary:focus-visible { outline: none; background: #E5255B; }"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline-crimson",
+      "description": "Crimson outline on transparent. Secondary affirmative action.",
+      "html": "<button class=\"ds-btn-outline\">Edit</button>",
+      "css": ".ds-btn-outline { background: transparent; color: #C9184A; padding: 10px 28px; font-family: Inter, Helvetica, Arial, sans-serif; font-size: 1rem; font-weight: 600; border: 1px solid #C9184A; border-radius: 8px; transition: background 200ms ease, border-color 200ms ease; cursor: pointer; } .ds-btn-outline:hover { background: #FCE4EC; border-color: #E5255B; } .ds-btn-outline:focus-visible { outline: none; border-color: #E5255B; }"
+    },
+    {
+      "name": "Light Button",
+      "kind": "button",
+      "refersTo": "button-light",
+      "description": "Slate hairline outline, slate-ink text. Card-level secondary action.",
+      "html": "<button class=\"ds-btn-light\">Edit</button>",
+      "css": ".ds-btn-light { background: transparent; color: #40444F; padding: 10px 20px; font-family: Inter, Helvetica, Arial, sans-serif; font-size: 0.75rem; font-weight: 500; border: 1px solid #A2B9D3; border-radius: 8px; transition: background 200ms ease; cursor: pointer; } .ds-btn-light:hover { background: #E4ECF5; } .ds-btn-light:focus-visible { outline: none; border-color: #6B84A6; }"
+    },
+    {
+      "name": "Destructive Button",
+      "kind": "button",
+      "refersTo": "button-destructive",
+      "description": "Coral tint fill with deep coral text. Delete is never crimson.",
+      "html": "<button class=\"ds-btn-destructive\">Delete</button>",
+      "css": ".ds-btn-destructive { background: #ECABB1; color: #8C1823; padding: 10px 20px; font-family: Inter, Helvetica, Arial, sans-serif; font-size: 0.75rem; font-weight: 500; border: none; border-radius: 8px; transition: filter 200ms ease; cursor: pointer; } .ds-btn-destructive:hover { filter: brightness(95%); } .ds-btn-destructive:focus-visible { outline: none; filter: brightness(90%); }"
+    },
+    {
+      "name": "Ghost Icon Button",
+      "kind": "button",
+      "refersTo": "button-icon-ghost",
+      "description": "Zero-padding, borderless, icon-only. Transport controls, back, search toggle.",
+      "html": "<button class=\"ds-btn-icon\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\"><path d=\"M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0M10 7a4 4 0 11-8 0 4 4 0 018 0\" stroke=\"#40444F\" stroke-width=\"2\" stroke-linecap=\"round\"/></svg></button>",
+      "css": ".ds-btn-icon { background: transparent; padding: 0; border: none; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: opacity 200ms ease; } .ds-btn-icon svg { stroke: #40444F; } .ds-btn-icon:hover svg { stroke: #4B5364; } .ds-btn-icon:active svg { stroke: #55637A; } .ds-btn-icon:focus-visible { outline: none; }"
+    },
+    {
+      "name": "Search Cluster",
+      "kind": "input",
+      "refersTo": "input-field",
+      "description": "Select + input + crimson submit as one unit with hairline vertical borders.",
+      "html": "<div class=\"ds-search\"><select class=\"ds-search-select\"><option>All Categories</option></select><input class=\"ds-search-input\" placeholder=\"Search...\" /><button class=\"ds-search-submit\" aria-label=\"Search\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\"><path d=\"M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0\" stroke=\"#FFFFFF\" stroke-width=\"2\" stroke-linecap=\"round\"/></svg></button></div>",
+      "css": ".ds-search { display: flex; align-items: stretch; font-family: Inter, Helvetica, Arial, sans-serif; } .ds-search-select { background: #FCFDFE; color: #40444F; padding: 10px 20px; font-size: 0.875rem; font-weight: 500; border: 1px solid #CCDBEB; border-right: none; border-radius: 8px 0 0 8px; } .ds-search-input { background: #FCFDFE; color: #40444F; padding: 10px 16px; font-size: 0.875rem; border: 1px solid #CCDBEB; border-radius: 0; min-width: 112px; flex: 1; } .ds-search-submit { background: #C9184A; border: 1px solid #C9184A; border-radius: 0 8px 8px 0; padding: 8px; display: flex; align-items: center; justify-content: center; width: 40px; cursor: pointer; transition: background 200ms ease, border-color 200ms ease; } .ds-search-submit:hover { background: #E5255B; border-color: #E5255B; } .ds-search-select:focus, .ds-search-input:focus { outline: none; }"
+    },
+    {
+      "name": "Album Card",
+      "kind": "card",
+      "refersTo": "card-surface",
+      "description": "White card, slate hairline, flat at rest, shadow-md on hover. Gold border is the favorites identity.",
+      "html": "<div class=\"ds-card\"><h2 class=\"ds-card-num\">#12</h2><div class=\"ds-card-cover\"></div><h3 class=\"ds-card-title\">Worship Collection</h3><p class=\"ds-card-meta\">2025 - 10 songs</p></div>",
+      "css": ".ds-card { background: #FFFFFF; border: 1px solid #E4ECF5; border-radius: 8px; padding: 20px; display: flex; flex-direction: column; gap: 16px; font-family: Inter, Helvetica, Arial, sans-serif; transition: box-shadow 300ms ease; box-shadow: none; } .ds-card:hover { box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); } .ds-card-num { font-size: 1.125rem; font-weight: 700; color: #40444F; } .ds-card-cover { width: 160px; height: 160px; margin: 0 auto; background: #E4ECF5; border-radius: 4px; } .ds-card-title { font-size: 1rem; font-weight: 600; line-height: 1.2; color: #40444F; } .ds-card-meta { font-size: 0.75rem; line-height: 1.2; color: #5F7392; }"
+    },
+    {
+      "name": "Song Row",
+      "kind": "custom",
+      "refersTo": "song-row",
+      "description": "Table row that is a drag handle and a navigation target: number, title, albums (desktop), tools right-aligned.",
+      "html": "<div class=\"ds-row\"><span class=\"ds-row-num\">104</span><span class=\"ds-row-title\">ዐቀበት ስዑ</span><span class=\"ds-row-albums\">Album 3, Album 7</span><span class=\"ds-row-tools\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\"><path d=\"M8 5v14l11-7z\" fill=\"#C9184A\"/></svg></span></div>",
+      "css": ".ds-row { display: flex; align-items: center; gap: 16px; padding: 12px 16px; background: #FFFFFF; border-bottom: 1px solid #E4ECF5; font-family: Inter, Helvetica, Arial, sans-serif; color: #40444F; cursor: pointer; transition: background 200ms ease; } .ds-row:hover { background: #E4ECF5; } .ds-row-num { font-size: 0.875rem; font-weight: 600; min-width: 40px; } .ds-row-title { font-size: 0.875rem; font-weight: 600; flex: 1; } .ds-row-albums { font-size: 0.75rem; color: #5F7392; } .ds-row-tools { margin-left: auto; display: flex; justify-content: flex-end; gap: 28px; align-items: center; }"
+    },
+    {
+      "name": "Audio Player Bar",
+      "kind": "custom",
+      "refersTo": "player-bar",
+      "description": "Signature component: 1px crimson→gold strip over a paper panel, gradient progress, transport cluster.",
+      "html": "<div class=\"ds-player\"><div class=\"ds-player-strip\"></div><div class=\"ds-player-body\"><div class=\"ds-player-progress\"><div class=\"ds-player-fill\"></div></div><div class=\"ds-player-meta\"><span class=\"ds-player-title\">ዐቀበት ስዑ</span><span class=\"ds-player-album\">Album 3, Album 7</span></div><div class=\"ds-player-transport\"><button class=\"ds-transport\" aria-label=\"Previous\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\"><path d=\"M6 5v14h3V5H6zm11 0v14l-9-7 9-7z\" fill=\"#40444F\"/></svg></button><button class=\"ds-transport ds-transport-play\" aria-label=\"Play\"><svg width=\"30\" height=\"30\" viewBox=\"0 0 24 24\"><path d=\"M8 5v14l11-7z\" fill=\"#C9184A\"/></svg></button><button class=\"ds-transport\" aria-label=\"Next\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\"><path d=\"M18 5v14h-3V5h3zM4 5v14l9-7-9-7z\" fill=\"#40444F\"/></svg></button></div></div></div>",
+      "css": ".ds-player { display: flex; flex-direction: column; font-family: Inter, Helvetica, Arial, sans-serif; } .ds-player-strip { height: 1px; background: linear-gradient(to right, #C9184A, #FABE1F); } .ds-player-body { background: #FCFDFE; padding: 14px 20px; display: flex; flex-direction: column; gap: 12px; } .ds-player-progress { position: relative; height: 8px; background: #CCDBEB; border-radius: 8px; overflow: hidden; } .ds-player-fill { width: 42%; height: 100%; background: linear-gradient(to right, #C9184A, #FABE1F); } .ds-player-meta { display: flex; flex-direction: column; gap: 6px; } .ds-player-title { font-size: 1rem; font-weight: 600; color: #40444F; } .ds-player-album { font-size: 0.75rem; font-weight: 600; color: #6B84A6; } .ds-player-transport { display: flex; align-items: center; gap: 12px; } .ds-transport { background: transparent; border: none; padding: 0; cursor: pointer; } .ds-transport:hover svg path { fill: #4B5364; } .ds-transport-play:hover svg path { fill: #E5255B; } .ds-transport-play:active svg path { fill: #AB143F; } .ds-transport:focus-visible { outline: none; }"
+    },
+    {
+      "name": "Nav Link",
+      "kind": "nav",
+      "refersTo": "nav-link-active",
+      "description": "Semibold links; active gets crimson text plus a 2px crimson underline, inactive slate-700.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-nav-link-active\" href=\"#\">Songs</a><a class=\"ds-nav-link\" href=\"#\">Albums</a><a class=\"ds-nav-link\" href=\"#\">Playlists</a></nav>",
+      "css": ".ds-nav { display: flex; gap: 32px; font-family: Inter, Helvetica, Arial, sans-serif; } .ds-nav-link, .ds-nav-link-active { font-size: 1.125rem; font-weight: 600; padding: 8px 0; text-decoration: none; } .ds-nav-link { color: #6B84A6; border-bottom: 2px solid transparent; transition: color 200ms ease; } .ds-nav-link:hover { color: #40444F; } .ds-nav-link-active { color: #C9184A; border-bottom: 2px solid #C9184A; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Songbook That Travels",
+    "overview": "The system behaves like the object it replaces: a working song binder carried into rehearsal and into a dim church hall. Surfaces are paper-cool and quiet so that Amharic lyrics read at a glance while a singer is standing, sight-reading, and holding a phone. Decoration is not the point; the point is that the right song's words, chords, and audio reach the right person in time. Color is used as a signal, not as atmosphere — gold marks what is active and selected, crimson carries the brand voice and the primary action, and the cool slate ramp does nearly all the structural work. Density follows the page's job. Lists and tables run tight and scannable because the songleader is scanning 1,016 songs; lyrics run generous because the singer is reading while singing.",
+    "keyCharacteristics": [
+      "Paper-cool surfaces (#FCFDFE) with a cool blue-gray neutral ramp doing the structural work.",
+      "Two liturgical accents only: Vestment Gold for state, Sanctuary Crimson for brand and primary action.",
+      "Inter for interface, an Ethiopic-first stack for lyrics; Amharic glyphs are the priority at every size.",
+      "Flat by default; shadow appears only when a state changes.",
+      "The gradient strip (crimson → gold) is the system's one signature gesture, reserved for the audio player and its progress."
+    ],
+    "rules": [
+      { "name": "The Two-Accent Rule", "body": "Gold and crimson are the only expressive colors in the system. Teal, ochre, and coral are semantic state codes with fixed meanings — a new hue is a defect, not a design choice.", "section": "colors" },
+      { "name": "The Rarity Rule", "body": "Gold is a marker, not a surface. On any screen, gold appears on the small number of things that are currently active. A wall of gold is a failure of hierarchy.", "section": "colors" },
+      { "name": "The Cool Neutral Rule", "body": "Neutrals run cool blue-gray, never warm gray. Text, borders, and metadata all come from the slate ramp; warm grays break the paper illusion.", "section": "colors" },
+      { "name": "The Amharic-First Rule", "body": "Any rule that sets lyrics must declare the Ethiopic stack before Latin fallbacks, and must survive a font-size change without breaking line breaks. Lyrics are content, not UI text.", "section": "typography" },
+      { "name": "The Reader Size Rule", "body": "Lyrics font size is a user-controlled product requirement, not a preference toggle. Every lyrics surface must scale with it and stay readable at the largest setting.", "section": "typography" },
+      { "name": "The Subordination Rule", "body": "Metadata is always smaller, lighter, and cooler than the title it describes. A row where title and metadata read at the same weight is a scan failure.", "section": "typography" },
+      { "name": "The Flat-By-Default Rule", "body": "Surfaces are flat at rest. A shadow means something is interactive, focused, or lifted by state. A shadow that is always on is decoration, and decoration is not the job.", "section": "elevation" },
+      { "name": "The Hairline Rule", "body": "Borders do the structural work. 1px slate-200/400 lines separate rows, cards, and fields; they are the depth system.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do keep the page background at Cool Paper (#FCFDFE) and text at Slate Ink (#40444F) — the paper illusion is the system's base.",
+      "Do use gold only for state: active, selected, saved, local. Keep it under 10% of any screen.",
+      "Do declare the Ethiopic stack first on any lyrics surface, then Latin fallbacks.",
+      "Do keep md (768px) as the mobile/desktop boundary, matching the windowWidth >= 768 logic in JS.",
+      "Do show focus through the control's own state (focus:ring-0 is the house convention), and keep tap targets at the phone-legible sizes the player uses.",
+      "Do reserve the crimson → gold gradient for the player bar and its progress fill.",
+      "Do use the slate ramp for every structural line: slate-200 for hairlines, slate-400 for secondary buttons, slate-700/800 for metadata."
+    ],
+    "donts": [
+      "Don't introduce a new hue. Teal, ochre, and coral are semantic state codes with fixed meanings; a fourth accent breaks the Two-Accent Rule.",
+      "Don't use pure black (#000000) for text or surfaces.",
+      "Don't put gold text on white, or white text on gold-400/gold-500 — use the deep gold steps (#CB9505, #6B4F03) for text on gold.",
+      "Don't add permanent shadows to cards, panels, or the player.",
+      "Don't center page titles, lyrics, or table content. The system is left-aligned.",
+      "Don't use warm grays, gray-500-family text, or Tailwind's default palette for structure — the neutral ramp is the slate family.",
+      "Don't apply the gradient strip to buttons, cards, headers, or text.",
+      "Don't ship a lyrics surface whose font size is fixed; the font-size control is a product requirement."
+    ]
+  }
+}

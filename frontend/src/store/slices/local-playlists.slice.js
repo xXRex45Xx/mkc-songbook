@@ -23,11 +23,6 @@ export const localPlaylistsSlice = createSlice({
      * @type {boolean}
      */
     isLoading: false,
-    /**
-     * Queue of playlist IDs awaiting sync confirmation
-     * @type {Array<string>}
-     */
-    syncPromptQueue: [],
   },
   reducers: {
     /**
@@ -92,31 +87,6 @@ export const localPlaylistsSlice = createSlice({
     setLoading: (state, action) => {
       state.isLoading = action.payload;
     },
-    /**
-     * Adds playlist ID to sync prompt queue
-     * @param {Object} state - Current state
-     * @param {Object} action - Action with playlist ID as payload
-     */
-    addToSyncPromptQueue: (state, action) => {
-      if (!state.syncPromptQueue.includes(action.payload)) {
-        state.syncPromptQueue.push(action.payload);
-      }
-    },
-    /**
-     * Clears and returns next playlist ID from sync queue
-     * @param {Object} state - Current state
-     * @returns {string|null} Next playlist ID or null if queue is empty
-     */
-    shiftSyncPromptQueue: (state) => {
-      state.syncPromptQueue.shift();
-    },
-    /**
-     * Clears the entire sync prompt queue
-     * @param {Object} state - Current state
-     */
-    clearSyncPromptQueue: (state) => {
-      state.syncPromptQueue = [];
-    },
   },
 });
 
@@ -127,9 +97,6 @@ export const {
   deleteLocalPlaylist,
   markAsSynced,
   setLoading,
-  addToSyncPromptQueue,
-  shiftSyncPromptQueue,
-  clearSyncPromptQueue,
 } = localPlaylistsSlice.actions;
 
 export default localPlaylistsSlice.reducer;

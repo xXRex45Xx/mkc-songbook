@@ -70,6 +70,9 @@ export const action = async ({ request }) => {
     const formData = await request.formData();
     try {
         const data = await addOrEditSong(formData, false);
+        // Queued while offline: the id is only assigned by the server, so the
+        // detail page is not reachable yet. Land on the list instead.
+        if (data?.queued) return redirect("/songs");
         if (!data || !data.insertedId)
             throw { status: 500, message: "An unexpected error occurred." };
         return redirect(`/songs/${data.insertedId}`);
