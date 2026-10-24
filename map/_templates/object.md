@@ -30,6 +30,11 @@ Citations: `{path}:{line}`
 - **joins:**
 - **looks-like-but-is-not:**
 
+## Known defects
+
+{Optional. Delete this section if none. One bullet per bug: what goes wrong, then the
+`path:line` that causes it. Only bugs, never field notes.}
+
 ## If you change this
 
 - **Hits:**

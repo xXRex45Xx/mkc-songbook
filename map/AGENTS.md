@@ -28,5 +28,6 @@ code. The code is the source of truth; cards cite it. How to walk: [CONTEXT.md](
 
 ## Status
 
-All cards are `status: stub` until slice 2 fills them. A stub tells you where the source is, not
-what it does: open the cited file.
+All 20 object cards are `verified: 2026-10-24 @ 9db0d0c`; 2 are ghosts. Cards marked
+**Known defects** record bugs found while mapping; the code is unchanged. A bare `:NN` on a card
+is a line in the last file it named.

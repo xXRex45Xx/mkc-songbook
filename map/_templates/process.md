@@ -23,6 +23,10 @@ produces: []
 
 1. {Cite `{path}:{line}`.}
 
+## Known defects
+
+{Optional. Delete this section if none. One bullet per bug, with `path:line`.}
+
 ## If you change this
 
 - **Hits:**

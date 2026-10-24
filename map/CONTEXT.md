@@ -15,7 +15,10 @@
 | `leftover` | Still present, off the main path. Touch only if that path is in scope. |
 | `ghost` | Named but not wired. Never build against it. |
 
-Known ghosts, kept off the shelves:
+Ghost cards on the shelves: [SearchHistory](objects/data-model/search-history.md),
+[settings store](objects/local-db/settings-store.md).
+
+Ghosts with no card:
 
 - Announcements: `/announcements` route renders "Under Construction"; no backend.
 - Backend E2E tests: `npm run test:e2e` exists; `backend/__tests__/e2e/` is empty.

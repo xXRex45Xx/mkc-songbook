@@ -23,6 +23,15 @@ Clusters:
 - `local-db`: IndexedDB stores, `STORE_SCHEMAS` in `frontend/src/utils/db/indexed-db.util.js`.
 - `app-state`: Redux slices, `frontend/src/store/slices/*.slice.js`.
 
+### Body sections
+
+In order: one-line summary, Why this shape, Shape, Connected to, Known defects (optional),
+If you change this, Surfaces, See.
+
+**Known defects** is the one home for bugs found while mapping. Each bullet says what goes
+wrong and cites `path:line`. No bug goes in another section. List them all with:
+`grep -rn -A12 '## Known defects' map/objects map/processes`
+
 ## `process` — a verb
 
 Lives in `processes/<slug>.md`. Copy `_templates/process.md`. Same `status`, `description` and
