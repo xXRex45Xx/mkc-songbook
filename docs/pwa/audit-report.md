@@ -1,5 +1,7 @@
 # Comprehensive PWA Audit and Implementation Review
 
+status: open — findings are against `fa2f32c`; Appendix D records fixes. Re-verify each finding against current code.
+
 **Project:** MKC Choir Songbook (`mkc-songbook`)
 **Scope audited:** `frontend/` (React 18 + Vite 5 + `vite-plugin-pwa` 1.1.0 / Workbox 7.4.0), `backend/` (Express 4 + Mongoose 8), built output in `frontend/dist/`.
 **Method:** Static source review of the service worker, manifest, registration, caching, sync, IndexedDB layer, route loaders, and offline playback paths; inspection of the generated `dist/sw.js` and `dist/manifest.webmanifest`; cross-check against `vite-plugin-pwa` and Workbox documentation. No browser was driven, so Lighthouse numbers below are derived from the build output, not measured.
@@ -430,9 +432,9 @@ The navigation fallback serves `index.html`, which is correct. There is no dedic
 
 **Fix:** add Vitest tests for `sync-service.util.js` (cursor advance, empty delta, missing cursor, delete tombstone) and for the loaders with a mocked IndexedDB.
 
-### B20. `PWA-plan.md` and `PWA-architecture.md` are stale
+### B20. `plan.md` and `architecture.md` are stale
 
-`PWA-architecture.md` §7.2 states that `cacheAudioForOffline` is unused; it is now wired to the "Save offline" button in `download-audio.component.jsx:56-67`. §5.1 documents `devOptions.enabled: true`; the config sets `false`. §12 item 2 is out of date. The docs describe a state that no longer matches the code.
+`architecture.md` §7.2 states that `cacheAudioForOffline` is unused; it is now wired to the "Save offline" button in `download-audio.component.jsx:56-67`. §5.1 documents `devOptions.enabled: true`; the config sets `false`. §12 item 2 is out of date. The docs describe a state that no longer matches the code.
 
 ---
 
@@ -551,7 +553,7 @@ Serve `dist/` with a CSP and HSTS header.
 
 ### P3.6 — Update the PWA docs
 
-Correct `PWA-architecture.md` §5.1, §7.2, and §12 to match the code.
+Correct `architecture.md` §5.1, §7.2, and §12 to match the code.
 
 ---
 
@@ -603,7 +605,7 @@ Correct `PWA-architecture.md` §5.1, §7.2, and §12 to match the code.
 - Vite PWA documentation: https://vite-pwa-org.netlify.app/ (via Context7 `/vite-pwa/vite-plugin-pwa`)
 - Workbox documentation: https://developer.chrome.com/docs/workbox
 - Web app manifest spec: https://www.w3.org/TR/appmanifest/
-- Project docs: `PWA-architecture.md`, `PWA-plan.md`
+- Project docs: [architecture.md](architecture.md), [plan.md](plan.md)
 
 ---
 
@@ -631,7 +633,7 @@ This section records the changes made after the audit ran against commit `fa2f32
 
 - **C12 (no HTTPS/deploy config):** the beta frontend runs on Cloudflare Pages and the backend runs in Docker on a server, with HTTPS provided by the platform. Plain HTTP in the repo is only for local development, so the item is not applicable to the repository as committed.
 - **L8 (cursor record re-fetched forever):** kept at `$gte` because the existing backend tests assert a `$gte` filter and the duplicate record is idempotent on upsert. The cost is bandwidth, not correctness; a migration to `$gt` needs the tests changed in the same commit.
-- **B14, B19, B20 (performance budget, frontend tests, stale docs):** out of scope for this remediation pass. `PWA-architecture.md` §5.1, §7.2 and §12 were corrected to match the code.
+- **B14, B19, B20 (performance budget, frontend tests, stale docs):** out of scope for this remediation pass. `architecture.md` §5.1, §7.2 and §12 were corrected to match the code.
 
 ### Verification
 

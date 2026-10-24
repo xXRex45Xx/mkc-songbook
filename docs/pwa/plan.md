@@ -1,5 +1,7 @@
 # PWA Implementation Plan — MKC Songbook
 
+status: superseded — design brief only; [architecture.md](architecture.md) records what was built.
+
 ## Overview
 
 Modify the existing frontend application to support full PWA functionality including offline data access, incremental sync, and audio file downloads.

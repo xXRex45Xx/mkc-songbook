@@ -242,9 +242,12 @@ mkc-songbook/
 -   Song list
 
 ### Service Logbook
+
+Entries are created before a service so members know what is planned.
+
 -   Church/service name
 -   Service date
--   Songs performed
+-   Songs planned for the service
 -   Cancellation status
 
 ## API Documentation

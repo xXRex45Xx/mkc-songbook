@@ -1,8 +1,10 @@
 # PWA Architecture — MKC Songbook
 
+status: live, partly stale — §5.1, §7.2 and §12 lag the code ([audit-report.md](audit-report.md) B20). Code wins.
+
 This document explains how the Progressive Web App (PWA) system works in the MKC Songbook codebase, as implemented on the `pwa-and-responsiveness` branch. It covers the backend delta-sync support, the IndexedDB local data layer, the service-worker runtime caching strategy, the sync orchestration, the offline audio feature, and the way route loaders integrate with it all.
 
-> Companion to `PWA-plan.md`, which was the design brief. This document describes what was *actually* implemented (including a few deviations from the plan), not just what was planned.
+> Companion to [plan.md](plan.md), which was the design brief. This document describes what was *actually* implemented (including a few deviations from the plan), not just what was planned.
 
 ---
 
