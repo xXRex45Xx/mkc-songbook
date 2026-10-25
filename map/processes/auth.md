@@ -54,9 +54,9 @@ Guess limits:
   instead by its own limiter (`AUDIO_RATE_LIMIT_MAX`, default 6000). Counters are in process
   memory, so they reset on restart and are not shared between instances. Behind a proxy set
   `TRUST_PROXY` (hop count), or all clients share one address. A throttled `POST
-  /api/user/login` gets the same 400 "Invalid username or password." as a wrong password, with
-  no `Retry-After`, so a throttled attacker cannot tell the two apart; every other throttled
-  request gets 429.
+  /api/user/login` gets the same 400 "Invalid username or password." as a wrong password, and
+  every login response carries no `RateLimit`, `RateLimit-Policy` or `Retry-After` header, so a
+  throttled attacker cannot tell the two apart; every other throttled request gets 429.
 - A code gets 5 wrong guesses, then it is deleted ([OTP](../objects/data-model/otp.md)).
 - Password login runs `assessLoginRisk` before the password is tried
   (`backend/middlewares/login-risk.middleware.js:69`). A browser whose `mkc_did` cookie matches a

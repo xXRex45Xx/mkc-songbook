@@ -29,17 +29,29 @@ export const isLoginRequest = (req) =>
 	req.method === "POST" && req.path === "/user/login";
 
 /**
+ * Removes the headers that show how much of the rate-limit budget is left.
+ *
+ * @param {Response} res - Express response object
+ */
+const hideRateLimitHeaders = (res) => {
+	res.removeHeader("RateLimit");
+	res.removeHeader("RateLimit-Policy");
+	res.removeHeader("Retry-After");
+};
+
+/**
  * Builds a per-address limiter: `limit` requests per 15 minutes for each client address,
  * IPv6 addresses grouped by subnet. Answers 429 with the API's `{ message }` shape, except
- * for a login, which gets the same 400 answer as a wrong password (and no `Retry-After`) so a
- * throttled attacker cannot tell throttling from a wrong guess.
+ * for a login, which gets the same 400 answer as a wrong password. Every login response,
+ * throttled or not, is stripped of the `RateLimit`, `RateLimit-Policy` and `Retry-After`
+ * headers, so a throttled attacker cannot tell throttling from a wrong guess.
  *
  * @param {number} limit - Requests allowed per window for one address
  * @param {Function} [appliesTo] - Receives the request; requests it rejects are not counted
  * @returns {Function} Express middleware
  */
-export const createRateLimiter = (limit, appliesTo = () => true) =>
-	rateLimit({
+export const createRateLimiter = (limit, appliesTo = () => true) => {
+	const limiter = rateLimit({
 		windowMs: 15 * 60 * 1000,
 		limit,
 		standardHeaders: "draft-8",
@@ -51,7 +63,7 @@ export const createRateLimiter = (limit, appliesTo = () => true) =>
 			!appliesTo(req),
 		handler: (req, res) => {
 			if (isLoginRequest(req)) {
-				res.removeHeader("Retry-After");
+				hideRateLimitHeaders(res);
 				return res
 					.status(400)
 					.json({ message: "Invalid username or password." });
@@ -61,6 +73,13 @@ export const createRateLimiter = (limit, appliesTo = () => true) =>
 			});
 		},
 	});
+
+	return (req, res, next) =>
+		limiter(req, res, (error) => {
+			if (isLoginRequest(req)) hideRateLimitHeaders(res);
+			next(error);
+		});
+};
 
 /** Generic limiter mounted on `/api` in index.js: `RATE_LIMIT_MAX` requests per 15 minutes (default 600). Audio is counted by `audioRateLimiter` instead. */
 export const apiRateLimiter = createRateLimiter(

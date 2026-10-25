@@ -62,6 +62,29 @@ describe("rate limit middleware", () => {
       expect(throttled.headers["retry-after"]).toBeUndefined();
     });
 
+    it("should send no rate-limit headers on any login answer, throttled or not", async () => {
+      const app = express();
+      app.use("/api", createRateLimiter(1), (req, res) => res.status(400).json({}));
+
+      const first = await request(app).post("/api/user/login");
+      const throttled = await request(app).post("/api/user/login");
+
+      for (const response of [first, throttled]) {
+        expect(response.headers["ratelimit"]).toBeUndefined();
+        expect(response.headers["ratelimit-policy"]).toBeUndefined();
+        expect(response.headers["retry-after"]).toBeUndefined();
+      }
+    });
+
+    it("should keep rate-limit headers on other routes", async () => {
+      const app = express();
+      app.use("/api", createRateLimiter(5), (req, res) => res.json({}));
+
+      const response = await request(app).get("/api/song");
+
+      expect(response.headers["ratelimit"]).toContain("5-in-15min");
+    });
+
     it("should still answer 429 to other throttled requests", async () => {
       const app = express();
       app.use("/api", createRateLimiter(1), (req, res) => res.json({}));
