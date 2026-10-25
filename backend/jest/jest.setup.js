@@ -13,6 +13,18 @@ process.env.DEFAULT_ADMIN_NAME ??= 'Admin User';
 process.env.DEFAULT_ADMIN_PHOTO_LINK ??= 'https://example.com/admin.jpg';
 process.env.PORT ??= '3001';
 
+// supertest starts each app with `listen(0)` (every interface) but connects to 127.0.0.1. On
+// macOS another local service can already hold that port on 127.0.0.1 alone, and then the
+// request reaches that service instead of the app. Connecting over the IPv6 loopback, which
+// the app also listens on, avoids it.
+const SupertestTest = require('supertest/lib/test');
+const serverAddress = SupertestTest.prototype.serverAddress;
+SupertestTest.prototype.serverAddress = function (app, path) {
+  const url = serverAddress.call(this, app, path);
+  // Without IPv6 (some containers) the app listens on IPv4 only, so keep 127.0.0.1.
+  return app.address().family === 'IPv6' ? url.replace('//127.0.0.1:', '//[::1]:') : url;
+};
+
 jest.mock('bcrypt', () => ({
   hash: jest.fn(async (value) => `hashed:${value}`),
   compare: jest.fn(async (value, hashedValue) => hashedValue === `hashed:${value}`),

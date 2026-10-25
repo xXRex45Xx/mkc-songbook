@@ -51,6 +51,10 @@ export const resetDatabase = async () => {
     await mongoose.connection.asPromise();
   }
 
+  // Unique indexes are built in the background after connecting; wait for them so a test
+  // that relies on one cannot run before it exists.
+  await Promise.all(Object.values(mongoose.models).map((model) => model.init()));
+
   await Promise.all([
     OTPModel.deleteMany({}),
     DeviceModel.deleteMany({}),
