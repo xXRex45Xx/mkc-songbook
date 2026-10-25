@@ -11,6 +11,7 @@ This file routes only; content lives in the files it points at.
 | `frontend/` | React app. Routing: [frontend/AGENTS.md](frontend/AGENTS.md) |
 | `backend/` | Express API. Routing: [backend/AGENTS.md](backend/AGENTS.md) |
 | `map/` | System map: nouns, verbs, change impact. Entry: [map/AGENTS.md](map/AGENTS.md) |
+| `workflows/` | Repeatable jobs as checked stages. Entry: [workflows/AGENTS.md](workflows/AGENTS.md) |
 | `docs/conventions.md` | Naming, formatting, imports, errors, JSDoc rules |
 | `docs/pwa/` | PWA plan, architecture, audit (each has a status line) |
 | `PRODUCT.md` | Users, roles, purpose, product principles |
@@ -30,6 +31,8 @@ them by absolute path.
 | Backend tests | `backend/TESTING.md` |
 | PWA / offline / sync | `map/processes/_index.md`; background in `docs/pwa/architecture.md` |
 | UI or visual work | `PRODUCT.md`, `DESIGN.md` |
+| Run a repeatable job (fix, release, …) | `workflows/AGENTS.md`, then that workflow's `CONTEXT.md` |
+| Write or change a workflow | `workflows/CONTEXT.md` |
 
 ## Git
 
