@@ -51,16 +51,21 @@ Guess limits:
 - Every `/api` request passes a per-address limiter (`RATE_LIMIT_MAX`, default 600 per 15
   minutes; `backend/middlewares/rate-limit.middleware.js`, mounted in `backend/index.js`).
   Audio streaming (`GET /api/song/:id/audio`, many 500 KB range requests per song) is counted
-  instead by its own limiter (`AUDIO_RATE_LIMIT_MAX`, default 6000). Counters are in process memory, so they reset on restart and are not shared between
-  instances. Behind a proxy set `TRUST_PROXY` (hop count), or all clients share one address.
+  instead by its own limiter (`AUDIO_RATE_LIMIT_MAX`, default 6000). Counters are in process
+  memory, so they reset on restart and are not shared between instances. Behind a proxy set
+  `TRUST_PROXY` (hop count), or all clients share one address. A throttled `POST
+  /api/user/login` gets the same 400 "Invalid username or password." as a wrong password, with
+  no `Retry-After`, so a throttled attacker cannot tell the two apart; every other throttled
+  request gets 429.
 - A code gets 5 wrong guesses, then it is deleted ([OTP](../objects/data-model/otp.md)).
 - Password login runs `assessLoginRisk` before the password is tried
   (`backend/middlewares/login-risk.middleware.js:69`). A browser whose `mkc_did` cookie matches a
   [Device](../objects/data-model/device.md) of that account skips every check. Anyone else needs
   a Turnstile captcha (`captchaToken` in the body; the server answers 403 with `code:
   "CAPTCHA_REQUIRED"`) when the request looks scripted (`backend/utils/bot-signal.util.js`: no
-  User-Agent, a tool User-Agent, or no Accept-Language) or has 5 failed attempts in 15 minutes
-  ([LoginAttempt](../objects/data-model/login-attempt.md)). A success clears the counters and,
+  User-Agent, a tool User-Agent, or no Accept-Language) or the client (device cookie, or
+  address plus User-Agent) or the account (from any client) has 5 failed attempts in 15 minutes
+  ([LoginAttempt](../objects/data-model/login-attempt.md)). The captcha never locks an account. A success clears the counters and,
   for an unknown browser, stores a Device and sets the cookie. Outside production without
   `TURNSTILE_SECRET_KEY` the captcha is off; in production without it, a required captcha always
   fails.

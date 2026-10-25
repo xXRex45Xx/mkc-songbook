@@ -19,8 +19,20 @@ export const isAudioRequest = (req) =>
 	/^\/song\/[^/]+\/audio$/.test(req.path);
 
 /**
+ * Tells whether a request is a password login (`POST /api/user/login`). Matches on the
+ * path under the `/api` mount, where `req.path` is `/user/login`.
+ *
+ * @param {Request} req - Express request object
+ * @returns {boolean} True for a login POST
+ */
+export const isLoginRequest = (req) =>
+	req.method === "POST" && req.path === "/user/login";
+
+/**
  * Builds a per-address limiter: `limit` requests per 15 minutes for each client address,
- * IPv6 addresses grouped by subnet. Answers 429 with the API's `{ message }` shape.
+ * IPv6 addresses grouped by subnet. Answers 429 with the API's `{ message }` shape, except
+ * for a login, which gets the same 400 answer as a wrong password (and no `Retry-After`) so a
+ * throttled attacker cannot tell throttling from a wrong guess.
  *
  * @param {number} limit - Requests allowed per window for one address
  * @param {Function} [appliesTo] - Receives the request; requests it rejects are not counted
@@ -37,10 +49,17 @@ export const createRateLimiter = (limit, appliesTo = () => true) =>
 		skip: (req) =>
 			(process.env.NODE_ENV === "test" && process.env.RATE_LIMIT_IN_TEST !== "on") ||
 			!appliesTo(req),
-		handler: (req, res) =>
-			res.status(429).json({
+		handler: (req, res) => {
+			if (isLoginRequest(req)) {
+				res.removeHeader("Retry-After");
+				return res
+					.status(400)
+					.json({ message: "Invalid username or password." });
+			}
+			return res.status(429).json({
 				message: "Too many requests. Please, try again later.",
-			}),
+			});
+		},
 	});
 
 /** Generic limiter mounted on `/api` in index.js: `RATE_LIMIT_MAX` requests per 15 minutes (default 600). Audio is counted by `audioRateLimiter` instead. */

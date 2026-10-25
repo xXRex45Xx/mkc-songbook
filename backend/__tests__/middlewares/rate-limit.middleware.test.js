@@ -7,6 +7,7 @@ import {
   apiRateLimiter,
   createRateLimiter,
   isAudioRequest,
+  isLoginRequest,
 } from "../../middlewares/rate-limit.middleware.js";
 
 describe("rate limit middleware", () => {
@@ -37,6 +38,39 @@ describe("rate limit middleware", () => {
     app.get("/b", createRateLimiter(1, (req) => req.path === "/a"), (req, res) => res.json({}));
 
     for (let i = 0; i < 3; i++) expect((await request(app).get("/b")).status).toBe(200);
+  });
+
+  describe("login requests", () => {
+    it.each([
+      ["POST", "/user/login", true],
+      ["GET", "/user/login", false],
+      ["POST", "/user/otp", false],
+      ["POST", "/user/login/extra", false],
+    ])("%s %s should be login: %s", (method, path, expected) => {
+      expect(isLoginRequest({ method, path })).toBe(expected);
+    });
+
+    it("should answer a throttled login like a wrong password, without Retry-After", async () => {
+      const app = express();
+      app.use("/api", createRateLimiter(1), (req, res) => res.json({}));
+
+      await request(app).post("/api/user/login");
+      const throttled = await request(app).post("/api/user/login");
+
+      expect(throttled.status).toBe(400);
+      expect(throttled.body).toEqual({ message: "Invalid username or password." });
+      expect(throttled.headers["retry-after"]).toBeUndefined();
+    });
+
+    it("should still answer 429 to other throttled requests", async () => {
+      const app = express();
+      app.use("/api", createRateLimiter(1), (req, res) => res.json({}));
+
+      await request(app).post("/api/user/otp");
+      const throttled = await request(app).post("/api/user/otp");
+
+      expect(throttled.status).toBe(429);
+    });
   });
 
   describe("audio requests", () => {

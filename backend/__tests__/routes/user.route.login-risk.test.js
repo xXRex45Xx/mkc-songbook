@@ -119,6 +119,43 @@ describe("login risk", () => {
     expect(response.body.code).toBe("CAPTCHA_REQUIRED");
   });
 
+  it("should require a captcha from a new client once the account has five failures elsewhere", async () => {
+    for (let i = 0; i < 5; i++) {
+      await login(wrong, { ...BROWSER, "User-Agent": `${BROWSER["User-Agent"]} client-${i}` });
+    }
+
+    const fresh = await login(member, { ...BROWSER, "User-Agent": `${BROWSER["User-Agent"]} fresh` });
+
+    expect(fresh.status).toBe(403);
+    expect(fresh.body.code).toBe("CAPTCHA_REQUIRED");
+  });
+
+  it("should not let failures on one account demand a captcha for another", async () => {
+    for (let i = 0; i < 5; i++) {
+      await login(wrong, { ...BROWSER, "User-Agent": `${BROWSER["User-Agent"]} client-${i}` });
+    }
+
+    const other = await login(
+      { email: testUsers.admin.email, password: testUsers.admin.password },
+      { ...BROWSER, "User-Agent": `${BROWSER["User-Agent"]} fresh` }
+    );
+
+    expect(other.status).toBe(200);
+  });
+
+  it("should never lock the account: a solved captcha still signs in", async () => {
+    for (let i = 0; i < 5; i++) {
+      await login(wrong, { ...BROWSER, "User-Agent": `${BROWSER["User-Agent"]} client-${i}` });
+    }
+
+    const response = await login(
+      { ...member, captchaToken: "solved" },
+      { ...BROWSER, "User-Agent": `${BROWSER["User-Agent"]} fresh` }
+    );
+
+    expect(response.status).toBe(200);
+  });
+
   it("should keep counting when the client discards its device cookie", async () => {
     for (let i = 0; i < 3; i++) {
       await login(wrong, { ...BROWSER, Cookie: `mkc_did=${"a".repeat(43)}` });

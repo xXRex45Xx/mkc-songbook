@@ -8,6 +8,8 @@
  * - A client with five failed attempts in 15 minutes needs a captcha. A client is its
  *   device cookie if it has one, and always its address plus User-Agent, so clearing
  *   the cookie does not reset the count.
+ * - An account with five failed attempts in 15 minutes, from any clients, needs a captcha
+ *   from every client that is not a known device. A captcha never locks anyone out.
  * @module middlewares/login-risk
  */
 
@@ -33,14 +35,19 @@ export const MAX_DEVICES_PER_USER = 20;
 const DAY = 1000 * 60 * 60 * 24;
 
 /**
- * Builds the failure-counter keys for a request.
+ * Builds the failure-counter keys for a request: one for the account being tried,
+ * one for the client's address and User-Agent, and one for its device cookie if any.
  *
  * @param {Request} req - Express request object
+ * @param {string} email - Email the login names
  * @param {string|null} deviceToken - Device token from the cookie, if any
  * @returns {string[]} Counter keys
  */
-const clientKeys = (req, deviceToken) => {
-	const keys = [`anon:${req.ip}:${sha256(req.headers["user-agent"] ?? "")}`];
+const clientKeys = (req, email, deviceToken) => {
+	const keys = [
+		`account:${email.trim().toLowerCase()}`,
+		`anon:${req.ip}:${sha256(req.headers["user-agent"] ?? "")}`,
+	];
 	if (deviceToken) keys.push(`device:${sha256(deviceToken)}`);
 	return keys;
 };
@@ -87,7 +94,7 @@ export const assessLoginRisk = async (req, _res, next) => {
 		}
 	}
 
-	const keys = clientKeys(req, deviceToken);
+	const keys = clientKeys(req, email, deviceToken);
 	req.loginRisk = { keys };
 
 	const counters = await LoginAttemptModel.find({ key: { $in: keys } });
