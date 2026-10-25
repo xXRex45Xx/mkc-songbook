@@ -50,11 +50,21 @@ Every stage `CONTEXT.md` has these sections, in this order:
 - **Do NOT load.** What an eager agent would wrongly pull in: other stages, old runs, all of
   `map/`.
 - **Process.** Numbered and short. Step 1 is always "If an input is missing or empty, stop and
-  say which." A step that is code names its command, run from the repo root.
+  say which. Create `output/` if it does not exist." A step that is code names its command,
+  run from the repo root.
 - **Outputs.** Each file and where it goes, normally `output/`.
-- **Check.** Exactly one, as a concrete act: a person reads X, `npm test` passes, a script
-  confirms Y. A check that is not a person writes `output/check.md`; its first line is `pass`
-  or `fail: <why>`.
+- **Check.** Exactly one, as a concrete act, starting with its type. Every check writes
+  `output/check.md`; its first line is `pass` or `fail: <why>`.
+
+| Type | Who decides | What goes in `check.md` |
+|---|---|---|
+| Person | Esrom reads the output and answers in chat | `pass — approved by Esrom` or `fail: <reason given>` |
+| Script | A command's exit code | the command, its exit code, `pass` / `fail: <why>` |
+| Agent | The agent, against a rubric the contract lists | `pass` / `fail: <why>`, then each rubric item |
+
+Use a Person check where a wrong call is costly or hard to undo: scope, conflict resolution,
+anything pushed to a shared branch. Use Script wherever a command can decide. Use Agent only
+for judgment a rubric can pin down.
 
 Rules live in reference files. A contract points at them; it never restates them.
 
@@ -65,8 +75,12 @@ Rules live in reference files. A contract points at them; it never restates them
 - A `fail` stops the run at that stage. Fix the output or the code, then re-run that check.
 - Status is what exists on disk: which `output/` folders hold artifacts, and what each
   `check.md` says. Never keep status in a separate tracker.
-- A new run overwrites `output/`. A run's outputs are committed with the change they produced,
-  so git history keeps old runs.
+- A new run overwrites `output/`. Everything inside `output/` is gitignored
+  (`workflows/*/*/output/*`): it is local run state, not product. Only an empty
+  `output/.gitkeep` is tracked, so the folder exists and `links.py` can check Inputs that point
+  into it. The commit message carries the run's summary.
+- One workflow may hand off to another as its last step (for example, to `review-commit`). The
+  hand-off is a row in the stages table, not a copied stage.
 
 ## 6. Factory and product
 
@@ -102,7 +116,8 @@ inputs) stays under about 8,000 tokens. If it grows, split the stage or narrow i
 ## 10. Add or change a workflow
 
 1. Copy `workflows/_templates/workflow-CONTEXT.md` to `workflows/<name>/CONTEXT.md`, and
-   `workflows/_templates/stage-CONTEXT.md` into each stage folder. Fill every `{…}`.
+   `workflows/_templates/stage-CONTEXT.md` into each stage folder. Fill every `{…}`. Add an
+   empty `output/.gitkeep` to each stage.
 2. Add one row to the Workflows table in [AGENTS.md](AGENTS.md).
 3. Walk test: open the root `AGENTS.md` cold. Can you reach the workflow's stage 01 contract
    through `workflows/AGENTS.md` and the workflow's `CONTEXT.md`, with no other reads? Does each

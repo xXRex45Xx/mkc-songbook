@@ -14,7 +14,7 @@ Do NOT load: {other stages' references, earlier runs, all of `map/`}.
 
 ## Process
 
-1. If an input is missing or empty, stop and say which.
+1. If an input is missing or empty, stop and say which. Create `output/` if it does not exist.
 2. {The transform. A step that is code names its command, run from the repo root:
    Run `cd backend && npm test`.}
 3. {Hard limits worth restating: length, count, format.}
@@ -25,5 +25,7 @@ Do NOT load: {other stages' references, earlier runs, all of `map/`}.
 
 ## Check
 
-{One concrete act: a person reads X / `{command}` passes / a script confirms Y. A check that is
-not a person writes `output/check.md`, first line `pass` or `fail: <why>`.}
+Type: {Person | Script | Agent}
+
+{One concrete act: Esrom reads X and approves / `{command}` exits 0 / the agent confirms each
+rubric item. Write `output/check.md`, first line `pass` or `fail: <why>`.}

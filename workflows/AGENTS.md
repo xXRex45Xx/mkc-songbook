@@ -12,6 +12,7 @@ numbered, checked stages. This file routes only. Rules for writing one: [CONTEXT
 | `<workflow>/NN_<stage>/output/` | This run's artifacts and `check.md` |
 | `<workflow>/references/` | Rules only that workflow uses |
 | [_templates/](_templates/) | `workflow-CONTEXT.md`, `stage-CONTEXT.md`: copy to start |
+| `_tools/` | Scripts stage checks call, e.g. `inventory_check.py` |
 
 Repo-wide reference files every workflow may read are listed in
 [CONTEXT.md §6](CONTEXT.md#6-factory-and-product); they live outside this folder.
@@ -20,7 +21,9 @@ Repo-wide reference files every workflow may read are listed in
 
 | Workflow | Use it when |
 |---|---|
-| none yet | — |
+| [fix-defect](fix-defect/CONTEXT.md) | A bug, security issue or map Known defect needs fixing |
+| [review-commit](review-commit/CONTEXT.md) | Esrom says commit, or another workflow hands off |
+| [merge-branches](merge-branches/CONTEXT.md) | One branch must be merged into another |
 
 Add one row here when a workflow is added.
 

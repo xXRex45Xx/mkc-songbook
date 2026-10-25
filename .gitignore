@@ -1,2 +1,5 @@
 .vscode
 .DS_Store
+# ICM workflow run state (local only)
+workflows/*/*/output/*
+!workflows/*/*/output/.gitkeep

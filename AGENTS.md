@@ -32,7 +32,10 @@ This file routes only; content lives in the files it points at.
 | Backend tests | `backend/TESTING.md` |
 | PWA / offline / sync | `map/processes/_index.md`; background in `docs/pwa/architecture.md` |
 | UI or visual work | Run the `impeccable` skill (`.claude/skills/impeccable/SKILL.md`); it loads `PRODUCT.md` and `DESIGN.md` |
-| Run a repeatable job (fix, release, …) | `workflows/AGENTS.md`, then that workflow's `CONTEXT.md` |
+| Commit changes | `workflows/review-commit/CONTEXT.md` |
+| Fix a bug or security issue | `workflows/fix-defect/CONTEXT.md` |
+| Merge branches | `workflows/merge-branches/CONTEXT.md` |
+| Run another repeatable job | `workflows/AGENTS.md`, then that workflow's `CONTEXT.md` |
 | Write or change a workflow | `workflows/CONTEXT.md` |
 
 ## Git
