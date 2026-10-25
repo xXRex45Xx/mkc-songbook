@@ -1,7 +1,7 @@
 ---
 type: process
 status: verified
-verified: 2026-10-25 @ 88be3c5+uncommitted
+verified: 2026-10-25 @ b7f940a
 description: Sign-up by emailed code, password or Google sign-in, 30-day JWT on every request.
 consumes: [../objects/data-model/user.md, ../objects/data-model/otp.md, ../objects/data-model/device.md, ../objects/data-model/login-attempt.md]
 produces: [../objects/data-model/user.md, ../objects/local-db/users-store.md, ../objects/app-state/user-slice.md]
@@ -29,22 +29,22 @@ Sign-up:
 
 1. `POST /api/user/otp` — refuses a known email (`backend/middlewares/check-user-exists.middleware.js:28`),
    then creates or refreshes the OTP; saving it sends the email
-   (`backend/controllers/user.controller.js:45`, `backend/models/otp.model.js:62`).
+   (`backend/controllers/user.controller.js:45`, `backend/models/otp.model.js:108`).
 2. `POST /api/user/verify-otp` — checks the code only; nothing is created
-   (`backend/controllers/user.controller.js:80`).
-3. `POST /api/user` — checks the code again (`backend/middlewares/validate-otp.middleware.js:24`),
+   (`backend/controllers/user.controller.js:81`).
+3. `POST /api/user` — checks the code again (`backend/middlewares/validate-otp.middleware.js:26`),
    hashes the password with bcrypt cost 10, creates the [User](../objects/data-model/user.md)
    with role `public`, returns user + token, deletes the OTP
-   (`backend/controllers/user.controller.js:115`).
+   (`backend/controllers/user.controller.js:114`).
 
 Password login: `POST /api/user/login` — risk check (below), then Passport local strategy; a user with no password
-(Google-only) always fails (`backend/config/passport.config.js:48`); token signed in
-`backend/middlewares/local-auth.middleware.js:32`.
+(Google-only) always fails (`backend/config/passport.config.js:49`); token signed in
+`backend/middlewares/local-auth.middleware.js:36`.
 
 Google: the browser gets a Google access token; `POST /api/user/google/callback` asks Google
 `tokeninfo` and refuses a token whose `aud`/`azp` is not `GOOGLE_CLIENT_ID`, then calls `userinfo`
 and refuses an email that is not `email_verified`, finds or creates the user by email, returns a
-token (`backend/controllers/user.controller.js:189`).
+token (`backend/controllers/user.controller.js:188`).
 
 Guess limits:
 
@@ -59,7 +59,7 @@ Guess limits:
   throttled attacker cannot tell the two apart; every other throttled request gets 429.
 - A code gets 5 wrong guesses, then it is deleted ([OTP](../objects/data-model/otp.md)).
 - Password login runs `assessLoginRisk` before the password is tried
-  (`backend/middlewares/login-risk.middleware.js:69`). A browser whose `mkc_did` cookie matches a
+  (`backend/middlewares/login-risk.middleware.js:76`). A browser whose `mkc_did` cookie matches a
   [Device](../objects/data-model/device.md) of that account skips every check. Anyone else needs
   a Turnstile captcha (`captchaToken` in the body; the server answers 403 with `code:
   "CAPTCHA_REQUIRED"`) when the request looks scripted (`backend/utils/bot-signal.util.js`: no
@@ -71,11 +71,11 @@ Guess limits:
   fails.
 
 Password reset: `POST /api/user/otp?forgotPassword=true` (requires a known email), then
-`PUT /api/user/reset-password` with the code (`backend/routes/user.route.js:294`).
+`PUT /api/user/reset-password` with the code (`backend/routes/user.route.js:296`).
 
 Every protected request: `passport.authenticate("jwt")` loads the user by `payload.id`
 (`backend/config/passport.config.js:77`); `roleBasedAuthorization` gates admin routes
-(`backend/routes/user.route.js:74`).
+(`backend/routes/user.route.js:75`).
 
 Frontend: forms save the token (`frontend/src/components/login-form.component.jsx:195`,
 `create-password-form.component.jsx:197`, `google-link.component.jsx:29`). The root loader calls
@@ -94,14 +94,16 @@ Frontend: forms save the token (`frontend/src/components/login-form.component.js
 - Google sign-in does not register a Device or count failures.
 
 - Login returns no `favorites`, unlike sign-up and Google sign-in.
-  `backend/middlewares/local-auth.middleware.js:39`
+  `backend/middlewares/local-auth.middleware.js:44`
 
 ## If you change this
 
 - **Hits:** [User](../objects/data-model/user.md), [OTP](../objects/data-model/otp.md),
   `backend/config/passport.config.js`, `backend/middlewares/local-auth.middleware.js`,
   `validate-otp.middleware.js`, `check-user-exists.middleware.js`, `login-risk.middleware.js`,
-  `frontend/src/utils/api/user-api.util.js`, the auth form components, `frontend/src/App.jsx`.
+  `frontend/src/utils/api/user-api.util.js`, the auth form components, `frontend/src/App.jsx`,
+  `backend/__tests__/routes/user.route.login-risk.test.js` (needs `TURNSTILE_SECRET_KEY` set to
+  test captchas; other route tests run with limiters and captchas off, see `backend/TESTING.md`).
   Changing the token claim or secret signs every user out.
 - **Frontend:** the login form shows the Turnstile widget only after a `CAPTCHA_REQUIRED` answer
   (`frontend/src/components/login-form.component.jsx`) and the login call sends cookies

@@ -3,7 +3,7 @@ type: object
 cluster: data-model
 universe: live
 status: verified
-verified: 2026-10-25 @ 88be3c5+uncommitted
+verified: 2026-10-25 @ b7f940a
 entity: backend/models/otp.model.js
 code-name: OTP
 description: One-time password for email verification and password reset; expires after 5 minutes or five wrong guesses.
@@ -23,24 +23,25 @@ OTP and mailing it are one step.
 
 ## Shape
 
-- `email` String, required, unique. `backend/models/otp.model.js:34`
-- `otp` Number, required. `:41`
+- `email` String, required, unique. `backend/models/otp.model.js:38`
+- `otp` Number, required. `:45`
 - `attempts` Number, default 0: wrong guesses so far, reset when the code is re-sent. `:49`
-- `createdAt` Date, `expires: 300` seconds (TTL).
-- `verifyCode(email, code)` static: true only for a matching code with attempts left. `:73`
-- `pre("save")` hook emails the code. `:62`
+- `createdAt` Date, `expires: 300` seconds (TTL). `:56`
+- `verifyCode(email, code)` static: true only for a matching code with attempts left. `:74`
+- `pre("save")` hook emails the code. `:108`
 
 ## Connected to
 
-- **joins:** [User](user.md) by email. Deleted after signup (`user.controller.js:138`) and
-  after password reset (`:260`).
+- **joins:** [User](user.md) by email. Deleted after signup (`user.controller.js:137`) and
+  after password reset (`:286`).
 
 ## If you change this
 
 - **Hits:** `backend/config/nodemailer.config.js` (SMTP), `backend/utils/otp.util.js`,
   `backend/middlewares/validate-otp.middleware.js`, `backend/controllers/user.controller.js`
   (`verifyOTP`, `registerOTP`),
-  `backend/__tests__/models/otp.model.test.js`.
+  `backend/__tests__/models/otp.model.test.js`, `backend/jest/helpers/integration.helper.js`
+  (`resetDatabase` clears OTPs and waits for the unique-email index).
 - **Does not hit:** the frontend stores — no OTP is cached on the device.
 
 ## Surfaces

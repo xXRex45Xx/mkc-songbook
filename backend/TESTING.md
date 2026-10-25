@@ -149,7 +149,7 @@ describe("GET /api/user/favorites", () => {
 ### `jest/helpers/integration.helper.js`
 
 - `ensureDbConnection()` - starts or reuses the in-memory MongoDB connection
-- `resetDatabase()` - clears test collections between tests
+- `resetDatabase()` - waits for every registered model's indexes to be built (`model.init()`), then clears the test collections between tests. A new Mongoose model needs its `deleteMany({})` added to the list inside it
 - `teardownDb()` - closes Mongoose and stops the in-memory server
 - `seedAuthUsers()` - creates public/member/admin/super-admin test users
 - `createUser()` - creates a single test user document with overridable defaults
@@ -189,6 +189,12 @@ The test suite sets defaults for:
 - `DEFAULT_ADMIN_NAME=Admin User`
 - `DEFAULT_ADMIN_PHOTO_LINK=https://example.com/admin.jpg`
 - `PORT=3001`
+- `GOOGLE_CLIENT_ID=test-google-client-id`
+
+Defaults that change behaviour in tests:
+
+- Rate limiters are skipped when `NODE_ENV=test`; a test of a limiter sets `RATE_LIMIT_IN_TEST=on` (see `__tests__/middlewares/rate-limit.middleware.test.js`).
+- Login captcha checks are off while `TURNSTILE_SECRET_KEY` is unset; a test of them sets it and mocks `global.fetch` for the siteverify call (see `__tests__/routes/user.route.login-risk.test.js`).
 
 Note: integration tests do not rely on a preconfigured `DB_URI`; the in-memory database is started inside the integration helper.
 
@@ -209,6 +215,15 @@ Note: integration tests do not rely on a preconfigured `DB_URI`; the in-memory d
 ### Tests fail with auth or env issues
 - Confirm the test imports run through Jest so `jest.env.js` and `jest.setup.js` are loaded.
 - Avoid starting the app with `npm run dev` while running integration tests.
+
+### Route test gets a 401 or other answer from a service that is not the app
+- Symptom: a login in a route test returns `{"detail":"Unauthorized"}` or another foreign body, and a later step sees `Bearer undefined`. It appears at random, more often under load.
+- Cause: supertest starts the app with `listen(0)` on every interface but connects to `127.0.0.1`. On macOS, another local service holding the same random port on `127.0.0.1` alone receives the request instead.
+- Fix in place: `jest/jest.setup.js` patches supertest's `serverAddress` to connect over `[::1]` when the app listens on IPv6, and keeps `127.0.0.1` on IPv4-only hosts. It relies on supertest's private `lib/test.js`, so a supertest upgrade that changes it fails every test at once.
+
+### A unique-index test passes alone but fails in the full run
+- Cause: Mongoose builds indexes in the background after connecting, so a test that expects a duplicate to be rejected can run before the unique index exists.
+- Fix in place: `resetDatabase()` waits for `model.init()` on every registered model. Call `resetDatabase()` in `beforeEach` (or `await Model.init()`) in any test that depends on a unique index.
 
 ### Integration tests interfere with each other
 - Ensure `resetDatabase()` runs in `beforeEach`.

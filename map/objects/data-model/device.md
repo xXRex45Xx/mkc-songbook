@@ -3,7 +3,7 @@ type: object
 cluster: data-model
 universe: live
 status: verified
-verified: 2026-10-25 @ 88be3c5+uncommitted
+verified: 2026-10-25 @ b7f940a
 entity: backend/models/device.model.js
 code-name: Device
 description: A browser that signed in to an account before; its login skips the captcha checks.
@@ -35,7 +35,8 @@ after `lastUsedAt`.
 ## If you change this
 
 - **Hits:** `backend/middlewares/login-risk.middleware.js`, `backend/utils/device.util.js` (cookie
-  name, flags), `backend/__tests__/routes/user.route.login-risk.test.js`.
+  name, flags), `backend/__tests__/routes/user.route.login-risk.test.js`,
+  `backend/jest/helpers/integration.helper.js` (`resetDatabase` clears devices by model name).
 - **Does not hit:** the frontend stores; the cookie is HttpOnly and never read by JavaScript.
 
 ## Surfaces

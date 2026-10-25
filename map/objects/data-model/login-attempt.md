@@ -3,7 +3,7 @@ type: object
 cluster: data-model
 universe: live
 status: verified
-verified: 2026-10-25 @ 88be3c5+uncommitted
+verified: 2026-10-25 @ b7f940a
 entity: backend/models/login-attempt.model.js
 code-name: LoginAttempt
 description: Failed password attempts per account or client key; five in 15 minutes makes the next login need a captcha.
@@ -38,7 +38,8 @@ captcha, and a known device skips it.
 ## If you change this
 
 - **Hits:** `backend/middlewares/login-risk.middleware.js` (`CAPTCHA_AFTER_FAILURES`, key
-  builder), `backend/__tests__/routes/user.route.login-risk.test.js`.
+  builder), `backend/__tests__/routes/user.route.login-risk.test.js`,
+  `backend/jest/helpers/integration.helper.js` (`resetDatabase` clears counters by model name).
 - **Does not hit:** [User](user.md); a counter holds the email, not an account id, so it also
   covers emails that do not exist.
 
