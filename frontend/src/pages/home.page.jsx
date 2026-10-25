@@ -20,7 +20,7 @@ const HomePage = () => {
 	const navigate = useNavigate();
 	useEffect(() => {
 		navigate("/songs");
-	}, []);
+	}, [navigate]);
 	return <MainBodyContainer title={"Under Construction"}></MainBodyContainer>;
 };
 

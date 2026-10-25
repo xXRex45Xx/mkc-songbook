@@ -64,7 +64,7 @@ const LyricViewer = ({ song }) => {
 			dispatch(setHiddenHeader(false));
 			document.exitFullscreen();
 		};
-	}, []);
+	}, [dispatch]);
 
 	/**
 	 * Font size configuration from Redux store

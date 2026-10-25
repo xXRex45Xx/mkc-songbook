@@ -187,7 +187,7 @@ const SongTools = ({
 			style += "first:stroke-basewhite first:fill-primary";
 		else style += "first:stroke-baseblack first:fill-basewhite";
 		return style;
-	}, [user]);
+	}, [user, song._id]);
 
 	return (
 		<div

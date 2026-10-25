@@ -33,7 +33,7 @@ const useWindowSize = () => {
       dispatch(setWindowInnerWidth(e.target.innerWidth));
     window.addEventListener("resize", updateSize);
     return () => window.removeEventListener("resize", updateSize);
-  }, []);
+  }, [dispatch]);
 };
 
 export default useWindowSize;

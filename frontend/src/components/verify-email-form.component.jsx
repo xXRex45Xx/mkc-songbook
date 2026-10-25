@@ -56,7 +56,7 @@ const VerifyEmailForm = () => {
 
     useEffect(() => {
         if (!email && !forgotEmail) navigate("/auth/signup");
-    }, [email, forgotEmail]);
+    }, [email, forgotEmail, navigate]);
 
     /**
      * Handles keypress events for OTP input fields

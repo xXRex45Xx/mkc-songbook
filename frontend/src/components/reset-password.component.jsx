@@ -68,7 +68,7 @@ const ResetPasswordForm = () => {
 
     useEffect(() => {
         if (!email || !otp) navigate("/auth/forgot-password");
-    }, [email, otp]);
+    }, [email, otp, navigate]);
 
     return (
         <Form

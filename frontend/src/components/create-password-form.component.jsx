@@ -70,7 +70,7 @@ const CreatePasswordForm = () => {
 
     useEffect(() => {
         if (!email || !otp) navigate("/auth/signup");
-    }, [email, otp]);
+    }, [email, otp, navigate]);
 
     return (
         <Form
