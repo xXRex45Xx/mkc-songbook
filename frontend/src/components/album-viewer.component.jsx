@@ -115,7 +115,7 @@ const AlbumViewer = ({ album }) => {
 			>
 				<Modal.Header>Delete Album?</Modal.Header>
 				<Modal.Body>
-					<p className="text-baseblack">This can't be undone!</p>
+					<p className="text-baseblack">This can&apos;t be undone!</p>
 					{deleteError && (
 						<p className="text-secondary mt-2">{deleteError}</p>
 					)}

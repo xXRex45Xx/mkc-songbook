@@ -9,11 +9,10 @@ import { Await, defer, redirect, useLoaderData } from "react-router-dom";
 
 import "./upload-song.styles.css";
 import { getAllAlbums } from "../utils/api/album-api.util";
-import { Suspense, useEffect } from "react";
+import { Suspense } from "react";
 import CustomTailSpin from "../components/custom-tail-spin.component";
 import { addOrEditSong } from "../utils/api/songs-api.util";
 import SongForm from "../components/song-form.component";
-import { useSelector } from "react-redux";
 
 /**
  * Upload Song Page Component

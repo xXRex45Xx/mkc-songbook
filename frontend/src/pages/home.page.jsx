@@ -5,7 +5,6 @@
 
 import { useNavigate } from "react-router-dom";
 import MainBodyContainer from "../components/main-body-container.component";
-import { useSelector } from "react-redux";
 import { useEffect } from "react";
 
 /**

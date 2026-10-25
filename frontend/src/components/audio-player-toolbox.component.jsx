@@ -3,14 +3,10 @@
  * Provides presentation mode, font size adjustment, and queue management
  */
 
-import { Tooltip, Button, Popover, Modal } from "flowbite-react";
-import CustomSlider from "./custom-slider.component";
+import { Tooltip, Button, Modal } from "flowbite-react";
 import { useDispatch, useSelector } from "react-redux";
-import { setLyricsFontSize } from "../store/slices/configs.slice";
 import { buttonTheme } from "../config/button-theme.config";
 
-import TextSizeSvg from "../assets/text-size.svg?react";
-import PresentationSvg from "../assets/presentation.svg?react";
 import QueueSvg from "../assets/queue.svg?react";
 import DownloadAudio from "./download-audio.component.jsx";
 import { useState } from "react";

@@ -5,7 +5,6 @@
 
 import { TextInput, Select } from "flowbite-react";
 import {
-	numberInputTheme,
 	searchInputTheme,
 	selectTheme,
 } from "../config/forms-theme.config";

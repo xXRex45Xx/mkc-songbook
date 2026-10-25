@@ -5,7 +5,7 @@ import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
 
 export default [
-  { ignores: ['dist'] },
+  { ignores: ['dist', 'dev-dist'] },
   {
     files: ['**/*.{js,jsx}'],
     languageOptions: {
@@ -29,10 +29,20 @@ export default [
       ...react.configs['jsx-runtime'].rules,
       ...reactHooks.configs.recommended.rules,
       'react/jsx-no-target-blank': 'off',
+      // Props are documented with JSDoc (docs/conventions.md); the project has no prop-types.
+      'react/prop-types': 'off',
+      'no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+      ],
       'react-refresh/only-export-components': [
         'warn',
         { allowConstantExport: true },
       ],
     },
+  },
+  {
+    files: ['tailwind.config.js', 'vite.config.js'],
+    languageOptions: { globals: globals.node },
   },
 ]

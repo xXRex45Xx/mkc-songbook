@@ -19,7 +19,7 @@ import {
     Textarea,
     Button,
 } from "flowbite-react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import CustomTailSpin from "./custom-tail-spin.component";
 
 /**

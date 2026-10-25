@@ -10,7 +10,7 @@ import CustomTailSpin from "../components/custom-tail-spin.component";
 import PlaylistForm from "../components/playlist-form.component";
 import { addOrEditPlaylist, getPlaylist } from "../utils/api/playlist-api.util";
 import { getLocalPlaylist, updateLocalPlaylist } from "../utils/api/local-playlist-api.util";
-import { useSelector, useDispatch } from "react-redux";
+import { useSelector } from "react-redux";
 
 /**
  * Edit Playlist Page Component
@@ -25,7 +25,6 @@ const EditPlaylistPage = () => {
 	const loaderData = useLoaderData();
 	const params = useParams();
 	const user = useSelector((state) => state.user.currentUser);
-	const dispatch = useDispatch();
 
 	return (
 		<MainBodyContainer title="Edit Playlist">

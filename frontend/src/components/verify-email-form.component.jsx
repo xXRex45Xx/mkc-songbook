@@ -173,7 +173,7 @@ const VerifyEmailForm = () => {
                 verify your account.
                 <br />
                 <br />
-                Didn't get it?{" "}
+                Didn&apos;t get it?{" "}
                 <button
                     onClick={handleResend}
                     className="text-secondary font-semibold"

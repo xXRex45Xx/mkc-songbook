@@ -305,7 +305,7 @@ const PlaylistViewer = ({ playlist }) => {
 				<Modal.Header>Change Visibility</Modal.Header>
 				<Modal.Body>
 					<p className="text-baseblack">
-						This playlist is private and can't be accessed by other users.
+						This playlist is private and can&apos;t be accessed by other users.
 						Please change the visibility first.
 					</p>
 					{preShareModalError && (

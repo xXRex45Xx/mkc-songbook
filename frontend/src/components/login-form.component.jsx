@@ -142,7 +142,7 @@ const LoginForm = () => {
 					</GoogleLink>
 				</div>
 				<span className="text-center">
-					Don't have an account?{" "}
+					Don&apos;t have an account?{" "}
 					<Link to="signup" className="text-secondary font-semibold">
 						Sign Up
 					</Link>

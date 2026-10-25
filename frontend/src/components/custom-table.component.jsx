@@ -76,4 +76,6 @@ const CustomTable = forwardRef(
 	)
 );
 
+CustomTable.displayName = "CustomTable";
+
 export default CustomTable;

@@ -31,13 +31,11 @@ import PlaylistCard from "./playlist-card.component";
 import { getAllPlaylists, patchPlaylist } from "../utils/api/playlist-api.util";
 import {
 	getAllLocalPlaylists,
-	createLocalPlaylist,
 	addSongToLocalPlaylist,
 } from "../utils/api/local-playlist-api.util";
 import { updateFavoriteSongs } from "../utils/api/user-api.util";
 import { setUserFavorites } from "../store/slices/user.slice";
 import { addSongToQueue, playNext } from "../store/slices/playlist.slice";
-import { addLocalPlaylist } from "../store/slices/local-playlists.slice";
 
 /**
  * Song Tools Component
@@ -247,7 +245,7 @@ const SongTools = ({
 					>
 						<Modal.Header>Delete Song?</Modal.Header>
 						<Modal.Body>
-							<p className="text-baseblack">This can't be undone!</p>
+							<p className="text-baseblack">This can&apos;t be undone!</p>
 							{deleteError && (
 								<p className="text-secondary mt-2">{deleteError}</p>
 							)}
