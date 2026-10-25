@@ -1,0 +1,2 @@
+# Platform engine binary (~16 MB). The launcher downloads it on first run and checks its sha256.
+scripts/bin/

@@ -34,7 +34,9 @@ No frontend test suite exists.
 - JSDoc: [STYLE_GUIDE.md](STYLE_GUIDE.md) and [TEMPLATES.md](TEMPLATES.md).
 - Offline or sync work: [../map/processes/_index.md](../map/processes/_index.md); background in
   [../docs/pwa/architecture.md](../docs/pwa/architecture.md).
-- UI work: [../PRODUCT.md](../PRODUCT.md), [../DESIGN.md](../DESIGN.md).
+- UI or visual work (components, pages, styling, themes): run the `impeccable` skill,
+  [../.claude/skills/impeccable/SKILL.md](../.claude/skills/impeccable/SKILL.md). It loads
+  [../PRODUCT.md](../PRODUCT.md) and [../DESIGN.md](../DESIGN.md).
 
 ## Environment (copy [.env.example](.env.example) to `.env`, not tracked)
 

@@ -24,6 +24,7 @@ A catalog, not a spec. Find the thing you are changing, open the listed cards, a
 | Service worker caching (`frontend/vite.config.js`) | [offline-audio](../processes/offline-audio.md), [delta-sync](../processes/delta-sync.md) | `docs/pwa/architecture.md` |
 | A Redux slice | its card in [app-state](../objects/app-state/_index.md) | the store or process it mirrors |
 | Route roles in `frontend/src/main.jsx` | [user slice](../objects/app-state/user-slice.md) | [auth](../processes/auth.md) |
+| Components, pages, styling, Tailwind or Flowbite themes | run the `impeccable` skill (`.claude/skills/impeccable/SKILL.md`) | the slice or store the component reads, from [app-state](../objects/app-state/_index.md) or [local-db](../objects/local-db/_index.md) |
 | `AUDIO_STORAGE`, `IMAGE_STORAGE`, `/static` paths | [publish-content](../processes/publish-content.md) | [offline-audio](../processes/offline-audio.md); see Outside consumers |
 
 ## Does not move together
@@ -43,6 +44,7 @@ or move files.
 | Consumer | Points at | Breaks when |
 |---|---|---|
 | `frontend/.impeccable/live/roots.json` (untracked) | absolute paths to `PRODUCT.md`, `DESIGN.md` | either file moves |
+| `impeccable` skill, `.claude/skills/impeccable/` | `PRODUCT.md`, `DESIGN.md` at the repo root | either file moves or is renamed |
 | Obsidian vault `mkc-songbook/` (one note per repo file, per `PRODUCT.md`) | repo file paths | any source file is renamed or moved |
 | Claude Code project memory `~/.claude/projects/-Users-esrom-js-apps-mkc-songbook/` | the checkout path | the repo folder moves |
 | `backend/Dockerfile` | `index.js`, `EXPOSE 8080`; `.dockerignore` drops `uploads`, `.env` | entry file renamed; `EXPOSE` only documents 8080, so set `PORT=8080` to match |

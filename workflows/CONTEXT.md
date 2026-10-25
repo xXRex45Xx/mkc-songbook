@@ -72,7 +72,8 @@ Rules live in reference files. A contract points at them; it never restates them
 
 - **Factory (stable, every run):** `docs/conventions.md`, `map/` (cards and
   `map/effects/CONTEXT.md`), `backend/TESTING.md`, `PRODUCT.md`, `DESIGN.md`, the
-  `STYLE_GUIDE.md` and `TEMPLATES.md` files. Link to them; never copy them into a workflow.
+  `STYLE_GUIDE.md` and `TEMPLATES.md` files, and the `impeccable` skill
+  (`.claude/skills/impeccable/SKILL.md`). Link to them; never copy them into a workflow.
 - **Workflow-only rules** go in `<workflow>/references/`.
 - **Product (new every run):** the files in each stage's `output/`, and the code change itself.
 
@@ -82,6 +83,9 @@ Rules live in reference files. A contract points at them; it never restates them
 - **A workflow that changes code** has a stage or step that opens `map/effects/CONTEXT.md` for
   what the change hits, then updates every map card it made untrue: fix or remove the Known
   defect, refresh citations, set `verified` to today and the new commit.
+- **A stage that changes UI or visual design** (components, pages, styling, themes) runs the
+  `impeccable` skill for that work and lists `.claude/skills/impeccable/SKILL.md` under its
+  Reference inputs.
 - **Commits and pushes** happen only at the stage that says so, and only after its check passes.
 
 ## 8. Size

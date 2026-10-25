@@ -12,14 +12,15 @@ This file routes only; content lives in the files it points at.
 | `backend/` | Express API. Routing: [backend/AGENTS.md](backend/AGENTS.md) |
 | `map/` | System map: nouns, verbs, change impact. Entry: [map/AGENTS.md](map/AGENTS.md) |
 | `workflows/` | Repeatable jobs as checked stages. Entry: [workflows/AGENTS.md](workflows/AGENTS.md) |
+| `.claude/skills/impeccable/` | `impeccable` skill: the tool for all UI and visual work |
 | `docs/conventions.md` | Naming, formatting, imports, errors, JSDoc rules |
 | `docs/pwa/` | PWA plan, architecture, audit (each has a status line) |
 | `PRODUCT.md` | Users, roles, purpose, product principles |
 | `DESIGN.md` | Visual design system |
 | `README.md` | Human setup guide |
 
-`PRODUCT.md` and `DESIGN.md` stay at the root: `frontend/.impeccable/live/roots.json` points at
-them by absolute path.
+`PRODUCT.md` and `DESIGN.md` stay at the root: the `impeccable` skill loads them from there, and
+`frontend/.impeccable/live/roots.json` points at them by absolute path.
 
 ## Go here for
 
@@ -30,7 +31,7 @@ them by absolute path.
 | Write JSDoc | `frontend/STYLE_GUIDE.md` or `backend/STYLE_GUIDE.md`, plus `TEMPLATES.md` |
 | Backend tests | `backend/TESTING.md` |
 | PWA / offline / sync | `map/processes/_index.md`; background in `docs/pwa/architecture.md` |
-| UI or visual work | `PRODUCT.md`, `DESIGN.md` |
+| UI or visual work | Run the `impeccable` skill (`.claude/skills/impeccable/SKILL.md`); it loads `PRODUCT.md` and `DESIGN.md` |
 | Run a repeatable job (fix, release, …) | `workflows/AGENTS.md`, then that workflow's `CONTEXT.md` |
 | Write or change a workflow | `workflows/CONTEXT.md` |
 

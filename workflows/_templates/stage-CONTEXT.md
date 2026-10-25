@@ -7,6 +7,7 @@ One job: {the single thing this stage does}.
 - Working (this run): `workflows/{workflow-name}/{prev-stage}/output/{file}`
 - Reference (every run): `docs/conventions.md`
 - Reference (every run): `{map card or workflows/{workflow-name}/references/{file}.md}`
+- Reference (UI or visual stages only): `.claude/skills/impeccable/SKILL.md` — run the skill
 - Example (optional): `workflows/{workflow-name}/{NN}_{stage-name}/examples/`
 
 Do NOT load: {other stages' references, earlier runs, all of `map/`}.
