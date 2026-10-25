@@ -15,8 +15,8 @@ How a song's recording is saved for offline play, and how the player picks its s
 
 The user presses "Save offline". The app fetches `GET /api/song/:id/audio`, stores the blob in
 the [audioFiles store](../objects/local-db/audio-files-store.md) stamped with the song's
-`updatedAt`, and also saves a file to the device. At play time the player uses the saved blob
-unless it is stale, else streams from the server.
+`updatedAt`. Nothing is written to the device's files, so no save dialog opens. At play time
+the player uses the saved blob unless it is stale, else streams from the server.
 
 ## Why this shape
 
@@ -26,17 +26,25 @@ what is saved and check staleness.
 
 ## Steps
 
-Save (`frontend/src/utils/api/audio-download.util.js:149`):
+Save (`saveAudioOffline`, `frontend/src/utils/api/audio-download.util.js:137`):
 
-1. `fetchAudioBlob`: plain `fetch` of `/api/song/:id/audio`, no `Range` header (`:60`). The
-   backend answers `200` with the whole file. A `206` is never taken as complete: the client
+1. `fetchAudioBlob`: plain `fetch` of `/api/song/:id/audio`, no `Range` header (`:89`). The
+   backend answers `200` with the whole file, read as a stream so progress can be reported
+   against `Content-Length` (`readBodyWithProgress`, `:62`). A `206` is never taken as complete: the client
    fetches the remaining ranges from `Content-Range` and fails if the total size is not reached
-   (`collectRemainingParts`, `:28`).
-2. Read the song's `updatedAt` from the [songs store](../objects/local-db/songs-store.md) (`:78`).
-3. `audioIdbService.store` with `{ _id, songId, blob, updatedAt, size, mimeType }` (`:153`).
-4. Save a copy to the device's files (`:162`).
+   (`collectRemainingParts`, `:33`).
+2. Read the song's `updatedAt` from the [songs store](../objects/local-db/songs-store.md) (`:111`).
+3. `audioIdbService.store` with `{ _id, songId, blob, updatedAt, size, mimeType }` (`:141`).
 
-The button and saved state live in `frontend/src/components/download-audio.component.jsx:48`.
+While the fetch runs, `download-audio.component.jsx` writes whole-percent progress into the
+[pwa slice](../objects/app-state/pwa-slice.md) (`audioDownloads`). The song table row
+(`frontend/src/components/custom-row.component.jsx`) dims and shows a progress bar under itself
+until the save ends.
+
+The button and saved state live in `frontend/src/components/download-audio.component.jsx:33`.
+Once a song is saved the button is disabled and shows a check icon; there is no re-save from the
+button. A saved copy is removed only when the song is deleted on the server (delta-sync
+reconcile) or site data is cleared, so a stale copy is streamed past, not refreshed.
 
 Play (`frontend/src/components/audio-player.component.jsx:76`):
 
@@ -48,7 +56,7 @@ Play (`frontend/src/components/audio-player.component.jsx:76`):
 3. Stream error → fall back to a saved blob, or show "unavailable" (`audio-player.component.jsx:105`).
 
 Stale means the songs store has a newer `updatedAt` than the saved copy
-(`frontend/src/utils/api/audio-download.util.js:195`).
+(`frontend/src/utils/api/audio-download.util.js:180`).
 
 ## Known defects
 

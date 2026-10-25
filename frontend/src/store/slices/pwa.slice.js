@@ -16,6 +16,7 @@ import { createSlice } from "@reduxjs/toolkit";
  * @property {Object|null} lastSyncCounts - Per-resource record counts from the last sync
  * @property {number} pendingWrites - Mutations waiting to reach the server
  * @property {number} failedWrites - Queued mutations the server permanently rejected
+ * @property {Object<string, number>} audioDownloads - Whole-percent progress (0-100) of audio saves in flight, by song id
  */
 const initialState = {
   offlineReady: false,
@@ -29,6 +30,7 @@ const initialState = {
   isInstallable: false,
   isInstalled: false,
   swError: null,
+  audioDownloads: {},
 };
 
 const pwaSlice = createSlice({
@@ -69,6 +71,13 @@ const pwaSlice = createSlice({
     setInstallable: (state, action) => {
       state.isInstallable = action.payload;
     },
+    setAudioDownloadProgress: (state, action) => {
+      const { songId, percent } = action.payload;
+      state.audioDownloads[songId] = percent;
+    },
+    clearAudioDownload: (state, action) => {
+      delete state.audioDownloads[action.payload];
+    },
     setInstalled: (state, action) => {
       state.isInstalled = action.payload;
     },
@@ -86,6 +95,8 @@ export const {
   setWriteQueueSummary,
   setInstallable,
   setInstalled,
+  setAudioDownloadProgress,
+  clearAudioDownload,
 } = pwaSlice.actions;
 
 export default pwaSlice.reducer;

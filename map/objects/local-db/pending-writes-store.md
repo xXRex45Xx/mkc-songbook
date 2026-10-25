@@ -41,7 +41,7 @@ Flush (`frontend/src/utils/pwa/write-queue.util.js:257`):
 - **joins:** [pwa slice](../app-state/pwa-slice.md) via `setWriteQueueSummary`.
 - **looks-like-but-is-not:** [localPlaylists store](local-playlists-store.md) — local
   playlists upload through their own path, not this queue
-  (`frontend/src/utils/pwa/pwa-register.util.js:86`).
+  (`frontend/src/utils/pwa/pwa-register.util.js:99`).
 
 ## Known defects
 

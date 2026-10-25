@@ -113,7 +113,6 @@ const LyricViewer = ({ song }) => {
 					{song.hasAudio && (
 						<DownloadAudio
 							songId={song._id}
-							songTitle={song.title}
 							hasAudio={song.hasAudio}
 						/>
 					)}

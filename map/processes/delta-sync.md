@@ -28,11 +28,12 @@ cannot see deletions, so a separate pass compares id lists.
 ## Steps
 
 1. Triggers: app start (`frontend/src/main.jsx:20` → `registerPwa`,
-   `frontend/src/utils/pwa/pwa-register.util.js:227`), service worker ready (`:232`), and the
-   `online` event (`:172`). One run at a time (`:112`). No timer.
+   `frontend/src/utils/pwa/pwa-register.util.js:236`), service worker ready (`:244`), the
+   `online` event (`:188`), and the app returning to the foreground, at most once per five minutes
+   (`visibilitychange` handler at the end of `registerPwa`). One run at a time (`:128`). No timer.
 2. `performSync`: flush the [write queue](offline-writes.md) first, then
    [upload local playlists](local-playlist-upload.md), then sync data
-   (`frontend/src/utils/pwa/pwa-register.util.js:67`).
+   (`frontend/src/utils/pwa/pwa-register.util.js:80`).
 3. No `lastFullSync` → `initializePwaData`: `GET /api/song?all=true` and `GET /api/album`,
    `bulkPut` both, set `lastSongSync` / `lastAlbumSync`, and write `lastFullSync` = now so the
    next start takes step 4 (`frontend/src/utils/pwa/sync-service.util.js:66`).
@@ -44,8 +45,9 @@ cannot see deletions, so a separate pass compares id lists.
    their saved audio, and albums the server no longer has (`sync-service.util.js:195`).
 6. Write `lastFullSync` = now (`sync-service.util.js:288`).
 
-The manual "sync now" button in `frontend/src/components/pwa-status.component.jsx:70` calls
-`syncAll` directly.
+There is no manual "sync now" control: the status bar that held it was removed from
+`frontend/src/components/pwa-status.component.jsx`. A user who wants fresh data reloads the app
+or reconnects.
 
 ## If you change this
 
@@ -62,8 +64,7 @@ The manual "sync now" button in `frontend/src/components/pwa-status.component.js
 
 | Surface | Role |
 |---|---|
-| App start, reconnect | trigger |
-| PWA status "sync now" | trigger |
+| App start, service worker ready, reconnect, return to foreground | trigger |
 | Songs, albums, lyrics pages | read the result |
 
 ## See

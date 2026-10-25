@@ -117,7 +117,7 @@ const VerifyEmailForm = () => {
                     Verify {forgotEmail ? "It's You" : "Email"}
                 </h3>
             </div>
-            <div className="flex gap-2.5 self-center">
+            <div className="flex gap-2 sm:gap-2.5 w-full justify-center">
                 <TextInput
                     autoFocus={true}
                     theme={numberInputTheme}

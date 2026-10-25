@@ -88,7 +88,6 @@ const AudioPlayerToolbox = () => {
 				{queue[currentSongIdx]?.hasAudio && (
 					<DownloadAudio
 						songId={queue[currentSongIdx]._id}
-						songTitle={queue[currentSongIdx].title}
 						hasAudio={queue[currentSongIdx].hasAudio}
 					/>
 				)}

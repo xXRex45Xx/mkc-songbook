@@ -11,8 +11,9 @@ import Bell from "../assets/active-bell.svg?react";
 import heart from "../assets/heart.svg";
 import SearchBar from "./search-bar.component";
 import SearchToggleSvg from "../assets/search-toggle.svg?react";
+import MenuSvg from "../assets/menu.svg?react";
 import InstallPrompt from "./install-prompt.component";
-import { useMemo, useState } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { buttonTheme } from "../config/button-theme.config";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -78,6 +79,45 @@ const Header = () => {
 		if (pathname.startsWith("/albums")) return "/albums";
 		return "/songs";
 	}, [pathname]);
+
+	/**
+	 * Navigation links visible to the current role
+	 */
+	const navLinks = useMemo(() => {
+		const links = [
+			{ to: "/songs", label: "Songs" },
+			{ to: "/albums", label: "Albums" },
+			{ to: "/playlists", label: "Playlists" },
+		];
+		if (role !== "public") links.push({ to: "/schedule", label: "Schedule" });
+		if (["admin", "super-admin"].includes(user?.role))
+			links.push({ to: "/users", label: "Users" });
+		if (["admin", "super-admin", "member"].includes(user?.role))
+			links.push({ to: "/announcements", label: "Announcements" });
+		return links;
+	}, [role, user]);
+
+	/**
+	 * Whether the links no longer fit in one row on a narrow screen. When they
+	 * do not, the row collapses into the current page name plus a menu button.
+	 */
+	const [navOverflows, setNavOverflows] = useState(false);
+	const navRowRef = useRef(null);
+	const navMeasureRef = useRef(null);
+
+	useLayoutEffect(() => {
+		const row = navRowRef.current;
+		const measure = navMeasureRef.current;
+		if (!row || !measure) return;
+		const check = () => setNavOverflows(measure.offsetWidth > row.clientWidth);
+		check();
+		const observer = new ResizeObserver(check);
+		observer.observe(row);
+		return () => observer.disconnect();
+	}, [navLinks]);
+
+	const activeLink =
+		navLinks.find((link) => pathname.startsWith(link.to)) || navLinks[0];
 
 	/**
 	 * Handles user logout by clearing Redux store, the offline user cache,
@@ -198,60 +238,60 @@ const Header = () => {
 				</div>
 			</Navbar>
 			<Navbar fluid border theme={navbarTheme}>
-				<Navbar.Collapse>
-					{/* {!["admin", "super-admin"].includes(user?.role) && (
-						<Navbar.Link as={Link} to="/" active={pathname === "/"}>
-							Home
-						</Navbar.Link>
-					)} */}
-					<Navbar.Link
-						as={Link}
-						to="/songs"
-						active={pathname.startsWith("/songs")}
+				<div ref={navRowRef} className="w-full h-0 overflow-hidden md:hidden">
+					<ul
+						ref={navMeasureRef}
+						aria-hidden="true"
+						className="invisible flex w-max gap-6 text-sm font-semibold whitespace-nowrap"
 					>
-						Songs
-					</Navbar.Link>
-					<Navbar.Link
-						as={Link}
-						to="/albums"
-						active={pathname.startsWith("/albums")}
-					>
-						Albums
-					</Navbar.Link>
-					<Navbar.Link
-						as={Link}
-						to="/playlists"
-						active={pathname.startsWith("/playlists")}
-					>
-						Playlists
-					</Navbar.Link>
-					{role !== "public" && (
-						<Navbar.Link
-							as={Link}
-							to="/schedule"
-							active={pathname.startsWith("/schedule")}
+						{navLinks.map((link) => (
+							<li key={link.to}>{link.label}</li>
+						))}
+					</ul>
+				</div>
+				{navOverflows && (
+					<div className="flex w-full items-center justify-between pb-2 md:hidden">
+						<span className="block pb-2 font-semibold text-sm text-secondary border-b-2 border-b-secondary">
+							{activeLink.label}
+						</span>
+						<Dropdown
+							arrowIcon={false}
+							inline
+							label={
+								<span className="p-2">
+									<span className="sr-only">Open navigation menu</span>
+									<MenuSvg className="*:stroke-baseblack hover:*:stroke-secondary-600 active:*:stroke-secondary-700" />
+								</span>
+							}
 						>
-							Schedule
-						</Navbar.Link>
-					)}
-					{["admin", "super-admin"].includes(user?.role) && (
+							{navLinks.map((link) => (
+								<Dropdown.Item
+									key={link.to}
+									as={Link}
+									to={link.to}
+									className={
+										pathname.startsWith(link.to)
+											? "font-semibold text-secondary"
+											: ""
+									}
+								>
+									{link.label}
+								</Dropdown.Item>
+							))}
+						</Dropdown>
+					</div>
+				)}
+				<Navbar.Collapse className={navOverflows ? "max-md:hidden" : ""}>
+					{navLinks.map((link) => (
 						<Navbar.Link
+							key={link.to}
 							as={Link}
-							to="/users"
-							active={pathname.startsWith("/users")}
+							to={link.to}
+							active={pathname.startsWith(link.to)}
 						>
-							Users
+							{link.label}
 						</Navbar.Link>
-					)}
-					{["admin", "super-admin", "member"].includes(user?.role) && (
-						<Navbar.Link
-							as={Link}
-							to="/announcements"
-							active={pathname.startsWith("/announcements")}
-						>
-							Announcements
-						</Navbar.Link>
-					)}
+					))}
 				</Navbar.Collapse>
 			</Navbar>
 			<div

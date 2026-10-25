@@ -68,15 +68,25 @@ const UsersTableRow = ({ user }) => {
 
     return (
         <Table.Row>
-            <Table.Cell>{user.name}</Table.Cell>
-            <Table.Cell>{user.email}</Table.Cell>
-            <Table.Cell>{user.role.replace("-", " ")}</Table.Cell>
-            <Table.Cell className="text-end flex justify-end gap-2">
+            <Table.Cell className="max-md:px-2 max-md:py-3">
+                {user.name}
+                <span className="md:hidden block text-xs font-normal text-neutrals-800 break-all">
+                    {user.email}
+                </span>
+                <span className="md:hidden block text-xs font-semibold uppercase tracking-wide text-neutrals-800 pt-1">
+                    {user.role.replace("-", " ")}
+                </span>
+            </Table.Cell>
+            <Table.Cell className="max-md:hidden">{user.email}</Table.Cell>
+            <Table.Cell className="max-md:hidden">
+                {user.role.replace("-", " ")}
+            </Table.Cell>
+            <Table.Cell className="text-end flex justify-end gap-2 max-md:flex-col max-md:items-end max-md:px-2 max-md:py-3">
                 {!["admin", "super-admin"].includes(user.role) && (
                     <>
                         <Button
                             onClick={() => setOpenPromoteModal(true)}
-                            className="text-nowrap focus:ring-0 h-full bg-success-100 text-success-300 px-3 hover:brightness-95"
+                            className="text-nowrap focus:ring-0 h-full bg-success-100 text-success-400 px-3 hover:brightness-95"
                         >
                             Promote
                             <img
@@ -112,7 +122,7 @@ const UsersTableRow = ({ user }) => {
                                 </Button>
                                 <Button
                                     size="sm"
-                                    className="focus:ring-0 bg-success-100 text-success-300 hover:brightness-95"
+                                    className="focus:ring-0 bg-success-100 text-success-400 hover:brightness-95"
                                     isProcessing={loading}
                                     processingSpinner={
                                         <CustomTailSpin small white />
@@ -137,7 +147,7 @@ const UsersTableRow = ({ user }) => {
                     <>
                         <Button
                             onClick={() => setOpenDemoteModal(true)}
-                            className="text-nowrap focus:ring-0 h-full bg-warning-100 text-warning-300 px-3 hover:brightness-95"
+                            className="text-nowrap focus:ring-0 h-full bg-warning-100 text-warning-400 px-3 hover:brightness-95"
                         >
                             Demote
                             <img
@@ -173,7 +183,7 @@ const UsersTableRow = ({ user }) => {
                                 </Button>
                                 <Button
                                     size="sm"
-                                    className="focus:ring-0 bg-warning-100 text-warning-300 hover:brightness-95"
+                                    className="focus:ring-0 bg-warning-100 text-warning-400 hover:brightness-95"
                                     isProcessing={loading}
                                     processingSpinner={
                                         <CustomTailSpin small white />

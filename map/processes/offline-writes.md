@@ -31,7 +31,7 @@ queued: only a missing network is.
    exception → queue (`frontend/src/utils/pwa/write-queue.util.js:325`).
 2. `queueWrite` stores url, method, headers and body; `FormData` (including audio and image
    files) is serialized so it survives in IndexedDB (`write-queue.util.js:61`, `:149`).
-3. Replay runs first in every sync (`frontend/src/utils/pwa/pwa-register.util.js:70`):
+3. Replay runs first in every sync (`frontend/src/utils/pwa/pwa-register.util.js:83`):
    4xx → mark `permanent` and continue; 5xx or network error → stop; success → remove
    (`write-queue.util.js:257`).
 4. The PWA status component shows pending and failed counts and can clear failed entries

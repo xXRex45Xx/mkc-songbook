@@ -199,7 +199,7 @@ const PlaylistForm = ({ method, action, playlist, isLocal = false }) => {
 			className="flex-1 self-stretch flex flex-col py-3.5 px-5 gap-10 items-stretch"
 			onSubmit={handleSubmit}
 		>
-			<div className="flex gap-7">
+			<div className="flex flex-col gap-5 md:flex-row md:gap-7">
 				<div className="flex-1 flex flex-col gap-2.5">
 					<Label htmlFor="name" value="Playlist Name" />
 					<TextInput

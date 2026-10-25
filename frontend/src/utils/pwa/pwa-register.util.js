@@ -33,6 +33,19 @@ import {
 const SW_UPDATE_INTERVAL_MS = 3600000;
 
 /**
+ * Minimum gap between checks triggered by the app coming back to the
+ * foreground, so rapid tab or app switching does not hit the network each time
+ * @type {number}
+ */
+const RESUME_CHECK_MIN_GAP_MS = 300000;
+
+/**
+ * When the last foreground-resume check ran (epoch ms)
+ * @type {number}
+ */
+let lastResumeCheck = 0;
+
+/**
  * The active service worker registration, kept so update checks can be
  * deferred until the device is actually online.
  * @type {ServiceWorkerRegistration|null}
@@ -215,11 +228,13 @@ const clearUpdateInterval = () => {
  * immediately; no refresh prompt is involved. Update checks are skipped while
  * offline and retried on reconnection. The interval is paused while the tab
  * is hidden and resumed on visibilitychange so it does not burn a fetch per
- * hour in a background tab.
+ * hour in a background tab. Returning to the foreground also checks for a new
+ * release and runs a data sync, at most once every five minutes.
  *
  * @returns {void}
  */
 export const registerPwa = () => {
+  lastResumeCheck = Date.now();
   setupNetworkListeners();
   setupInstallListeners();
   requestPersistentStorage();
@@ -250,14 +265,24 @@ export const registerPwa = () => {
     },
   });
 
-  // Pause the update poll while the tab is hidden; resume on visibilitychange.
+  // Pause the update poll while the tab is hidden; on return, restart it and
+  // check for a new release and fresh data (throttled).
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) {
       clearUpdateInterval();
-    } else if (swRegistration) {
+      return;
+    }
+
+    if (swRegistration) {
       clearUpdateInterval();
       swUpdateInterval = setInterval(checkForUpdate, SW_UPDATE_INTERVAL_MS);
     }
+
+    const now = Date.now();
+    if (now - lastResumeCheck < RESUME_CHECK_MIN_GAP_MS) return;
+    lastResumeCheck = now;
+    checkForUpdate();
+    runSync();
   });
 };
 

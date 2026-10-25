@@ -72,7 +72,18 @@ export const promptInstall = async () => {
 export const isInstallable = () => Boolean(deferredPrompt);
 
 /**
+ * Whether the page is running as an installed app (standalone window),
+ * including iOS Safari's home-screen mode.
+ *
+ * @returns {boolean} True when launched from the home screen or app list
+ */
+const isRunningStandalone = () =>
+  window.matchMedia?.("(display-mode: standalone)").matches ||
+  window.navigator.standalone === true;
+
+/**
  * Registers the beforeinstallprompt and appinstalled listeners.
+ * Also flags the app as installed when it is already running standalone.
  * Safe to call more than once: duplicate listeners are avoided by checking
  * the captured flag.
  *
@@ -81,6 +92,11 @@ export const isInstallable = () => Boolean(deferredPrompt);
 export const setupInstallListeners = () => {
   if (setupInstallListeners.ready) return;
   setupInstallListeners.ready = true;
+
+  store.dispatch(setInstalled(isRunningStandalone()));
+  window
+    .matchMedia?.("(display-mode: standalone)")
+    .addEventListener?.("change", (e) => store.dispatch(setInstalled(e.matches)));
 
   window.addEventListener("beforeinstallprompt", captureInstallPrompt);
   window.addEventListener("appinstalled", onAppInstalled);

@@ -28,7 +28,7 @@ choosing it.
 ## Steps
 
 1. Runs in every sync, after the write queue and before data sync, only when a token exists
-   (`frontend/src/utils/pwa/pwa-register.util.js:93`).
+   (`frontend/src/utils/pwa/pwa-register.util.js:106`).
 2. `syncAllUnsyncedPlaylists` loops the unsynced records one by one; a failure is recorded and
    the loop continues (`frontend/src/utils/api/local-playlist-api.util.js:214`).
 3. `syncPlaylistToServer` builds `FormData` with `name`, `visibility: "private"` and each

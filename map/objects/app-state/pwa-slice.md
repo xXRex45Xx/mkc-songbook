@@ -17,7 +17,7 @@ Redux state the PWA layer reports into, so the UI can show offline, syncing and 
 
 Service worker, sync and write-queue code run outside React. `pwa-register.util.js`,
 `write-queue.util.js` and `install.util.js` dispatch into this slice; two components read it.
-`lastSyncTime` comes from `lastFullSync` (`frontend/src/utils/pwa/pwa-register.util.js:144`).
+`lastSyncTime` comes from `lastFullSync` (`frontend/src/utils/pwa/pwa-register.util.js:157`).
 
 ## Shape
 
@@ -27,7 +27,12 @@ State (`frontend/src/store/slices/pwa.slice.js:20`):
 - `isSyncing`, `lastSyncTime`, `lastSyncCounts`, `syncError` — sync runs.
 - `pendingWrites`, `failedWrites` — from the [pendingWrites store](../local-db/pending-writes-store.md)
   via `setWriteQueueSummary` (`:65`).
-- `isInstallable`, `isInstalled` — install prompt (`:69`).
+- `isInstallable`, `isInstalled` — install prompt (`:69`). `isInstalled` is set at startup from
+  `display-mode: standalone` (and iOS `navigator.standalone`), kept current by a media-query
+  listener, and set by `appinstalled`. The song tools show Download only when it is true.
+- `audioDownloads` — whole-percent progress (0-100) of audio saves in flight, keyed by song id
+  (`setAudioDownloadProgress`, `clearAudioDownload`). Written by `download-audio.component.jsx`,
+  read by the song table row, which dims and shows a progress bar while an entry exists.
 
 ## Connected to
 

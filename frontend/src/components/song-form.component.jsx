@@ -115,7 +115,7 @@ const SongForm = ({ albums, method, action, song }) => {
             onSubmit={formSubmitHandler}
             encType="multipart/form-data"
         >
-            <div className="grid grid-cols-2 gap-x-7 gap-y-2.5">
+            <div className="grid grid-cols-1 gap-y-5 md:grid-cols-2 md:gap-x-7 md:gap-y-2.5">
                 <div className="flex flex-col gap-2.5">
                     <Label htmlFor="title" value="Song Title" />
                     <TextInput

@@ -77,6 +77,7 @@ const SongTools = ({
 	const revalidator = useRevalidator();
 	// const windowWidth = useSelector((state) => state.configs.windowWidth);
 	const user = useSelector((state) => state.user.currentUser);
+	const isInstalled = useSelector((state) => state.pwa.isInstalled);
 	const [openDeleteModal, setOpenDeleteModal] = useState(false);
 	const [isDeleting, setIsDeleting] = useState(false);
 	const [deleteError, setDeleteError] = useState("");
@@ -192,7 +193,7 @@ const SongTools = ({
 	return (
 		<div
 			onClick={(e) => e.stopPropagation()}
-			className="flex gap-7 items-center w-fit"
+			className="flex gap-5 md:gap-7 items-center w-fit"
 		>
 			{!["admin", "super-admin"].includes(user?.role) && (
 				<>
@@ -201,11 +202,12 @@ const SongTools = ({
 							<PlaySmallSvg className="hover:first:fill-secondary-600 active:first:fill-secondary-700" />
 						</button>
 					)}
-					<DownloadAudio
-						songId={song._id}
-						songTitle={song.title}
-						hasAudio={song.hasAudio}
-					/>
+					{isInstalled && (
+						<DownloadAudio
+							songId={song._id}
+							hasAudio={song.hasAudio}
+						/>
+					)}
 					{isAddingToFavorite ? (
 						<CustomTailSpin xs />
 					) : (

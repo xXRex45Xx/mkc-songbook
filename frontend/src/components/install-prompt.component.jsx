@@ -7,14 +7,14 @@
  * @returns {JSX.Element} Install button or instruction card
  */
 import { Button } from "flowbite-react";
+import InstallSvg from "../assets/install-app.svg?react";
 import { useEffect, useState } from "react";
 import { buttonTheme } from "../config/button-theme.config";
 import {
   promptInstall,
   setupInstallListeners,
 } from "../utils/pwa/install.util";
-import { useDispatch, useSelector } from "react-redux";
-import { setInstallable, setInstalled } from "../store/slices/pwa.slice";
+import { useSelector } from "react-redux";
 
 /**
  * Detects whether the browser is iOS Safari, which has no install prompt.
@@ -39,7 +39,6 @@ const isIosSafari = () => {
  * @returns {JSX.Element} Install affordance
  */
 const InstallPrompt = () => {
-  const dispatch = useDispatch();
   const { isInstallable, isInstalled } = useSelector((state) => state.pwa);
   const [isIos, setIsIos] = useState(false);
 
@@ -64,16 +63,15 @@ const InstallPrompt = () => {
 
   return (
     <Button
-      size="xs"
       theme={buttonTheme}
-      onClick={async () => {
-        await promptInstall();
-        dispatch(setInstallable(false));
-        dispatch(setInstalled(true));
-      }}
+      className="focus:ring-0 *:p-0 *:gap-1.5 *:items-center"
+      onClick={promptInstall}
       title="Install the app on your device"
     >
-      Install
+      <InstallSvg className="*:stroke-baseblack group-hover:*:stroke-secondary-600 group-active:*:stroke-secondary-700" />
+      <span className="max-[480px]:sr-only text-sm font-semibold text-baseblack group-hover:text-secondary-600 group-active:text-secondary-700">
+        Install
+      </span>
     </Button>
   );
 };

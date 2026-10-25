@@ -73,6 +73,10 @@ const SongsTableRow = ({
 	 * Window width from Redux store for responsive layout decisions
 	 */
 	const windowWidth = useSelector((state) => state.configs.windowWidth);
+	const downloadPercent = useSelector(
+		(state) => state.pwa.audioDownloads[song._id]
+	);
+	const isDownloading = downloadPercent !== undefined;
 
 	return (
 		<>
@@ -81,7 +85,9 @@ const SongsTableRow = ({
 			)}
 			<Table.Row
 				key={song._id}
-				className={"cursor-pointer touch-manipulation"}
+				className={`cursor-pointer touch-manipulation transition-opacity ${
+					isDownloading ? "opacity-40" : ""
+				}`}
 				ref={draggable ? setDraggableRef : undefined}
 				{...(draggable ? attributes : {})}
 				{...(draggable ? listeners : {})}
@@ -94,12 +100,16 @@ const SongsTableRow = ({
 				style={draggable ? dragTransformStyles : undefined}
 			>
 				<Table.Cell
-					className={draggable && isDragging ? "tranform scale-105" : ""}
+					className={`max-md:w-12 max-md:px-2 max-md:py-3 max-md:text-xs max-md:text-neutrals-800 whitespace-nowrap ${
+						draggable && isDragging ? "tranform scale-105" : ""
+					}`}
 				>
 					{song._id}
 				</Table.Cell>
 				<Table.Cell
-					className={draggable && isDragging ? "tranform scale-105" : ""}
+					className={`max-md:px-2 max-md:py-3 ${
+						draggable && isDragging ? "tranform scale-105" : ""
+					}`}
 				>
 					{song.title}
 				</Table.Cell>
@@ -115,8 +125,8 @@ const SongsTableRow = ({
 				<Table.Cell
 					className={
 						draggable && isDragging
-							? "text-end flex justify-end tranform scale-105"
-							: "text-end flex justify-end"
+							? "text-end flex justify-end tranform scale-105 max-md:px-2 max-md:py-3"
+							: "text-end flex justify-end max-md:px-2 max-md:py-3"
 					}
 				>
 					{queueTools ? (
@@ -149,6 +159,33 @@ const SongsTableRow = ({
 					)}
 				</Table.Cell>
 			</Table.Row>
+			{isDownloading && (
+				<Table.Row className="hover:bg-transparent">
+					<Table.Cell
+						colSpan={windowWidth >= 768 ? 4 : 3}
+						className="py-2 max-md:px-2"
+					>
+						<div className="flex flex-col gap-1">
+							<span className="self-end text-xs font-semibold text-neutrals-800">
+								{downloadPercent}%
+							</span>
+							<div
+								role="progressbar"
+								aria-label={`Saving ${song.title} offline`}
+								aria-valuemin={0}
+								aria-valuemax={100}
+								aria-valuenow={downloadPercent}
+								className="h-2 w-full rounded-full bg-neutrals-100"
+							>
+								<div
+									className="h-full rounded-full bg-success-200 transition-[width] duration-200"
+									style={{ width: `${downloadPercent}%` }}
+								/>
+							</div>
+						</div>
+					</Table.Cell>
+				</Table.Row>
+			)}
 			{draggable && (
 				<Table.Row
 					ref={setDroppableRef}

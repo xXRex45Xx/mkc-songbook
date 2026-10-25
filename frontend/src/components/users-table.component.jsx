@@ -4,6 +4,8 @@
  */
 
 import { useNavigation, useSearchParams } from "react-router-dom";
+import { useSelector } from "react-redux";
+import useWindowSize from "../hooks/useWindowSize.hook";
 import CustomTable from "./custom-table.component.jsx";
 import CustomTailSpin from "./custom-tail-spin.component.jsx";
 import UsersTableRow from "./users-table-row.component.jsx";
@@ -25,15 +27,23 @@ import UsersTableRow from "./users-table-row.component.jsx";
  */
 const UsersTable = ({ users, totalPages }) => {
     const { state: navState } = useNavigation();
+    const windowWidth = useSelector((state) => state.configs.windowWidth);
+    useWindowSize();
 
     const [searchParams, setSearchParams] = useSearchParams();
 
-    const tableHeaders = [
-        { align: "left", name: "NAME" },
-        { align: "left", name: "EMAIL" },
-        { align: "left", name: "ROLE" },
-        { align: "right", name: "ACTIONS" },
-    ];
+    const tableHeaders =
+        windowWidth >= 768
+            ? [
+                  { align: "left", name: "NAME" },
+                  { align: "left", name: "EMAIL" },
+                  { align: "left", name: "ROLE" },
+                  { align: "right", name: "ACTIONS" },
+              ]
+            : [
+                  { align: "left", name: "USER" },
+                  { align: "right", name: "ACTIONS" },
+              ];
 
     return (
         <>

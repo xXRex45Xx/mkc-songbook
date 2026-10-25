@@ -102,9 +102,9 @@ export const rangeSliderTheme = {
  */
 export const numberInputTheme = {
 	field: {
-		base: "relative",
+		base: "relative min-w-0 flex-1 max-w-11",
 		input: {
-			base: "inline text-center w-11 text-base font-bold border disabled:cursor-not-allowed disabled:opacity-50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
+			base: "inline text-center w-full text-base font-bold border disabled:cursor-not-allowed disabled:opacity-50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
 		},
 	},
 };

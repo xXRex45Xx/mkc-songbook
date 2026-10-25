@@ -212,8 +212,7 @@ Audio gets special treatment because streaming and offline storage are deliberat
 
 ### 7.1 Download (`audio-download.util.js`)
 
-- `downloadAudioFile(songId, songTitle)` — fetches `/api/song/:id/audio` as a `Blob`, then saves it to the user's device. Prefers the **File System Access API** (`window.showSaveFilePicker`) with a suggested `.mp3` name when available (Chrome/Edge); silently aborts on `AbortError` (user cancelled the picker). Falls back to a blob-URL `<a download>` click otherwise. The blob URL is revoked after the click.
-- `cacheAudioForOffline(songId)` — same fetch, but stores the Blob in the `audioFiles` IDB store for in-app offline playback. Wired to the "Save offline" button in `download-audio.component.jsx`.
+- `saveAudioOffline(songId, onProgress)` — fetches `/api/song/:id/audio` as a stream (progress against `Content-Length`) and stores the Blob in the `audioFiles` IDB store for in-app offline playback. Nothing is written to the device's files. Wired to the download button in `download-audio.component.jsx`, which publishes progress to `state.pwa.audioDownloads` for the table row's progress bar.
 - `saveAudioForOffline(songIds, onProgress)` / `saveAllAudioForOffline(onProgress)` — bulk save for an album, a playlist, the queue, or the whole catalog. Skips cached songs, checks `navigator.storage.estimate()` before each fetch, and reports progress to the UI.
 - `getOfflineAudioBlob(songId)` — returns the cached Blob or `null`.
 
@@ -274,13 +273,12 @@ This reads the `allby` query param instead of `sortby`. Since the UI almost cert
 
 ## 9. PWA Status UI (`pwa-status.component.jsx`)
 
-Mounted in `App.jsx` between `<Header />` and `<Outlet />`. It reads `state.pwa` and renders up to three stacked bars:
+Mounted in `App.jsx` between `<Header />` and `<Outlet />`. It reads `state.pwa` and renders up to two stacked banners:
 
-1. **Offline-ready banner** (green) — shown when `offlineReady && showOfflineBanner` (local dismiss state). Dismissing also dispatches `setOfflineReady(false)`, which hides bar #3 too.
-2. **Update-available toast** (primary) — shown when `needRefresh`. "Reload" calls `updateSW()`; "Dismiss" dispatches `setNeedRefresh(false)`.
-3. **Sync status bar** (neutral, xs) — shown whenever `offlineReady`. Displays "Syncing...", "Last synced: <time>", or "Not yet synced" (plus an inline error if `syncError`), with a "Sync Now" button that dispatches `setSyncing(true)`, awaits `syncAll()`, and dispatches `setSyncComplete(result)` / `setSyncError(...)`.
+1. **Offline-ready banner** (green) — shown when `offlineReady && showOfflineBanner` (local dismiss state).
+2. **Failed-writes banner** (warning) — shown when `failedWrites > 0`. "Discard" calls `clearFailedWrites()`.
 
-There is a redundancy worth noting: both `registerPwa`'s `onOfflineReady` and the `PwaStatus` "Sync Now" button can dispatch sync actions, so sync can be triggered automatically on SW ready and manually by the user.
+The sync status bar (last sync time, pending changes, offline marker, sync error, upload-pending playlists, and the "Sync Now" button) was removed. Sync is therefore triggered only automatically through `registerPwa`: app start, service worker ready, the `online` event, and the app returning to the foreground (`visibilitychange`, at most once every five minutes, together with a service worker update check). Sync state still lives in `state.pwa`; nothing renders it.
 
 ---
 
@@ -321,9 +319,9 @@ Service worker:
 
 ### Audio download (online)
 ```
-Click DownloadAudio ─► downloadAudioFile(songId, title)
-  ─► fetch /api/song/:id/audio as Blob
-  ─► showSaveFilePicker (if available) OR <a download> blob-URL click
+Click DownloadAudio ─► saveAudioOffline(songId, onProgress)
+  ─► fetch /api/song/:id/audio as a stream (progress → state.pwa.audioDownloads)
+  ─► store Blob in the audioFiles IDB store
 ```
 
 ---
@@ -339,7 +337,7 @@ Click DownloadAudio ─► downloadAudioFile(songId, title)
 | `frontend/src/utils/db/audio-idb-service.util.js` | Audio Blob storage |
 | `frontend/src/utils/pwa/sync-service.util.js` | `initializePwaData` / `syncSongs` / `syncAlbums` / `syncAll` |
 | `frontend/src/utils/pwa/pwa-register.util.js` | `registerSW` wrapper → Redux + `updateSW` |
-| `frontend/src/utils/api/audio-download.util.js` | `downloadAudioFile` / `cacheAudioForOffline` / `getOfflineAudioBlob` |
+| `frontend/src/utils/api/audio-download.util.js` | `saveAudioOffline` / `getOfflineAudioBlob` |
 | `frontend/src/store/slices/pwa.slice.js` | PWA Redux slice |
 | `frontend/src/components/pwa-status.component.jsx` | Offline-ready / update / sync-status UI |
 | `frontend/src/components/download-audio.component.jsx` | Download button |

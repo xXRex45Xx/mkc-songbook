@@ -1,6 +1,6 @@
 /**
  * @fileoverview Audio download utility
- * Provides the single save-and-download entry point for the download button,
+ * Provides the single save-offline entry point for the download button,
  * plus read helpers for the offline audio player.
  */
 
@@ -25,15 +25,17 @@ const totalFromContentRange = (response) => {
  *
  * @param {string} url - Audio URL
  * @param {Response} first - The 206 response already received
+ * @param {(fraction: number) => void} [onProgress] - Called with 0-1 after each part
  * @returns {Promise<Blob[]>} Every part, in order, covering the whole file
  * @throws {Error} If the total size is unknown or a part is missing or out of order
  * @private
  */
-const collectRemainingParts = async (url, first) => {
+const collectRemainingParts = async (url, first, onProgress) => {
 	const total = totalFromContentRange(first);
 	if (!Number.isFinite(total)) throw new Error("Audio response is partial and has no total size");
 	const parts = [await first.blob()];
 	let received = parts[0].size;
+	onProgress?.(Math.min(received / total, 1));
 	while (received < total) {
 		const response = await fetch(url, { headers: { Range: `bytes=${received}-` } });
 		if (response.status !== 206) throw new Error("Failed to fetch audio file");
@@ -41,9 +43,37 @@ const collectRemainingParts = async (url, first) => {
 		if (part.size === 0) throw new Error("Audio download stalled");
 		parts.push(part);
 		received += part.size;
+		onProgress?.(Math.min(received / total, 1));
 	}
 	if (received !== total) throw new Error("Audio download size mismatch");
 	return parts;
+};
+
+/**
+ * Reads a full (200) response body, reporting progress against Content-Length.
+ * Falls back to a single read, with no intermediate progress, when the stream
+ * or the length is unavailable.
+ *
+ * @param {Response} response - A 200 response
+ * @param {(fraction: number) => void} [onProgress] - Called with 0-1 as bytes arrive
+ * @returns {Promise<Blob>} The whole body
+ * @private
+ */
+const readBodyWithProgress = async (response, onProgress) => {
+	const total = Number(response.headers.get("content-length")) || 0;
+	if (!response.body || !total) return response.blob();
+
+	const reader = response.body.getReader();
+	const chunks = [];
+	let received = 0;
+	for (;;) {
+		const { done, value } = await reader.read();
+		if (done) break;
+		chunks.push(value);
+		received += value.length;
+		onProgress?.(Math.min(received / total, 1));
+	}
+	return new Blob(chunks, { type: response.headers.get("content-type") || "" });
 };
 
 /**
@@ -51,19 +81,22 @@ const collectRemainingParts = async (url, first) => {
  * the whole file: the remaining ranges are fetched, or the call fails.
  *
  * @param {string} songId - Song identifier
+ * @param {(fraction: number) => void} [onProgress] - Called with 0-1 as bytes arrive
  * @returns {Promise<{blob: Blob, mimeType: string}>} Audio bytes and content type
  * @throws {Error} If the request fails or the audio cannot be completed
  * @private
  */
-const fetchAudioBlob = async (songId) => {
+const fetchAudioBlob = async (songId, onProgress) => {
 	const url = `${backendURL}/api/song/${songId}/audio`;
 	const response = await fetch(url);
 	if (!response.ok) throw new Error("Failed to fetch audio file");
 	const contentType = response.headers.get("content-type") || "";
 	const blob =
 		response.status === 206
-			? new Blob(await collectRemainingParts(url, response), { type: contentType })
-			: await response.blob();
+			? new Blob(await collectRemainingParts(url, response, onProgress), {
+					type: contentType,
+			  })
+			: await readBodyWithProgress(response, onProgress);
 	return { blob, mimeType: blob.type || contentType };
 };
 
@@ -86,68 +119,23 @@ const lookupRemoteUpdatedAt = async (songId) => {
 };
 
 /**
- * Writes a Blob to the device. Uses the File System Access API
- * (showSaveFilePicker) when available, falls back to blob URL + anchor click.
+ * Saves a song's audio for offline playback.
  *
- * Resolves "aborted" when the user dismisses the save dialog; the caller keeps
- * the offline copy in that case.
- *
- * @param {Blob} blob - Audio bytes to write
- * @param {string} songTitle - Song title used for the filename
- * @returns {Promise<"saved"|"aborted"|"fallback">} Outcome of the device write
- * @throws {Error} If the fallback write cannot be initiated
- * @private
- */
-const saveBlobToDevice = async (blob, songTitle) => {
-	if (window.showSaveFilePicker) {
-		try {
-			const handle = await window.showSaveFilePicker({
-				suggestedName: `${songTitle}.mp3`,
-				types: [
-					{
-						description: "Audio File",
-						accept: { "audio/mpeg": [".mp3"] },
-					},
-				],
-			});
-			const writable = await handle.createWritable();
-			await writable.write(blob);
-			await writable.close();
-			return "saved";
-		} catch (err) {
-			if (err.name === "AbortError") return "aborted";
-		}
-	}
-
-	const url = URL.createObjectURL(blob);
-	const a = document.createElement("a");
-	a.href = url;
-	a.download = `${songTitle}.mp3`;
-	document.body.appendChild(a);
-	a.click();
-	document.body.removeChild(a);
-	URL.revokeObjectURL(url);
-	return "fallback";
-};
-
-/**
- * Saves a song's audio for offline playback and downloads it to the device.
- *
- * Single entry point for the download button: one fetch serves both outcomes.
- * The IndexedDB copy is written first, so in-app offline playback survives even
- * when the user dismisses the device save dialog.
+ * Single entry point for the download button. The copy lives in IndexedDB and
+ * the player prefers it over the stream; nothing is written to the device's
+ * files, so no browser save dialog opens.
  *
  * @param {string} songId - Song identifier
- * @param {string} songTitle - Song title used for the downloaded filename
- * @returns {Promise<{device: "saved"|"aborted"|"fallback"}>} Device write outcome
+ * @param {(fraction: number) => void} [onProgress] - Called with 0-1 while the audio downloads
+ * @returns {Promise<void>}
  * @throws {Error} If the fetch or the IndexedDB write fails
  * @example
  * ```javascript
- * const { device } = await saveAndDownloadAudio(song._id, song.title);
+ * await saveAudioOffline(song._id, (fraction) => console.log(fraction));
  * ```
  */
-export const saveAndDownloadAudio = async (songId, songTitle) => {
-	const { blob, mimeType } = await fetchAudioBlob(songId);
+export const saveAudioOffline = async (songId, onProgress) => {
+	const { blob, mimeType } = await fetchAudioBlob(songId, onProgress);
 	const remoteUpdatedAt = await lookupRemoteUpdatedAt(songId);
 
 	await audioIdbService.store(songId, {
@@ -158,9 +146,6 @@ export const saveAndDownloadAudio = async (songId, songTitle) => {
 		size: typeof blob.size === "number" ? blob.size : 0,
 		mimeType,
 	});
-
-	const device = await saveBlobToDevice(blob, songTitle);
-	return { device };
 };
 
 /**
