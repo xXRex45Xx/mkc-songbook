@@ -10,7 +10,7 @@ code. The code is the source of truth; cards cite it. How to walk: [CONTEXT.md](
 | [objects/data-model/](objects/data-model/_index.md) | Mongoose models in `backend/models/` |
 | [objects/local-db/](objects/local-db/_index.md) | IndexedDB stores in `frontend/src/utils/db/` |
 | [objects/app-state/](objects/app-state/_index.md) | Redux slices in `frontend/src/store/slices/` |
-| `processes/` | Verb cards — slice 3, not built yet |
+| [processes/](processes/_index.md) | Verb cards: auth, sync, offline writes and audio, uploads |
 | `effects/` | Change-impact index — slice 4, not built yet |
 | [_meta/schema.md](_meta/schema.md) | Card types and frontmatter fields |
 | `_templates/` | `object.md`, `process.md`: copy to start a card |
@@ -28,6 +28,7 @@ code. The code is the source of truth; cards cite it. How to walk: [CONTEXT.md](
 
 ## Status
 
-All 20 object cards are `verified: 2026-10-24 @ 9db0d0c`; 2 are ghosts. Cards marked
+All 20 object cards are `verified: 2026-10-24 @ 9db0d0c`; 2 are ghosts. All 6 process cards
+are `verified: 2026-10-24 @ c8aefb1`. Cards marked
 **Known defects** record bugs found while mapping; the code is unchanged. A bare `:NN` on a card
 is a line in the last file it named.
