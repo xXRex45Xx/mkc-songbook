@@ -8,6 +8,7 @@ import { useSelector } from "react-redux";
 import useWindowSize from "../hooks/useWindowSize.hook";
 import CustomTable from "./custom-table.component.jsx";
 import CustomTailSpin from "./custom-tail-spin.component.jsx";
+import NoResults from "./no-results.component.jsx";
 import UsersTableRow from "./users-table-row.component.jsx";
 
 /**
@@ -48,7 +49,10 @@ const UsersTable = ({ users, totalPages }) => {
     return (
         <>
             {navState === "loading" && <CustomTailSpin />}
-            {navState !== "loading" && (
+            {navState !== "loading" && users.length === 0 && (
+                <NoResults description="No users found." />
+            )}
+            {navState !== "loading" && users.length > 0 && (
                 <CustomTable
                     title="Users"
                     headers={tableHeaders}

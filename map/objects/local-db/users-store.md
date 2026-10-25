@@ -36,7 +36,7 @@ session and protected routes show the error page.
 ## If you change this
 
 - **Hits:** `frontend/src/App.jsx` root loader (caches the user `:85`, clears `:97`, reads
-  offline `:108`), `frontend/src/components/header.component.jsx:93` (clears on logout),
+  offline `:108`), `frontend/src/components/header.component.jsx:133` (clears on logout),
   [user slice](../app-state/user-slice.md).
 - **Does not hit:** the users admin page, which always reads from the API.
 

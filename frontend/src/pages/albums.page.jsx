@@ -4,6 +4,7 @@
  * Uses IndexedDB-first loading with background network sync
  */
 
+import NoResults from "../components/no-results.component";
 import MainBodyContainer from "../components/main-body-container.component";
 import AlbumCard from "../components/album-card.component";
 import { Await, defer, useLoaderData } from "react-router-dom";
@@ -39,20 +40,24 @@ const AlbumsPage = () => {
 		>
 			<Suspense fallback={<CustomTailSpin />}>
 				<Await resolve={loaderData.albumData}>
-					{(albums) => (
-						<div className="flex flex-wrap gap-6">
-							{albums.map((album) => (
-								<AlbumCard
-									key={album._id}
-									number={album._id}
-									title={album.name}
-									imgSrc={backendURL + album.photoLink}
-									numOfSongs={album.numOfSongs}
-									year={album.createdAt}
-								/>
-							))}
-						</div>
-					)}
+					{(albums) =>
+						albums.length === 0 ? (
+							<NoResults description="No albums found." />
+						) : (
+							<div className="flex flex-wrap gap-6">
+								{albums.map((album) => (
+									<AlbumCard
+										key={album._id}
+										number={album._id}
+										title={album.name}
+										imgSrc={backendURL + album.photoLink}
+										numOfSongs={album.numOfSongs}
+										year={album.createdAt}
+									/>
+								))}
+							</div>
+						)
+					}
 				</Await>
 			</Suspense>
 		</MainBodyContainer>

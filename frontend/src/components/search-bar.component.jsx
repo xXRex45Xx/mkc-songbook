@@ -66,9 +66,9 @@ const SearchBar = ({ action, searchValue = "", selectValue = "all" }) => {
 			method="GET"
 			onSubmit={handleSubmit}
 			navigate={false}
-			className="h-full"
+			className="h-full max-md:w-full"
 		>
-			<div className="flex items-stretch">
+			<div className="flex items-stretch max-md:w-full">
 				<Select
 					name="type"
 					theme={selectTheme}
@@ -97,7 +97,7 @@ const SearchBar = ({ action, searchValue = "", selectValue = "all" }) => {
 						<option value="title">Title</option>
 					)}
 				</Select>
-				<div className="w-full flex flex-nowrap">
+				<div className="w-full min-w-0 flex flex-nowrap">
 					<TextInput
 						name="q"
 						required

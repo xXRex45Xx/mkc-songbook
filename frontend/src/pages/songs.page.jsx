@@ -45,6 +45,7 @@ const SongsPage = () => {
 							totalPages={totalPages}
 							showPlayButton
 							singleSongQueue
+							showNoResults
 						/>
 					)}
 				</Await>

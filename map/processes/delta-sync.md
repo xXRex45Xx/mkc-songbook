@@ -21,8 +21,8 @@ Status is reported into the [pwa slice](../objects/app-state/pwa-slice.md).
 
 ## Why this shape
 
-Page loaders read IndexedDB first and render at once (`frontend/src/pages/songs.page.jsx:68`,
-`frontend/src/pages/albums.page.jsx:70`); the network only tops the stores up. `?syncSince`
+Page loaders read IndexedDB first and render at once (`frontend/src/pages/songs.page.jsx:69`,
+`frontend/src/pages/albums.page.jsx:75`); the network only tops the stores up. `?syncSince`
 cannot see deletions, so a separate pass compares id lists.
 
 ## Steps

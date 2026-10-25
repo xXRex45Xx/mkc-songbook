@@ -295,7 +295,7 @@ const Header = () => {
 				</Navbar.Collapse>
 			</Navbar>
 			<div
-				className={` transition-all flex justify-center ${
+				className={` transition-all flex justify-center px-5 md:px-0 ${
 					showSearch ? "max-h-40 pt-7" : "max-h-0 overflow-hidden pt-0"
 				} `}
 			>
