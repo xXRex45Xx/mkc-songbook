@@ -6,7 +6,7 @@ status: verified
 verified: 2026-10-24 @ 9db0d0c
 entity: backend/models/song.model.js:49
 code-name: Song
-description: A song: Amharic lyrics, chords, rhythm, tempo, optional audio.
+description: "A song: Amharic lyrics, chords, rhythm, tempo, optional audio."
 ---
 
 # Song

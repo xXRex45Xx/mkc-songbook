@@ -6,7 +6,7 @@ status: verified
 verified: 2026-10-24 @ 9db0d0c
 entity: frontend/src/utils/db/indexed-db.util.js:74
 code-name: pendingWrites
-description: Offline write queue: failed mutations replayed in order when the network returns.
+description: "Offline write queue: failed mutations replayed in order when the network returns."
 ---
 
 # pendingWrites store

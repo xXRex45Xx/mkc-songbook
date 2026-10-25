@@ -5,7 +5,8 @@
 1. Read [AGENTS.md](AGENTS.md). Pick the cluster your change touches.
 2. Open that cluster's `_index.md`. Open only the cards you need, never the whole folder.
 3. On each card, follow **See** to the source. Code beats the card; if they disagree, fix the card.
-4. Before a change, read the card's **If you change this**. Once `effects/` exists, start there.
+4. Before a change, start at [effects/CONTEXT.md](effects/CONTEXT.md), then read each listed
+   card's **If you change this**.
 5. For a flow (sign-in, sync, offline, upload), start in `processes/`; each card links its nouns.
 
 ## Universes
@@ -42,5 +43,4 @@ Never hand-edit `_index.md`.
 
 ## Outside consumers
 
-`frontend/.impeccable/live/roots.json` (untracked) holds absolute paths to `PRODUCT.md` and
-`DESIGN.md`. No other outside consumer of repo paths is known.
+Listed in [effects/CONTEXT.md](effects/CONTEXT.md#outside-consumers).

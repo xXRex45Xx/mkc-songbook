@@ -11,7 +11,7 @@ code. The code is the source of truth; cards cite it. How to walk: [CONTEXT.md](
 | [objects/local-db/](objects/local-db/_index.md) | IndexedDB stores in `frontend/src/utils/db/` |
 | [objects/app-state/](objects/app-state/_index.md) | Redux slices in `frontend/src/store/slices/` |
 | [processes/](processes/_index.md) | Verb cards: auth, sync, offline writes and audio, uploads |
-| `effects/` | Change-impact index — slice 4, not built yet |
+| [effects/](effects/CONTEXT.md) | Change-impact index and outside consumers: open before a change |
 | [_meta/schema.md](_meta/schema.md) | Card types and frontmatter fields |
 | `_templates/` | `object.md`, `process.md`: copy to start a card |
 | `_tools/` | `index.py` rebuilds `_index.md`; `links.py` checks links |

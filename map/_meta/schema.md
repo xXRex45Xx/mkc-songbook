@@ -14,7 +14,7 @@ Lives in `objects/<cluster>/<slug>.md`. Copy `_templates/object.md`.
 | `status` | `stub`, `verified`, `stale` |
 | `entity` | `path:line` of the owning definition |
 | `code-name` | Name in code when it differs from the product word |
-| `description` | One line; feeds `_index.md` |
+| `description` | One line; feeds `_index.md`. Double-quote it if it contains `: ` or ` #` |
 | `verified` | `YYYY-MM-DD @ <commit>` — required when `status: verified` |
 
 Clusters:
