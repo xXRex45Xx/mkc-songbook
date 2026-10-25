@@ -42,6 +42,16 @@ export default [
     },
   },
   {
+    // Lazy route modules export `loader` next to the component (React Router `lazy`).
+    files: [
+      'src/App.jsx',
+      'src/pages/**/*.{js,jsx}',
+      'src/components/*-form.component.jsx',
+      'src/components/reset-password.component.jsx',
+    ],
+    rules: { 'react-refresh/only-export-components': 'off' },
+  },
+  {
     files: ['tailwind.config.js', 'vite.config.js'],
     languageOptions: { globals: globals.node },
   },
