@@ -225,6 +225,7 @@ export const patchPlaylist = async (req, res) => {
 			(songInDb) => !removeSongs.includes(songInDb)
 		);
 
+	playlistInDb.updatedAt = Date.now();
 	await playlistInDb.save();
 	res.status(200).json({ updated: true });
 };

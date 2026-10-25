@@ -54,6 +54,8 @@ export const getAllPlaylists = async (
  * @param {boolean} edit - If true, updates existing playlist; if false, creates new playlist
  * @param {string|null} playlistId - ID of playlist to edit (required if edit is true)
  * @param {string} token - Authentication token (defaults to token in localStorage)
+ * @param {Object} [options] - Send options
+ * @param {boolean} [options.queue=true] - When false, a missing network throws instead of queueing the request
  * @returns {Promise<Object>} Created or updated playlist data
  * @throws {Object} Validation errors or server error response
  */
@@ -61,7 +63,8 @@ export const addOrEditPlaylist = async (
 	formData,
 	edit = false,
 	playlistId = null,
-	token = localStorage.getItem("_s")
+	token = localStorage.getItem("_s"),
+	{ queue = true } = {}
 ) => {
 	const error = { status: 400 };
 	let errorOccured = false;
@@ -86,6 +89,7 @@ export const addOrEditPlaylist = async (
 			"Content-Type": "application/json",
 		},
 		label: edit ? `Update playlist ${playlistId}` : "Create playlist",
+		queueable: queue,
 	});
 
 	return data;

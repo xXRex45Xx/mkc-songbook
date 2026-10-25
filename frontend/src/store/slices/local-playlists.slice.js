@@ -52,6 +52,8 @@ export const localPlaylistsSlice = createSlice({
       if (idx !== -1) {
         state.localPlaylists[idx] = {
           ...state.localPlaylists[idx],
+          // An edit after an upload must reach the server copy too.
+          synced: false,
           ...updates,
         };
       }

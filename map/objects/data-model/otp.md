@@ -3,7 +3,7 @@ type: object
 cluster: data-model
 universe: live
 status: verified
-verified: 2026-10-25 @ b7f940a
+verified: 2026-10-25 @ 3515b77
 entity: backend/models/otp.model.js
 code-name: OTP
 description: One-time password for email verification and password reset; expires after 5 minutes or five wrong guesses.
@@ -19,7 +19,7 @@ One document per email (`unique`), with a TTL index so MongoDB deletes it 5 minu
 `createdAt`. Five wrong guesses delete it too, so a 6-digit code cannot be brute-forced inside its
 5 minutes: `OTPModel.verifyCode` counts a wrong guess with one atomic update (parallel guesses
 cannot pass the limit) and deletes the entry on the fifth. Saving it sends the email: the `pre("save")` hook calls `sendEmail`, so creating an
-OTP and mailing it are one step.
+OTP and mailing it are one step. `registerOTP` awaits the save, so a mail failure reaches the client as an error, not `success: true`.
 
 ## Shape
 

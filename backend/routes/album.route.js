@@ -6,6 +6,8 @@
  */
 
 import { Router } from "express";
+import { checkBaseVersion } from "../middlewares/base-version.middleware.js";
+import AlbumModel from "../models/album.model.js";
 import { wrapAsync } from "../utils/error.util.js";
 import {
 	addAlbum,
@@ -153,6 +155,7 @@ albumRouter
 		wrapAsync(roleBasedAuthorization(["admin", "super-admin"])),
 		albumImageUpload.single("cover"),
 		wrapAsync(validateGetAlbum),
+		wrapAsync(checkBaseVersion(AlbumModel)),
 		wrapAsync(validateUpdateAlbum),
 		wrapAsync(checkAlbumExistsForUpdate),
 		wrapAsync(checkSongExists),
@@ -179,6 +182,7 @@ albumRouter
 		passport.authenticate("jwt", { session: false }),
 		wrapAsync(roleBasedAuthorization(["admin", "super-admin"])),
 		wrapAsync(validateGetAlbum),
+		wrapAsync(checkBaseVersion(AlbumModel)),
 		wrapAsync(deleteAlbum)
 	);
 

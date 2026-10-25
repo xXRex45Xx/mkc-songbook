@@ -91,22 +91,22 @@ describe("album controller", () => {
     expect(SongModel.updateMany).toHaveBeenNthCalledWith(
       1,
       { _id: { $in: ["song-001"] } },
-      { $pull: { albums: "album-001" } },
+      { $pull: { albums: "album-001" }, $set: { updatedAt: expect.any(Date) } },
     );
     expect(SongModel.updateMany).toHaveBeenNthCalledWith(
       2,
       { _id: { $in: ["song-003"] } },
-      { $push: { albums: "album-002" } },
+      { $push: { albums: "album-002" }, $set: { updatedAt: expect.any(Date) } },
     );
     expect(SongModel.updateMany).toHaveBeenNthCalledWith(
       3,
       { _id: { $in: ["song-002"] } },
-      { $pull: { albums: "album-001" } },
+      { $pull: { albums: "album-001" }, $set: { updatedAt: expect.any(Date) } },
     );
     expect(SongModel.updateMany).toHaveBeenNthCalledWith(
       4,
       { _id: { $in: ["song-002"] } },
-      { $push: { albums: "album-002" } },
+      { $push: { albums: "album-002" }, $set: { updatedAt: expect.any(Date) } },
     );
     expect(albumInDb.save).not.toHaveBeenCalled();
   });
@@ -127,7 +127,7 @@ describe("album controller", () => {
 
     expect(SongModel.updateMany).toHaveBeenCalledWith(
       { _id: { $in: ["song-001"] } },
-      { $pull: { albums: "album-001" } },
+      { $pull: { albums: "album-001" }, $set: { updatedAt: expect.any(Date) } },
     );
     expect(fs.unlink).toHaveBeenCalledWith("/tmp/album.jpg", expect.any(Function));
     expect(res.json).toHaveBeenCalledWith({ deleted: true });

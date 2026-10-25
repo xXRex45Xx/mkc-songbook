@@ -11,10 +11,49 @@
  */
 
 import AlbumModel from "../models/album.model.js";
+import LogBookModel from "../models/service-logbook.model.js";
+import PlaylistModel from "../models/playlist.model.js";
 import SongModel from "../models/song.model.js";
+import UserModel from "../models/user.model.js";
 import { regexBuilder } from "../utils/amharic-map.util.js";
 import { ClientFaultError, NotFoundError, ServerFaultError } from "../utils/error.util.js";
 import fs from "fs";
+
+/**
+ * Remove a song id from every album, playlist, user favorites list and service logbook.
+ * Albums, playlists and logbooks get a new `updatedAt` so delta sync sees the change.
+ *
+ * @param {string} songId - Id of the song being deleted
+ * @returns {Promise<void>} Resolves when all four collections are updated
+ */
+const removeSongFromReferences = async (songId) => {
+	const now = new Date();
+	await Promise.all([
+		AlbumModel.updateMany({ songs: songId }, { $pull: { songs: songId }, $set: { updatedAt: now } }),
+		PlaylistModel.updateMany({ songs: songId }, { $pull: { songs: songId }, $set: { updatedAt: now } }),
+		LogBookModel.updateMany({ songList: songId }, { $pull: { songList: songId }, $set: { updatedAt: now } }),
+		UserModel.updateMany({ favorites: songId }, { $pull: { favorites: songId } }),
+	]);
+};
+
+/**
+ * Point every album, playlist, user favorites list and service logbook at a song's new id.
+ * Albums, playlists and logbooks get a new `updatedAt` so delta sync sees the change.
+ *
+ * @param {string} oldId - Id the song had
+ * @param {string} newId - Id the song has now
+ * @returns {Promise<void>} Resolves when all four collections are updated
+ */
+const replaceSongIdInReferences = async (oldId, newId) => {
+	const now = new Date();
+	const arrayFilters = [{ e: oldId }];
+	await Promise.all([
+		AlbumModel.updateMany({ songs: oldId }, { $set: { "songs.$[e]": newId, updatedAt: now } }, { arrayFilters }),
+		PlaylistModel.updateMany({ songs: oldId }, { $set: { "songs.$[e]": newId, updatedAt: now } }, { arrayFilters }),
+		LogBookModel.updateMany({ songList: oldId }, { $set: { "songList.$[e]": newId, updatedAt: now } }, { arrayFilters }),
+		UserModel.updateMany({ favorites: oldId }, { $set: { "favorites.$[e]": newId } }, { arrayFilters }),
+	]);
+};
 
 /**
  * Get all songs or search songs with pagination
@@ -191,6 +230,7 @@ export const addSong = async (req, res) => {
 	if (song.albums) {
 		for (const album of song.albums) {
 			album.songs.push(insertedSong);
+			album.updatedAt = new Date();
 			await album.save();
 		}
 	}
@@ -270,27 +310,33 @@ export const updateSong = async (req, res) => {
 	if (song.albums) {
 		for (const album of songInDb.albums) {
 			album.songs = album.songs.filter((s) => s != id);
+			album.updatedAt = new Date();
 			await album.save();
 		}
 		for (const album of song.albums) {
 			album.songs.push(song.id);
+			album.updatedAt = new Date();
 			await album.save();
 		}
 		songInDb.albums = song.albums;
 	}
 
 	if (song.id != id) {
-		await SongModel.findByIdAndDelete(songInDb._id);
-
+		// _id cannot change in place: create the copy first so a failure loses nothing, then
+		// repoint every reference and drop the old document.
 		await SongModel.create({
 			_id: song.id,
-			albums: song.albums,
+			albums: song.albums ?? songInDb.albums,
 			createdAt: songInDb.createdAt,
+			updatedAt: songInDb.updatedAt,
 			lyrics: songInDb.lyrics,
-			mediaFiles: songInDb.mediaFiles,
 			musicElements: songInDb.musicElements,
+			songFilePath: songInDb.songFilePath,
 			title: songInDb.title,
+			youtubeLink: songInDb.youtubeLink,
 		});
+		await replaceSongIdInReferences(id, song.id);
+		await SongModel.findByIdAndDelete(songInDb._id);
 	} else await songInDb.save();
 
 	res.status(200).json({ updated: true });
@@ -337,10 +383,10 @@ export const patchSong = async (req, res) => {
 };
 
 /**
- * Delete a song and remove it from associated albums
+ * Delete a song and remove it from albums, playlists, favorites and logbooks
  *
- * This function deletes a song from the database and removes references to it
- * from associated albums. It also handles file deletion for audio files.
+ * This function deletes a song from the database and removes every reference to it
+ * (albums, playlists, user favorites, service logbooks). It also deletes the audio file.
  *
  * @param {Object} req - Express request object containing request data
  * @param {Object} req.params - Route parameters with explanation of what they represent
@@ -354,14 +400,13 @@ export const deleteSong = async (req, res) => {
 	const { id } = req.params;
 	const song = await SongModel.findById(id);
 	if (!song) throw new NotFoundError("Song doesn't exist.");
-	for (const albumId of song.albums) {
-		const album = await AlbumModel.findById(albumId);
-		const songIdx = album.songs.indexOf(id);
-		album.songs.splice(songIdx, 1);
-		await album.save();
-	}
-
+	await removeSongFromReferences(id);
 	await SongModel.findByIdAndDelete(id);
+
+	if (song.songFilePath && fs.existsSync(song.songFilePath))
+		fs.unlink(song.songFilePath, (err) => {
+			if (err) console.error(err);
+		});
 
 	res.status(200).json({ deleted: true });
 };

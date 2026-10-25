@@ -16,6 +16,11 @@
 import { getDB } from "../db/indexed-db.util";
 import store from "../../store/store";
 import { setWriteQueueSummary } from "../../store/slices/pwa.slice";
+import {
+  applyOptimisticWrite,
+  parseResource,
+  readBaseUpdatedAt,
+} from "./optimistic-write.util";
 
 const STORE_NAME = "pendingWrites";
 
@@ -30,6 +35,13 @@ let writeSequence = 0;
  * HTTP methods that may be queued. Reads are never queued.
  * @type {string[]}
  */
+/** Request header that carries the record version a replayed edit was made against. */
+const BASE_VERSION_HEADER = "X-Base-Updated-At";
+
+/** Message stored on an entry the server refused because the record changed meanwhile. */
+const CONFLICT_MESSAGE =
+  "Changed on the server after this edit was made, so the server version was kept.";
+
 const QUEUEABLE_METHODS = ["POST", "PUT", "PATCH", "DELETE"];
 
 /**
@@ -98,6 +110,48 @@ const deserializeBody = (payload) => {
  * @param {FormData|string|undefined} [entry.body] - Request body
  * @returns {Promise<Response>} The fetch response
  */
+/**
+ * Copies headers without the login token. The token is stored nowhere in the queue: replay
+ * reads the current one, so a token that expired while the write waited cannot fail it.
+ *
+ * @param {Object} headers - Request headers as given by the caller
+ * @returns {Object} Headers without `Authorization`
+ */
+const withoutAuthorization = (headers) => {
+  const rest = { ...(headers || {}) };
+  delete rest.Authorization;
+  delete rest.authorization;
+  return rest;
+};
+
+/**
+ * Key that identifies the record an entry changes, so repeated edits of one record can be
+ * told apart from edits of another. Requests with no record id use their URL.
+ *
+ * @param {Object} entry - Queue entry or request with `url`
+ * @returns {string} Resource key
+ */
+const resourceKey = (entry) => {
+  const target = parseResource(entry.url);
+  return target ? `${target.kind}:${target.id}` : entry.url;
+};
+
+/**
+ * Reads the user id out of a login token, only to tell whose token it is. The token is not
+ * verified here; the server does that on every request.
+ *
+ * @param {string|null|undefined} token - JWT from the login response
+ * @returns {string|null} User id, or null when the token is missing or malformed
+ */
+const tokenOwner = (token) => {
+  try {
+    const payload = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+    return JSON.parse(atob(payload)).id ?? null;
+  } catch {
+    return null;
+  }
+};
+
 const performRequest = ({ url, method, headers, body }) =>
   fetch(url, { method, headers, body });
 
@@ -140,7 +194,7 @@ export const refreshWriteQueueSummary = async () => {
  * @param {Object} entry - Request definition
  * @param {string} entry.url - Absolute request URL
  * @param {string} entry.method - HTTP method
- * @param {Object} [entry.headers] - Request headers, including the auth token
+ * @param {Object} [entry.headers] - Request headers; the auth token is read for its owner, never stored
  * @param {FormData|string} [entry.body] - Request body
  * @param {string} [entry.label] - Human readable description for diagnostics
  * @returns {Promise<void>}
@@ -152,20 +206,33 @@ export const queueWrite = async ({ url, method, headers, body, label }) => {
   }
 
   const db = await getDB();
+  const serializedBody = serializeBody(body);
+
+  // Only the first queued edit of a record carries a base version: later ones were made on
+  // top of that edit, so they are checked as one chain with it.
+  const queued = await db.getAll(STORE_NAME);
+  const chained = queued.some(
+    (entry) => !entry.permanent && resourceKey(entry) === resourceKey({ url })
+  );
+  const baseUpdatedAt = chained ? null : await readBaseUpdatedAt(url);
+
   await db.put(STORE_NAME, {
     id: createId(),
     sequence: nextSequence(),
     url,
     method,
-    headers: headers || {},
-    body: serializeBody(body),
+    headers: withoutAuthorization(headers),
+    baseUpdatedAt,
+    body: serializedBody,
     label: label || `${method} ${url}`,
     createdAt: new Date().toISOString(),
     attempts: 0,
     lastError: null,
     permanent: false,
+    owner: tokenOwner(headers?.Authorization?.replace(/^Bearer /, "")),
   });
 
+  await applyOptimisticWrite({ url, method, body: serializedBody });
   await refreshWriteQueueSummary();
 };
 
@@ -246,6 +313,12 @@ const updateEntry = async (entry, patch) => {
 /**
  * Replays queued writes in order
  *
+ * Sends the current login token, not the one saved at queue time, so a token that expired
+ * while the write waited cannot fail it; a 401 keeps the entry for the next sign-in. A record
+ * edited offline is sent with the version the device saw (`X-Base-Updated-At`); a 409 means
+ * the server copy is newer, so that entry and later edits of the same record are marked
+ * permanent and the server version stays.
+ *
  * Stops at the first transport failure so ordering is preserved: a create must
  * reach the server before the update that targets it. Entries the server
  * rejects with a 4xx are marked permanent instead of being retried forever, and
@@ -261,17 +334,45 @@ export const flushPendingWrites = async () => {
   }
 
   const entries = await getPendingWrites();
+  const token = localStorage.getItem("_s");
+  const currentOwner = tokenOwner(token);
+  const conflicted = new Set();
+  const checked = new Set();
   let flushed = 0;
 
   for (const entry of entries) {
     if (entry.permanent) continue;
+
+    // An entry made by another account waits until that account signs in again.
+    if (entry.owner && currentOwner && entry.owner !== currentOwner) continue;
+
+    if (!token) {
+      await updateEntry(entry, { lastError: "Sign in to send this change." });
+      break;
+    }
+
+    const key = resourceKey(entry);
+    if (conflicted.has(key)) {
+      await updateEntry(entry, {
+        attempts: (entry.attempts || 0) + 1,
+        permanent: true,
+        lastError: CONFLICT_MESSAGE,
+      });
+      continue;
+    }
+
+    // The first replayed edit of a record proves nothing changed since the device last saw it;
+    // later edits of the same record build on it, so they carry no base version.
+    const headers = { ...withoutAuthorization(entry.headers), Authorization: `Bearer ${token}` };
+    if (entry.baseUpdatedAt && !checked.has(key)) headers[BASE_VERSION_HEADER] = entry.baseUpdatedAt;
+    checked.add(key);
 
     let response;
     try {
       response = await performRequest({
         url: entry.url,
         method: entry.method,
-        headers: entry.headers,
+        headers,
         body: deserializeBody(entry.body),
       });
     } catch (error) {
@@ -282,10 +383,32 @@ export const flushPendingWrites = async () => {
       break;
     }
 
+    // An expired or revoked login is not the edit's fault: keep it and wait for a new sign-in.
+    if (response.status === 401) {
+      await updateEntry(entry, {
+        attempts: (entry.attempts || 0) + 1,
+        headers: withoutAuthorization(entry.headers),
+        lastError: "Sign in again to send this change.",
+      });
+      break;
+    }
+
+    if (response.status === 409) {
+      conflicted.add(key);
+      await updateEntry(entry, {
+        attempts: (entry.attempts || 0) + 1,
+        permanent: true,
+        headers: withoutAuthorization(entry.headers),
+        lastError: CONFLICT_MESSAGE,
+      });
+      continue;
+    }
+
     if (response.status >= 400 && response.status < 500) {
       await updateEntry(entry, {
         attempts: (entry.attempts || 0) + 1,
         permanent: true,
+        headers: withoutAuthorization(entry.headers),
         lastError: `Rejected by the server with status ${response.status}.`,
       });
       continue;
@@ -294,6 +417,7 @@ export const flushPendingWrites = async () => {
     if (!response.ok) {
       await updateEntry(entry, {
         attempts: (entry.attempts || 0) + 1,
+        headers: withoutAuthorization(entry.headers),
         lastError: `Server error ${response.status}.`,
       });
       break;
@@ -319,16 +443,18 @@ export const flushPendingWrites = async () => {
  * @param {Object} [entry.headers] - Request headers
  * @param {FormData|string} [entry.body] - Request body
  * @param {string} [entry.label] - Human readable description for diagnostics
+ * @param {boolean} [entry.queueable=true] - When false the request is never queued: a missing
+ *   network is thrown to the caller, who keeps its own record of what is still unsent
  * @returns {Promise<Object>} Parsed response, or { queued: true } when queued
  * @throws {Object} Error with message and status if the server rejects the request
  */
-export const sendMutation = async ({ url, method, headers, body, label }) => {
+export const sendMutation = async ({ url, method, headers, body, label, queueable = true }) => {
   const queueIt = async () => {
     await queueWrite({ url, method, headers, body, label });
     return { queued: true };
   };
 
-  if (!navigator.onLine) return queueIt();
+  if (queueable && !navigator.onLine) return queueIt();
 
   try {
     const response = await performRequest({ url, method, headers, body });
@@ -343,7 +469,7 @@ export const sendMutation = async ({ url, method, headers, body, label }) => {
 
     return data;
   } catch (error) {
-    if (error && typeof error.status === "number") throw error;
+    if (!queueable || (error && typeof error.status === "number")) throw error;
     return queueIt();
   }
 };

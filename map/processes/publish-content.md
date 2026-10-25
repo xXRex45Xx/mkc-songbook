@@ -1,7 +1,7 @@
 ---
 type: process
 status: verified
-verified: 2026-10-24 @ c8aefb1
+verified: 2026-10-25 @ 3515b77
 description: Admin uploads a song (with audio) or an album (with cover); both sides of the link are written.
 consumes: [../objects/data-model/user.md]
 produces: [../objects/data-model/song.md, ../objects/data-model/album.md]
@@ -49,10 +49,8 @@ Frontend: `frontend/src/pages/upload-song.page.jsx`, `upload-album.page.jsx`, th
 
 ## Known defects
 
-- Adding a song to albums saves each album without bumping `Album.updatedAt`, and adding an
-  album saves each song without bumping `Song.updatedAt`, so [delta-sync](delta-sync.md) misses
-  the new link on the other side. `backend/controllers/song.controller.js:194`,
-  `backend/controllers/album.controller.js:120`
+None known. `addSong`, `updateSong`, `addAlbum` and `updateAlbum` set `updatedAt` on both sides of
+a song–album link, so [delta-sync](delta-sync.md) sees the new link from either side.
 
 ## If you change this
 

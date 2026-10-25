@@ -15,6 +15,8 @@ import {
 	streamSongAudio,
 	updateSong,
 } from "../controllers/song.controller.js";
+import { checkBaseVersion } from "../middlewares/base-version.middleware.js";
+import SongModel from "../models/song.model.js";
 import { wrapAsync } from "../utils/error.util.js";
 import {
 	validateCreateSong,
@@ -180,6 +182,7 @@ songRouter
 		wrapAsync(roleBasedAuthorization(["admin", "super-admin"])),
 		audioUpload.single("audio-file"),
 		wrapAsync(validateGetSong),
+		wrapAsync(checkBaseVersion(SongModel)),
 		wrapAsync(validateCreateSong),
 		wrapAsync(checkSongNumberConflict),
 		wrapAsync(checkAlbumExists),
@@ -215,6 +218,7 @@ songRouter
 		wrapAsync(roleBasedAuthorization(["admin", "super-admin"])),
 		audioUpload.single("audio-file"),
 		wrapAsync(validateGetSong),
+		wrapAsync(checkBaseVersion(SongModel)),
 		wrapAsync(validatePatchSong),
 		wrapAsync(patchSong)
 	)
@@ -242,6 +246,7 @@ songRouter
 		passport.authenticate("jwt", { session: false }),
 		wrapAsync(roleBasedAuthorization(["admin", "super-admin"])),
 		wrapAsync(validateGetSong),
+		wrapAsync(checkBaseVersion(SongModel)),
 		wrapAsync(deleteSong)
 	);
 

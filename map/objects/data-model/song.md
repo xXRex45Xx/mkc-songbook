@@ -3,7 +3,7 @@ type: object
 cluster: data-model
 universe: live
 status: verified
-verified: 2026-10-25 @ 7d5d104
+verified: 2026-10-25 @ 3515b77
 entity: backend/models/song.model.js:49
 code-name: Song
 description: "A song: Amharic lyrics, chords, rhythm, tempo, optional audio."
@@ -33,6 +33,12 @@ changes with `?syncSince` delta sync.
 - `youtubeLink` String. `:71`
 - `albums` [String ref Album]. `:72`
 
+Deleting a song (`deleteSong`) pulls its id from every album, playlist, logbook and user
+favorites list, bumps `updatedAt` on the albums, playlists and logbooks it touched, then deletes
+the audio file. Changing a song's `_id` (`updateSong`) creates the new document first (keeping
+`songFilePath`, `youtubeLink`, `createdAt`), repoints the same four collections to the new id,
+then deletes the old document; both paths live in `backend/controllers/song.controller.js`.
+
 API: `/api/song` (`backend/routes/song.route.js:44`), plus `GET /api/song/:id/audio` range
 streaming (`backend/routes/song.route.js:266`).
 
@@ -41,21 +47,19 @@ streaming (`backend/routes/song.route.js:266`).
 - **owns:** the audio file at `songFilePath`.
 - **owned-by:** none.
 - **joins:** [Album](album.md) both ways (`Song.albums` and `Album.songs` are kept in sync by
-  hand); referenced by [Playlist](playlist.md), [User](user.md) favorites,
+  hand, and each side's `updatedAt` is bumped when the link changes); referenced by [Playlist](playlist.md), [User](user.md) favorites,
   [Service logbook](service-logbook.md).
 - **looks-like-but-is-not:** [songs store](../local-db/songs-store.md) — the offline copy has
   `hasAudio`, not `songFilePath`.
 
 ## Known defects
 
-- Changing a song's `_id` deletes and recreates it without `songFilePath` or `youtubeLink`,
-  and copies a `mediaFiles` field the schema does not have. `:282`
-- `deleteSong` pulls the id from albums only: playlists, favorites and logbook entries keep a
-  dangling id, and the audio file stays on disk. `:353`
+None known.
 
 ## If you change this
 
-- **Hits:** `backend/models/validation-schemas/song.validation-shcema.js`,
+- **Hits:** `backend/middlewares/base-version.middleware.js` (409 on a stale replayed edit),
+  `backend/models/validation-schemas/song.validation-shcema.js`,
   `backend/middlewares/pre-add-song.middleware.js`, `pre-update-song.middleware.js`,
   `backend/controllers/song.controller.js`, `backend/controllers/album.controller.js`
   (`$pull`/`$push` on `albums`), `backend/init-db/init-db.js` (seed mapping),

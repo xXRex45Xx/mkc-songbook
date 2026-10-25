@@ -3,7 +3,7 @@ type: object
 cluster: local-db
 universe: live
 status: verified
-verified: 2026-10-24 @ 9db0d0c
+verified: 2026-10-25 @ 3515b77
 entity: frontend/src/utils/db/indexed-db.util.js:74
 code-name: pendingWrites
 description: "Offline write queue: failed mutations replayed in order when the network returns."
@@ -17,22 +17,27 @@ Mutations made offline, waiting to reach the server. Store name `pendingWrites`.
 
 An app-level queue, not Workbox `backgroundSync`, because Safari lacks the Background Sync API
 (`frontend/src/utils/pwa/write-queue.util.js:6`). Replay is in creation order (`sequence` breaks
-same-millisecond ties) and last-write-wins: the backend has no concurrency check.
+same-millisecond ties). The token is not stored: replay reads the current `localStorage._s`.
+Each edit of a record carries the `updatedAt` the device last saw, and the backend refuses a
+stale one with 409.
 
 ## Shape
 
 - keyPath `id`; index `createdAt`. `frontend/src/utils/db/indexed-db.util.js:74`
 - Record: `{ id, sequence, url, method, headers, body, label, createdAt, attempts, lastError,
-  permanent }`. `frontend/src/utils/pwa/write-queue.util.js:155`
-- `headers` is stored as given, including the `Authorization: Bearer` token
-  (`frontend/src/utils/api/playlist-api.util.js:173`).
+  permanent, baseUpdatedAt, owner }`. `frontend/src/utils/pwa/write-queue.util.js:155`
+- `headers` is stored without `Authorization`; `owner` is the user id read from the token, so an
+  entry waits for its own account. `baseUpdatedAt` is the local copy's `updatedAt` at queue
+  time, set only on the first queued edit of a record (later edits build on it).
 
 Flush (`frontend/src/utils/pwa/write-queue.util.js:257`):
 
 | Response | Result |
 |---|---|
 | network error | `attempts`+1, stop the flush |
-| 4xx | `permanent: true`, skip, continue |
+| 401 | keep the entry (`attempts`+1), stop: wait for a new sign-in |
+| 409 | `permanent: true` (record changed on the server), later edits of that record too, continue |
+| other 4xx | `permanent: true`, skip, continue |
 | 5xx | `attempts`+1, stop the flush |
 | 2xx/3xx | remove the entry |
 
@@ -45,9 +50,8 @@ Flush (`frontend/src/utils/pwa/write-queue.util.js:257`):
 
 ## Known defects
 
-- Queued `headers` keep the bearer token, so a token that expires while queued gets a 401 on
-  replay and the write is marked `permanent` (failed for good).
-  `frontend/src/utils/pwa/write-queue.util.js:285`
+None known. A permanent non-409 rejection (for example validation) leaves the optimistic local
+copy in place until a later sync replaces it.
 
 ## If you change this
 

@@ -166,11 +166,12 @@ export const removeSongFromLocalPlaylist = async (playlistId, songId) => {
 
 /**
  * Uploads a local playlist to the server
- * After successful upload, marks the playlist as synced
+ * After successful upload, marks the playlist as synced. A playlist uploaded before is updated
+ * in place (PUT to its `remoteId`) instead of being created again. A missing network throws.
  *
  * @param {string} id - Local playlist ID
  * @param {string} token - JWT authentication token
- * @returns {Promise<Object>} Server response with insertedId
+ * @returns {Promise<Object>} Server response with insertedId set to the server playlist id
  * @throws {Error} 404: If playlist not found
  * @throws {Error} 401: If not authenticated
  * @throws {Error} 500: If server upload fails
@@ -189,14 +190,35 @@ export const syncPlaylistToServer = async (id, token) => {
   formData.append("visibility", "private");
   playlist.songs.forEach((song) => formData.append("songs", song._id));
 
-  const result = await addOrEditPlaylist(formData, false, null, token);
+  // Sent directly, never through the offline queue: the record stays unsynced until the
+  // server answers, so a queued copy would be created a second time on the next sync.
+  const send = (edit, remoteId) =>
+    addOrEditPlaylist(formData, edit, remoteId, token, { queue: false });
 
-  if (result.insertedId) {
-    await playlistIdbService.markSynced(id, result.insertedId);
-    store.dispatch(markAsSynced({ id, remoteId: result.insertedId }));
+  let result;
+  let remoteId = playlist.remoteId;
+  if (remoteId) {
+    try {
+      result = await send(true, remoteId);
+    } catch (error) {
+      // The server copy is gone (deleted elsewhere): upload this one as a new playlist.
+      if (error.status !== 404) throw error;
+      remoteId = null;
+    }
+  }
+  if (!remoteId) {
+    result = await send(false, null);
+    remoteId = result.insertedId;
   }
 
-  return result;
+  if (remoteId) {
+    await playlistIdbService.markSynced(id, remoteId, playlist.updatedAt);
+    // Edited while the upload ran: markSynced kept it unsynced, so the store must agree.
+    if ((await playlistIdbService.getById(id))?.synced)
+      store.dispatch(markAsSynced({ id, remoteId }));
+  }
+
+  return { ...result, insertedId: remoteId };
 };
 
 /**

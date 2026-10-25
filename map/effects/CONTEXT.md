@@ -8,6 +8,7 @@ A catalog, not a spec. Find the thing you are changing, open the listed cards, a
 | Changing | Open first | Also open |
 |---|---|---|
 | Song fields, song API, `updatedAt` on edit | [Song](../objects/data-model/song.md) | [songs store](../objects/local-db/songs-store.md), [delta-sync](../processes/delta-sync.md), [publish-content](../processes/publish-content.md) |
+| Song delete or `_id` rename (`song.controller.js`) | [Song](../objects/data-model/song.md) | `removeSongFromReferences` / `replaceSongIdInReferences` touch Album, Playlist, User favorites, LogBook: add a new song reference there too |
 | Song or album `_id` rename | [Song](../objects/data-model/song.md), [Album](../objects/data-model/album.md) | [Playlist](../objects/data-model/playlist.md), [User](../objects/data-model/user.md) favorites, [Service logbook](../objects/data-model/service-logbook.md) — all hold string ids |
 | Album fields or cover upload | [Album](../objects/data-model/album.md) | [albums store](../objects/local-db/albums-store.md), [publish-content](../processes/publish-content.md) |
 | Song–album link | [publish-content](../processes/publish-content.md) | [Song](../objects/data-model/song.md), [Album](../objects/data-model/album.md), [delta-sync](../processes/delta-sync.md) |
@@ -19,6 +20,7 @@ A catalog, not a spec. Find the thing you are changing, open the listed cards, a
 | JWT secret, claim, expiry, `localStorage._s` | [auth](../processes/auth.md) | [pendingWrites store](../objects/local-db/pending-writes-store.md) (queued tokens) |
 | `?syncSince`, `?idsOnly`, sync triggers | [delta-sync](../processes/delta-sync.md) | [syncMeta store](../objects/local-db/sync-meta-store.md), [songs store](../objects/local-db/songs-store.md), [albums store](../objects/local-db/albums-store.md) |
 | IndexedDB `STORE_SCHEMAS`, `DB_VERSION` | the store's card in [local-db](../objects/local-db/_index.md) | every process that reads that store |
+| `X-Base-Updated-At`, `checkBaseVersion`, optimistic local writes | [offline-writes](../processes/offline-writes.md) | [pendingWrites store](../objects/local-db/pending-writes-store.md), [songs store](../objects/local-db/songs-store.md), [albums store](../objects/local-db/albums-store.md), [users store](../objects/local-db/users-store.md) |
 | `sendMutation`, queue replay | [offline-writes](../processes/offline-writes.md) | [pendingWrites store](../objects/local-db/pending-writes-store.md), [pwa slice](../objects/app-state/pwa-slice.md) |
 | Device playlists | [localPlaylists store](../objects/local-db/local-playlists-store.md) | [localPlaylists slice](../objects/app-state/local-playlists-slice.md), [local-playlist-upload](../processes/local-playlist-upload.md) |
 | Audio stream endpoint, chunk size | [offline-audio](../processes/offline-audio.md) | [audioFiles store](../objects/local-db/audio-files-store.md) |

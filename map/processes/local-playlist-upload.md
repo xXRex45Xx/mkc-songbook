@@ -1,7 +1,7 @@
 ---
 type: process
 status: verified
-verified: 2026-10-24 @ c8aefb1
+verified: 2026-10-25 @ 3515b77
 description: After sign-in, device-only playlists are uploaded once as private server playlists.
 consumes: [../objects/local-db/local-playlists-store.md]
 produces: [../objects/data-model/playlist.md, ../objects/local-db/local-playlists-store.md, ../objects/app-state/local-playlists-slice.md]
@@ -33,17 +33,19 @@ choosing it.
    the loop continues (`frontend/src/utils/api/local-playlist-api.util.js:214`).
 3. `syncPlaylistToServer` builds `FormData` with `name`, `visibility: "private"` and each
    song `_id`, then calls `addOrEditPlaylist` (`local-playlist-api.util.js:183`).
-4. If the response has `insertedId`: `markSynced` in IndexedDB and `markAsSynced` in Redux
+4. With the server id: `markSynced` in IndexedDB and `markAsSynced` in Redux
    (`local-playlist-api.util.js:194`, `frontend/src/utils/db/playlist-idb-service.util.js:138`).
 
 ## Known defects
 
-- Duplicate upload: `addOrEditPlaylist` goes through `sendMutation`, so a network failure
-  queues the POST and returns no `insertedId`. The record stays unsynced; on the next sync the
-  queue creates the playlist, then this step uploads it again.
-  `frontend/src/utils/api/local-playlist-api.util.js:192`
-- One-shot: editing a playlist after upload does not reset `synced`, so later changes never
-  reach the server copy. `frontend/src/utils/db/playlist-idb-service.util.js:97`
+None known. Two rules keep it correct:
+
+- The upload is sent with `queue: false`, never through the offline queue, so the record stays
+  unsynced exactly until the server answers. A network failure throws and the next sync retries.
+- Editing a playlist sets `synced: false` (IndexedDB `update` and the slice's
+  `updateLocalPlaylist`). A playlist that already has a `remoteId` is sent as `PUT` to that id;
+  a 404 means the server copy is gone, so it is created again. `markSynced` keeps the record
+  unsynced if it was edited while the upload ran. A re-upload resets `visibility` to `private`.
 
 ## If you change this
 

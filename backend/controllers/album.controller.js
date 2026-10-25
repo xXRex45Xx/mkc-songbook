@@ -117,6 +117,7 @@ export const addAlbum = async (req, res) => {
 
 	for (const song of album.songs) {
 		song.albums.push(insertedAlbum._id);
+		song.updatedAt = new Date();
 		await song.save();
 	}
 
@@ -238,11 +239,11 @@ export const updateAlbum = async (req, res) => {
 		const songUpdatePromises = [
 			SongModel.updateMany(
 				{ _id: { $in: removedSongIds } },
-				{ $pull: { albums: id } }
+				{ $pull: { albums: id }, $set: { updatedAt: new Date() } }
 			),
 			SongModel.updateMany(
 				{ _id: { $in: addedSongIds } },
-				{ $push: { albums: album.id } }
+				{ $push: { albums: album.id }, $set: { updatedAt: new Date() } }
 			),
 		];
 
@@ -256,11 +257,11 @@ export const updateAlbum = async (req, res) => {
 
 		await SongModel.updateMany(
 			{ _id: { $in: remainingSongIds } },
-			{ $pull: { albums: id } }
+			{ $pull: { albums: id }, $set: { updatedAt: new Date() } }
 		);
 		await SongModel.updateMany(
 			{ _id: { $in: remainingSongIds } },
-			{ $push: { albums: album.id } }
+			{ $push: { albums: album.id }, $set: { updatedAt: new Date() } }
 		);
 	}
 
@@ -294,7 +295,7 @@ export const deleteAlbum = async (req, res) => {
 
 	await SongModel.updateMany(
 		{ _id: { $in: album.songs } },
-		{ $pull: { albums: id } }
+		{ $pull: { albums: id }, $set: { updatedAt: new Date() } }
 	);
 	await AlbumModel.findByIdAndDelete(id);
 	if (album.photoPath && fs.existsSync(album.photoPath))

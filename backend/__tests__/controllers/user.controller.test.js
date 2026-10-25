@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import {
   getAllOrSearchUsers,
   googleOAuthLogin,
+  registerOTP,
   updateFavorites,
   verifyOTP,
 } from "../../controllers/user.controller.js";
@@ -31,6 +32,16 @@ describe("user controller", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     global.fetch = jest.fn();
+  });
+
+  it("should not report success when re-sending a code fails to email", async () => {
+    const save = jest.fn().mockRejectedValue(new Error("SMTP down"));
+    OTPModel.findOne = jest.fn().mockResolvedValue({ save });
+    const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+
+    await expect(registerOTP({ body: { email: "a@example.com" } }, res)).rejects.toThrow("SMTP down");
+
+    expect(res.json).not.toHaveBeenCalled();
   });
 
   it("should pass the submitted code to OTP verification", async () => {

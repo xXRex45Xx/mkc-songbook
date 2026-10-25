@@ -28,7 +28,10 @@ import {
 } from "../../controllers/song.controller.js";
 import AlbumModel from "../../models/album.model.js";
 import fs from "fs";
+import LogBookModel from "../../models/service-logbook.model.js";
+import PlaylistModel from "../../models/playlist.model.js";
 import SongModel from "../../models/song.model.js";
+import UserModel from "../../models/user.model.js";
 import { NotFoundError, ServerFaultError } from "../../utils/error.util.js";
 
 describe("song controller", () => {
@@ -38,6 +41,8 @@ describe("song controller", () => {
     SongModel.findByIdAndDelete = mockSongFindByIdAndDelete;
     SongModel.create = mockSongCreate;
     AlbumModel.findById = mockAlbumFindById;
+    for (const model of [AlbumModel, PlaylistModel, LogBookModel, UserModel])
+      model.updateMany = jest.fn().mockResolvedValue({ acknowledged: true });
     fs.existsSync = mockExistsSync;
     fs.unlink = mockUnlink;
     fs.statSync = mockStatSync;
@@ -64,6 +69,7 @@ describe("song controller", () => {
     await addSong(req, res);
 
     expect(album.songs).toEqual([{ _id: "song-001" }]);
+    expect(album.updatedAt).toBeInstanceOf(Date);
     expect(saveAlbum).toHaveBeenCalledTimes(1);
     expect(res.status).toHaveBeenCalledWith(201);
   });
@@ -102,23 +108,28 @@ describe("song controller", () => {
     expect(mockUnlink).toHaveBeenCalledWith("/tmp/old.mp3", expect.any(Function));
     expect(oldAlbum.songs).toEqual([]);
     expect(newAlbum.songs).toEqual(["song-001"]);
+    expect(oldAlbum.updatedAt).toBeInstanceOf(Date);
+    expect(newAlbum.updatedAt).toBeInstanceOf(Date);
     expect(songInDb.songFilePath).toBe("/tmp/new.mp3");
     expect(songInDb.save).toHaveBeenCalledTimes(1);
   });
 
-  it("should recreate the song when the id changes during update", async () => {
+  it("should create the renamed song before deleting the old one and keep its audio and link", async () => {
+    const order = [];
     const songInDb = {
       _id: "song-001",
-      songFilePath: null,
+      songFilePath: "/tmp/keep.mp3",
+      youtubeLink: "https://youtu.be/old",
       albums: [],
       createdAt: "2024",
       lyrics: "lyrics",
-      mediaFiles: [],
       musicElements: { chord: "C", tempo: 120, rythm: "4/4" },
       title: "Old",
       save: jest.fn(),
     };
     mockSongFindById.mockReturnValue({ populate: jest.fn().mockResolvedValue(songInDb) });
+    mockSongCreate.mockImplementation(async () => order.push("create"));
+    mockSongFindByIdAndDelete.mockImplementation(async () => order.push("delete"));
     const req = {
       params: { id: "song-001" },
       body: {
@@ -128,17 +139,31 @@ describe("song controller", () => {
         chord: "G",
         tempo: 100,
         rythm: "3/4",
+        "video-link": "https://youtu.be/keep",
       },
     };
     const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
 
     await updateSong(req, res);
 
+    expect(order).toEqual(["create", "delete"]);
     expect(mockSongFindByIdAndDelete).toHaveBeenCalledWith("song-001");
-    expect(mockSongCreate).toHaveBeenCalledWith(
-      expect.objectContaining({ _id: "song-002", title: "Updated" }),
+    const created = mockSongCreate.mock.calls[0][0];
+    expect(created).toEqual(
+      expect.objectContaining({
+        _id: "song-002",
+        title: "Updated",
+        songFilePath: "/tmp/keep.mp3",
+        youtubeLink: "https://youtu.be/keep",
+      }),
     );
+    expect(created).not.toHaveProperty("mediaFiles");
     expect(songInDb.save).not.toHaveBeenCalled();
+    expect(PlaylistModel.updateMany).toHaveBeenCalledWith(
+      { songs: "song-001" },
+      { $set: { "songs.$[e]": "song-002", updatedAt: expect.any(Date) } },
+      { arrayFilters: [{ e: "song-001" }] },
+    );
   });
 
   it("should update the audio file when patching a song", async () => {
@@ -164,18 +189,33 @@ describe("song controller", () => {
     expect(songInDb.save).toHaveBeenCalledTimes(1);
   });
 
-  it("should remove a deleted song from all albums", async () => {
-    const album = { songs: ["song-001", "song-002"], save: jest.fn() };
-    mockSongFindById.mockResolvedValue({ albums: ["album-001"] });
-    mockAlbumFindById.mockResolvedValue(album);
+  it("should remove a deleted song from every collection and delete its audio file", async () => {
+    mockSongFindById.mockResolvedValue({ albums: ["album-001"], songFilePath: "/tmp/a.mp3" });
+    mockExistsSync.mockReturnValue(true);
+    mockUnlink.mockImplementation((_path, callback) => callback(null));
     const req = { params: { id: "song-001" } };
     const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
 
     await deleteSong(req, res);
 
-    expect(album.songs).toEqual(["song-002"]);
-    expect(album.save).toHaveBeenCalledTimes(1);
+    expect(AlbumModel.updateMany).toHaveBeenCalledWith(
+      { songs: "song-001" },
+      { $pull: { songs: "song-001" }, $set: { updatedAt: expect.any(Date) } },
+    );
+    expect(PlaylistModel.updateMany).toHaveBeenCalledWith(
+      { songs: "song-001" },
+      { $pull: { songs: "song-001" }, $set: { updatedAt: expect.any(Date) } },
+    );
+    expect(LogBookModel.updateMany).toHaveBeenCalledWith(
+      { songList: "song-001" },
+      { $pull: { songList: "song-001" }, $set: { updatedAt: expect.any(Date) } },
+    );
+    expect(UserModel.updateMany).toHaveBeenCalledWith(
+      { favorites: "song-001" },
+      { $pull: { favorites: "song-001" } },
+    );
     expect(mockSongFindByIdAndDelete).toHaveBeenCalledWith("song-001");
+    expect(mockUnlink).toHaveBeenCalledWith("/tmp/a.mp3", expect.any(Function));
   });
 
   it("should throw when trying to delete a missing song", async () => {
