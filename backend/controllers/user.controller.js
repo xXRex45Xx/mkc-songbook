@@ -189,6 +189,32 @@ export const getCurrentUser = async (req, res) => {
 export const googleOAuthLogin = async (req, res) => {
 	const { accessToken } = req.body;
 
+	// A token issued to another Google app must not sign in here: check audience first.
+	const tokenInfoResponse = await fetch(
+		"https://oauth2.googleapis.com/tokeninfo",
+		{
+			method: "POST",
+			headers: { "Content-Type": "application/x-www-form-urlencoded" },
+			body: new URLSearchParams({ access_token: accessToken }),
+		}
+	);
+
+	if (!tokenInfoResponse.ok) {
+		throw new UnauthorizedError(
+			"Failed to sign up or login with google. Please, try again."
+		);
+	}
+
+	const tokenInfo = await tokenInfoResponse.json();
+	if (
+		!process.env.GOOGLE_CLIENT_ID ||
+		tokenInfo.aud !== process.env.GOOGLE_CLIENT_ID
+	) {
+		throw new UnauthorizedError(
+			"Failed to sign up or login with google. Please, try again."
+		);
+	}
+
 	const googleApiResponse = await fetch(
 		"https://www.googleapis.com/oauth2/v3/userinfo",
 		{
@@ -203,6 +229,16 @@ export const googleOAuthLogin = async (req, res) => {
 	}
 
 	const googleApiData = await googleApiResponse.json();
+	if (
+		!googleApiData.email ||
+		(googleApiData.email_verified !== true &&
+			googleApiData.email_verified !== "true")
+	) {
+		throw new UnauthorizedError(
+			"Your Google email is not verified. Please, verify it and try again."
+		);
+	}
+
 	let user = await UserModel.findOne({ email: googleApiData.email });
 
 	if (!user)

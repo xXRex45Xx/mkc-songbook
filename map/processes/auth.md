@@ -1,7 +1,7 @@
 ---
 type: process
 status: verified
-verified: 2026-10-24 @ c8aefb1
+verified: 2026-10-25 @ 3d62afa+uncommitted
 description: Sign-up by emailed code, password or Google sign-in, 30-day JWT on every request.
 consumes: [../objects/data-model/user.md, ../objects/data-model/otp.md]
 produces: [../objects/data-model/user.md, ../objects/local-db/users-store.md, ../objects/app-state/user-slice.md]
@@ -41,9 +41,17 @@ Password login: `POST /api/user/login` — Passport local strategy; a user with 
 (Google-only) always fails (`backend/config/passport.config.js:48`); token signed in
 `backend/middlewares/local-auth.middleware.js:32`.
 
-Google: the browser gets a Google access token; `POST /api/user/google/callback` calls Google
-`userinfo` with it, finds or creates the user by email, returns a token
-(`backend/controllers/user.controller.js:189`).
+Google: the browser gets a Google access token; `POST /api/user/google/callback` asks Google
+`tokeninfo` and refuses a token whose `aud`/`azp` is not `GOOGLE_CLIENT_ID`, then calls `userinfo`
+and refuses an email that is not `email_verified`, finds or creates the user by email, returns a
+token (`backend/controllers/user.controller.js:189`).
+
+Rate limits (failed requests only; successes do not count): every route above except
+`current-user` passes `authIpLimiter` (30 per 15 minutes per address); code and password routes also pass `authEmailLimiter` (10 per 15 minutes per email) and
+`/otp` passes `otpRequestLimiter` (5 per 15 minutes per email), all in
+`backend/middlewares/rate-limit.middleware.js`. Counters live in process memory: they reset on
+restart and are not shared between instances. Behind a proxy set `TRUST_PROXY` (hop count) in
+`backend/index.js`, or all clients share one address.
 
 Password reset: `POST /api/user/otp?forgotPassword=true` (requires a known email), then
 `PUT /api/user/reset-password` with the code (`backend/routes/user.route.js:294`).
@@ -60,11 +68,6 @@ Frontend: forms save the token (`frontend/src/components/login-form.component.js
 
 ## Known defects
 
-- The Google access token's audience is never checked, so a token issued to any other Google
-  app for that user also signs in here. `email_verified` is not checked either.
-  `backend/controllers/user.controller.js:192`
-- No rate limit on `/otp`, `/verify-otp` or `/login`; a 6-digit code can be guessed
-  repeatedly inside its 5-minute life. `backend/index.js`
 - Login returns no `favorites`, unlike sign-up and Google sign-in.
   `backend/middlewares/local-auth.middleware.js:39`
 

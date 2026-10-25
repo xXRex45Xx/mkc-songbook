@@ -28,6 +28,13 @@ if (process.env.NODE_ENV !== "production") {
 
 const app = express();
 
+// Behind a reverse proxy, set TRUST_PROXY to the number of proxy hops so rate
+// limits key on the real client address instead of the proxy.
+if (process.env.TRUST_PROXY) {
+	const hops = Number(process.env.TRUST_PROXY);
+	app.set("trust proxy", Number.isInteger(hops) && hops > 0 ? hops : process.env.TRUST_PROXY);
+}
+
 export default app;
 
 /**

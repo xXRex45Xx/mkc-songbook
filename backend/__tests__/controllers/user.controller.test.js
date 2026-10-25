@@ -9,7 +9,23 @@ import {
 } from "../../controllers/user.controller.js";
 import OTPModel from "../../models/otp.model.js";
 import UserModel from "../../models/user.model.js";
-import { ClientFaultError } from "../../utils/error.util.js";
+import { ClientFaultError, UnauthorizedError } from "../../utils/error.util.js";
+
+const mockGoogle = ({ aud = process.env.GOOGLE_CLIENT_ID, profile = {} } = {}) => {
+  global.fetch.mockImplementation(async (url) => ({
+    ok: true,
+    json: async () =>
+      String(url).includes("tokeninfo")
+        ? { aud }
+        : {
+            email: "google@example.com",
+            email_verified: true,
+            name: "Google User",
+            picture: "https://example.com/google.jpg",
+            ...profile,
+          },
+  }));
+};
 
 describe("user controller", () => {
   beforeEach(() => {
@@ -110,14 +126,7 @@ describe("user controller", () => {
       role: "public",
       favorites: [],
     };
-    global.fetch.mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        email: "google@example.com",
-        name: "Google User",
-        picture: "https://example.com/google.jpg",
-      }),
-    });
+    mockGoogle();
     UserModel.findOne = jest.fn().mockResolvedValue(null);
     UserModel.create = jest.fn().mockResolvedValue(createdUser);
     jest.spyOn(jwt, "sign").mockReturnValue("jwt-token");
@@ -141,6 +150,26 @@ describe("user controller", () => {
     });
   });
 
+  it("should reject a Google token issued to another app", async () => {
+    mockGoogle({ aud: "some-other-app" });
+    UserModel.create = jest.fn();
+
+    await expect(
+      googleOAuthLogin({ body: { accessToken: "token-123" } }, { json: jest.fn() }),
+    ).rejects.toThrow(UnauthorizedError);
+    expect(UserModel.create).not.toHaveBeenCalled();
+  });
+
+  it("should reject a Google account with an unverified email", async () => {
+    mockGoogle({ profile: { email_verified: false } });
+    UserModel.create = jest.fn();
+
+    await expect(
+      googleOAuthLogin({ body: { accessToken: "token-123" } }, { json: jest.fn() }),
+    ).rejects.toThrow(UnauthorizedError);
+    expect(UserModel.create).not.toHaveBeenCalled();
+  });
+
   it("should reuse an existing Google user without creating a duplicate", async () => {
     const res = { json: jest.fn() };
     const existingUser = {
@@ -150,14 +179,7 @@ describe("user controller", () => {
       role: "member",
       favorites: ["song-001"],
     };
-    global.fetch.mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        email: "google@example.com",
-        name: "Google User",
-        picture: "https://example.com/google.jpg",
-      }),
-    });
+    mockGoogle();
     UserModel.findOne = jest.fn().mockResolvedValue(existingUser);
     UserModel.create = jest.fn();
     jest.spyOn(jwt, "sign").mockReturnValue("jwt-token");

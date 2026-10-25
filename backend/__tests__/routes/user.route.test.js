@@ -16,6 +16,22 @@ import {
   teardownDb,
 } from "../../jest/helpers/integration.helper.js";
 
+const mockGoogle = ({ aud = process.env.GOOGLE_CLIENT_ID, profile = {} } = {}) => {
+  global.fetch.mockImplementation(async (url) => ({
+    ok: true,
+    json: async () =>
+      String(url).includes("tokeninfo")
+        ? { aud }
+        : {
+            email: "google@example.com",
+            email_verified: true,
+            name: "Google User",
+            picture: "https://example.com/google.jpg",
+            ...profile,
+          },
+  }));
+};
+
 describe("user routes", () => {
   beforeAll(async () => {
     await ensureDbConnection();
@@ -225,14 +241,7 @@ describe("user routes", () => {
 
   describe("POST /api/user/google/callback", () => {
     it("should create a new user from Google OAuth", async () => {
-      global.fetch.mockResolvedValue({
-        ok: true,
-        json: async () => ({
-          email: "google@example.com",
-          name: "Google User",
-          picture: "https://example.com/google.jpg",
-        }),
-      });
+      mockGoogle();
 
       const response = await request(app)
         .post("/api/user/google/callback")
@@ -263,14 +272,7 @@ describe("user routes", () => {
         password: "hashed:password123",
         role: "public",
       });
-      global.fetch.mockResolvedValue({
-        ok: true,
-        json: async () => ({
-          email: "google@example.com",
-          name: "Google User",
-          picture: "https://example.com/google.jpg",
-        }),
-      });
+      mockGoogle();
 
       const response = await request(app)
         .post("/api/user/google/callback")
@@ -278,6 +280,28 @@ describe("user routes", () => {
 
       expect(response.status).toBe(200);
       expect(await UserModel.countDocuments({ email: "google@example.com" })).toBe(1);
+    });
+
+    it("should reject a Google token issued to another app", async () => {
+      mockGoogle({ aud: "some-other-app" });
+
+      const response = await request(app)
+        .post("/api/user/google/callback")
+        .send({ accessToken: "foreign-token" });
+
+      expect(response.status).toBe(401);
+      expect(await UserModel.countDocuments({ email: "google@example.com" })).toBe(0);
+    });
+
+    it("should reject a Google account with an unverified email", async () => {
+      mockGoogle({ profile: { email_verified: false } });
+
+      const response = await request(app)
+        .post("/api/user/google/callback")
+        .send({ accessToken: "valid-token" });
+
+      expect(response.status).toBe(401);
+      expect(await UserModel.countDocuments({ email: "google@example.com" })).toBe(0);
     });
 
     it("should return a generic server error when Google userinfo fetch fails", async () => {
