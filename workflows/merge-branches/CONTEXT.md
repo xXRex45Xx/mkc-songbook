@@ -32,5 +32,5 @@ Every stage may read these; none copies them:
 Before stage 01 changes anything, the working tree is committed and pushed. Any `fail` before
 the commit: `git merge --abort` returns the target to the tip recorded in `merge-plan.md`.
 
-Status is whatever exists: a stage is done when its `output/` holds an artifact and its
-`check.md` says `pass`.
+Status is whatever exists: a stage is done for a run when its `output/{run}/` holds an artifact and
+its `check.md` says `pass`.

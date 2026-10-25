@@ -4,7 +4,7 @@ One job: find bugs and rule breaks in the change before it is committed.
 
 ## Inputs
 
-- Working (this run): `workflows/review-commit/01_inventory/output/changes.md`
+- Working (this run): `workflows/review-commit/01_inventory/output/{run}/changes.md`
 - Working (this run): `git diff HEAD -- <commit list from changes.md>`
 - Reference (every run): the harness's built-in `code-review` skill (not stored in this repo)
 - Reference (every run): `docs/conventions.md`
@@ -14,8 +14,8 @@ Do NOT load: files outside the commit list, old runs, all of `map/`.
 
 ## Process
 
-1. If `changes.md` or `02_checks/output/check.md` is missing or not `pass`, stop and say
-   which. Create `output/` if it does not exist.
+1. If `changes.md` or `02_checks/output/{run}/check.md` is missing or not `pass`, stop and say
+   which. Create `output/{run}/`.
 2. Run the harness's `code-review` skill on the diff of the commit list. If the harness has no
    such skill, review the diff by hand in the same buckets and say so in `review.md`.
 3. Add the repo-specific items the skill does not know:
@@ -27,7 +27,7 @@ Do NOT load: files outside the commit list, old runs, all of `map/`.
 
 ## Outputs
 
-- `review.md` -> `output/`: findings by bucket, and which reviewer produced them.
+- `review.md` -> `output/{run}/`: findings by bucket, and which reviewer produced them.
 
 ## Check
 

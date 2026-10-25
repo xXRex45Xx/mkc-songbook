@@ -9,7 +9,7 @@ numbered, checked stages. This file routes only. Rules for writing one: [CONTEXT
 |---|---|
 | `<workflow>/CONTEXT.md` | That workflow in one screen: trigger, stages, done |
 | `<workflow>/NN_<stage>/CONTEXT.md` | One stage's contract: inputs, process, outputs, check |
-| `<workflow>/NN_<stage>/output/` | This run's artifacts and `check.md` |
+| `<workflow>/NN_<stage>/output/<run>/` | One run's artifacts and `check.md`; `<run>` = `<YYYYMMDD-HHMM>-<task-slug>` |
 | `<workflow>/references/` | Rules only that workflow uses |
 | [_templates/](_templates/) | `workflow-CONTEXT.md`, `stage-CONTEXT.md`: copy to start |
 | `_tools/` | Scripts stage checks call, e.g. `inventory_check.py` |
@@ -31,10 +31,10 @@ Add one row here when a workflow is added.
 
 | If | Go to | Then stop at |
 |---|---|---|
-| starting a run | the workflow's `CONTEXT.md`, then `01_*/CONTEXT.md` | stage 01's check |
-| a stage's `check.md` says `pass` | the next numbered stage | that stage's check |
-| a stage's `check.md` says `fail: …` | fix that stage's output, re-run its check | the same check |
-| asked for status | each stage's `output/` and `check.md`, in order | report what exists |
+| starting a run | the workflow's `CONTEXT.md`, then `01_*/CONTEXT.md`; name a new `{run}` | stage 01's check |
+| `output/{run}/check.md` says `pass` | the next numbered stage, same `{run}` | that stage's check |
+| `output/{run}/check.md` says `fail: …` | fix that stage's output, re-run its check | the same check |
+| asked for status | each stage's `output/{run}/` and its `check.md`, in order | report what exists |
 | writing or changing a workflow | [CONTEXT.md](CONTEXT.md) | the walk test there |
 
 ## The one rule

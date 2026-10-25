@@ -12,7 +12,9 @@ Do NOT load: file contents, `map/`, other stages.
 
 ## Process
 
-1. If source or target is not named, stop and ask. Create `output/` if it does not exist.
+1. If source or target is not named, stop and ask.
+   Name the run: `{run}` = `<YYYYMMDD-HHMM>-<task-slug>` (`workflows/CONTEXT.md` §5); say it
+   in chat. Create `output/{run}/`.
 2. Confirm the working tree is committed and pushed (`git status -sb`). If not, run
    `workflows/review-commit/` first.
 3. `git fetch origin`. Record both tips (`git rev-parse <target> <source>`) and the merge base
@@ -25,7 +27,7 @@ Do NOT load: file contents, `map/`, other stages.
 
 ## Outputs
 
-- `merge-plan.md` -> `output/`: source → target, both tips, base, commits each side, files
+- `merge-plan.md` -> `output/{run}/`: source → target, both tips, base, commits each side, files
   changed on both sides, predicted conflicts, and the abort command
   (`git merge --abort`, target tip to return to).
 
@@ -34,5 +36,5 @@ Do NOT load: file contents, `map/`, other stages.
 Type: Person
 
 Esrom reads `merge-plan.md` and confirms the direction (source → target) and that pushing the
-target afterwards is wanted. Write `output/check.md`: `pass — approved by Esrom` or
+target afterwards is wanted. Write `output/{run}/check.md`: `pass — approved by Esrom` or
 `fail: <reason given>`.

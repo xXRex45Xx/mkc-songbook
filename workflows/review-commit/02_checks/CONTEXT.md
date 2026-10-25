@@ -4,7 +4,7 @@ One job: run the pre-commit checks for every area the commit touches.
 
 ## Inputs
 
-- Working (this run): `workflows/review-commit/01_inventory/output/changes.md`
+- Working (this run): `workflows/review-commit/01_inventory/output/{run}/changes.md`
 - Reference (every run): `backend/TESTING.md`
 
 Do NOT load: source files, `map/` cards, `docs/pwa/`.
@@ -12,7 +12,7 @@ Do NOT load: source files, `map/` cards, `docs/pwa/`.
 ## Process
 
 1. If `changes.md` is missing or its check is not `pass`, stop and say which. Create
-   `output/` if it does not exist.
+   `output/{run}/`.
 2. Run only the rows whose area appears in `changes.md`, from the repo root:
 
 | Area touched | Command |
@@ -27,11 +27,11 @@ Do NOT load: source files, `map/` cards, `docs/pwa/`.
 
 ## Outputs
 
-- `checks.md` -> `output/`: one row per command run, with exit code and result.
+- `checks.md` -> `output/{run}/`: one row per command run, with exit code and result.
 
 ## Check
 
 Type: Script
 
-Every command in `checks.md` exited 0. Write `output/check.md`: `pass`, or `fail: <command>`
+Every command in `checks.md` exited 0. Write `output/{run}/check.md`: `pass`, or `fail: <command>`
 with its error line.

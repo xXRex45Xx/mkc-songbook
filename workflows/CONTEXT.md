@@ -22,7 +22,8 @@ workflows/<workflow-name>/
 ├─ 01_<stage-name>/
 │  ├─ CONTEXT.md         the stage contract (copy _templates/stage-CONTEXT.md)
 │  ├─ examples/          optional: one real input and one good output
-│  └─ output/            this run's artifacts and check.md
+│  └─ output/
+│     └─ <run>/          one folder per run: its artifacts and check.md
 └─ 02_<stage-name>/ …
 ```
 
@@ -46,15 +47,15 @@ It holds four things and nothing else:
 Every stage `CONTEXT.md` has these sections, in this order:
 
 - **Inputs.** Exact backticked paths from the repo root, split into *Working (this run)* (the
-  previous stage's `output/`) and *Reference (every run)*.
+  previous stage's `output/{run}/`) and *Reference (every run)*.
 - **Do NOT load.** What an eager agent would wrongly pull in: other stages, old runs, all of
   `map/`.
 - **Process.** Numbered and short. Step 1 is always "If an input is missing or empty, stop and
-  say which. Create `output/` if it does not exist." A step that is code names its command,
-  run from the repo root.
-- **Outputs.** Each file and where it goes, normally `output/`.
+  say which. Create `output/{run}/`." A step that is code names its command, run from the repo
+  root.
+- **Outputs.** Each file and where it goes, normally `output/{run}/`.
 - **Check.** Exactly one, as a concrete act, starting with its type. Every check writes
-  `output/check.md`; its first line is `pass` or `fail: <why>`.
+  `output/{run}/check.md`; its first line is `pass` or `fail: <why>`.
 
 | Type | Who decides | What goes in `check.md` |
 |---|---|---|
@@ -70,17 +71,25 @@ Rules live in reference files. A contract points at them; it never restates them
 
 ## 5. Handoff, stop and status
 
-- One stage's `output/` is the next stage's working input. A person can edit any output file
-  before the next stage reads it.
-- A `fail` stops the run at that stage. Fix the output or the code, then re-run that check.
-- Status is what exists on disk: which `output/` folders hold artifacts, and what each
-  `check.md` says. Never keep status in a separate tracker.
-- A new run overwrites `output/`. Everything inside `output/` is gitignored
-  (`workflows/*/*/output/*`): it is local run state, not product. Only an empty
-  `output/.gitkeep` is tracked, so the folder exists and `links.py` can check Inputs that point
-  into it. The commit message carries the run's summary.
+- **Every run gets its own folder.** Stage 01 names the run once:
+  `{run}` = `<YYYYMMDD-HHMM>-<task-slug>`, local time from `date +%Y%m%d-%H%M`, slug kebab-case
+  and at most 40 characters (`20261025-1430-song-updatedat-on-edit`). Every stage of that run
+  writes only into `output/{run}/`, with the same `{run}`. Say the run name in chat when stage
+  01 creates it.
+- Runs never overwrite each other. Two agents, or a re-run, each use their own `{run}`; an old
+  run's folder stays for review until a person deletes it.
+- One stage's `output/{run}/` is the next stage's working input. A person can edit any output
+  file before the next stage reads it.
+- A `fail` stops the run at that stage. Fix the output or the code, then re-run that check in
+  the same `{run}` folder.
+- Status is what exists on disk: which stages have an `output/{run}/` folder, and what each
+  `check.md` in it says. Never keep status in a separate tracker.
+- Everything inside `output/` is gitignored (`workflows/*/*/output/*`): it is local run state,
+  not product. Only an empty `output/.gitkeep` is tracked so the folder exists. The commit
+  message carries the run's summary.
 - One workflow may hand off to another as its last step (for example, to `review-commit`). The
-  hand-off is a row in the stages table, not a copied stage.
+  hand-off is a row in the stages table, not a copied stage, and passes its `{run}` on: the
+  receiving workflow uses the same run name.
 
 ## 6. Factory and product
 

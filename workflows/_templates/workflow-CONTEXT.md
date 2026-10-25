@@ -25,5 +25,5 @@ Every stage may read these; none copies them:
 - `map/effects/CONTEXT.md`
 - {workflow-only rules: `workflows/{workflow-name}/references/{file}.md`}
 
-Status is whatever exists: a stage is done when its `output/` holds an artifact and its
-`check.md`, if any, says `pass`.
+Status is whatever exists: a stage is done for a run when its `output/{run}/` holds an artifact and
+its `check.md`, if any, says `pass`.
