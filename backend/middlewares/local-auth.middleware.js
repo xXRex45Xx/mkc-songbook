@@ -6,6 +6,7 @@
 import passport from "passport";
 import { ClientFaultError, ServerFaultError } from "../utils/error.util.js";
 import jwt from "jsonwebtoken";
+import { recordLoginFailure, recordLoginSuccess } from "./login-risk.middleware.js";
 
 /**
  * Authenticates a user using local strategy and generates a JWT token.
@@ -22,13 +23,16 @@ import jwt from "jsonwebtoken";
  * @throws {ServerFaultError} If there's an internal server error during authentication with clear explanation of server error conditions and error context
  */
 const localAuth = async (req, res, next) => {
-    passport.authenticate("local", {}, (err, user) => {
+    passport.authenticate("local", {}, async (err, user) => {
         if (err) return next(new ServerFaultError(err));
-        if (!user)
+        if (!user) {
+            await recordLoginFailure(req);
             return next(new ClientFaultError("Invalid username or password."));
-        req.login(user, { session: false }, (err) => {
+        }
+        req.login(user, { session: false }, async (err) => {
             if (err) return next(new ServerFaultError(err));
             try {
+                await recordLoginSuccess(req, res, user);
                 const token = jwt.sign(
                     {
                         id: user._id,

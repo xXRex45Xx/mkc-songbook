@@ -152,6 +152,15 @@ The application uses SMTP for sending emails such as verification and password r
 2. Generate an App Password
 3. Use the App Password in `SMTP_PASS`
 
+### Login protection
+
+Password login asks for a Cloudflare Turnstile captcha from scripted clients and after five
+failed attempts. Create a Turnstile widget in the Cloudflare dashboard, put its secret key in
+`TURNSTILE_SECRET_KEY` and its site key in the frontend's `VITE_TURNSTILE_SITE_KEY`. In production
+the secret key is required. Browsers that signed in before are remembered with an HttpOnly
+`mkc_did` cookie, which is sent cross-site (`SameSite=None; Secure`), so the API must be served
+over HTTPS and `ALLOWED_ORIGINS` must list the frontend origin.
+
 ### Client URLs
 
 Configure allowed origins for CORS:

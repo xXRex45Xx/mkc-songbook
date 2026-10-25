@@ -5,6 +5,8 @@ import request from "supertest";
 
 import app from "../../index.js";
 import AlbumModel from "../../models/album.model.js";
+import DeviceModel from "../../models/device.model.js";
+import LoginAttemptModel from "../../models/login-attempt.model.js";
 import OTPModel from "../../models/otp.model.js";
 import PlaylistModel from "../../models/playlist.model.js";
 import LogBookModel from "../../models/service-logbook.model.js";
@@ -51,6 +53,8 @@ export const resetDatabase = async () => {
 
   await Promise.all([
     OTPModel.deleteMany({}),
+    DeviceModel.deleteMany({}),
+    LoginAttemptModel.deleteMany({}),
     PlaylistModel.deleteMany({}),
     LogBookModel.deleteMany({}),
     AlbumModel.deleteMany({}),

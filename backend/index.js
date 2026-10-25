@@ -8,6 +8,7 @@
 import { config } from "dotenv";
 import { connect } from "./config/db.js";
 import compression from "compression";
+import cookieParser from "cookie-parser";
 import express from "express";
 import apiRouter from "./routes/index.js";
 import cors from "cors";
@@ -19,6 +20,7 @@ import helmet from "helmet";
 import morgan from "morgan";
 import path from "path";
 import { wrapAsync } from "./utils/error.util.js";
+import { apiRateLimiter, audioRateLimiter } from "./middlewares/rate-limit.middleware.js";
 
 if (process.env.NODE_ENV !== "production") {
 	const configError = config().error;
@@ -162,6 +164,8 @@ app.use(
 			console.warn(`CORS rejected origin: ${origin}`);
 			return cb(new Error(`Not allowed by CORS: ${origin}`));
 		},
+		// The device cookie set at login needs credentialed cross-origin requests.
+		credentials: true,
 	})
 );
 app.use(
@@ -242,10 +246,11 @@ app.use(
  * app.use(express.json());
  */
 app.use(express.json());
+app.use(cookieParser());
 
 /**
  * API routes middleware.
- * Mounts the apiRouter at the /api prefix, routing all API requests
+ * Mounts the per-address rate limiters (generic, and a higher one for audio) and the apiRouter at the /api prefix, routing all API requests
  * to the appropriate sub-routers defined in routes/index.js.
  *
  * @example
@@ -257,7 +262,7 @@ app.use(express.json());
  * // DELETE /api/playlist - Handled by playlistRouter
  * app.use("/api", apiRouter);
  */
-app.use("/api", apiRouter);
+app.use("/api", apiRateLimiter, audioRateLimiter, apiRouter);
 
 /**
  * Global error handling middleware.
@@ -271,7 +276,7 @@ app.use("/api", apiRouter);
  *
  * Error handling flow:
  * 1. If request has uploaded file, attempt to delete it (errors logged to req.fileDeleteError)
- * 2. Extract error message and status code from error object
+ * 2. Extract error message, status code and optional `errorCode` from error object
  * 3. Map Multer file size limit errors to 400 status
  * 4. For server errors (500), log internal error and send generic message
  * 5. For client errors (4xx), send specific error message
@@ -304,7 +309,7 @@ app.use(async (err, req, res, _next) => {
 		fs.unlink(req.file.path, (err) => {
 			if (err) req.fileDeleteError = err;
 		});
-	let { message, statusCode = 500 } = err;
+	let { message, statusCode = 500, errorCode } = err;
 	if (err instanceof MulterError && err.code === "LIMIT_FILE_SIZE")
 		statusCode = 400;
 	if (statusCode === 500) {
@@ -312,7 +317,9 @@ app.use(async (err, req, res, _next) => {
 		else req.error = err;
 		message = "An unexpected error occurred.";
 	}
-	res.status(statusCode).json({ message });
+	res.status(statusCode).json(
+		errorCode ? { message, code: errorCode } : { message }
+	);
 });
 
 /**

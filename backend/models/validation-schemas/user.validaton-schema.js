@@ -79,6 +79,7 @@ export const registerOTPQuerySchema = Joi.object({
  * @typedef {Object} LoginBody
  * @property {string} email - Valid email address (required) with explanation of email format validation
  * @property {string} password - Password (required, 8-100 characters) with description of security requirements and complexity guidelines
+ * @property {string} [captchaToken] - Turnstile token, required when the server answers CAPTCHA_REQUIRED
  */
 export const loginBodySchema = Joi.object({
 	email: Joi.string()
@@ -88,6 +89,7 @@ export const loginBodySchema = Joi.object({
 		.email()
 		.required(),
 	password: Joi.string().min(8).max(100).required(),
+	captchaToken: Joi.string().max(2048),
 }).required();
 
 /**

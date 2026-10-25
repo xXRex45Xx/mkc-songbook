@@ -20,11 +20,7 @@ import {
 	updateFavorites,
 	getFavorites,
 } from "../controllers/user.controller.js";
-import {
-	authEmailLimiter,
-	authIpLimiter,
-	otpRequestLimiter,
-} from "../middlewares/rate-limit.middleware.js";
+import { assessLoginRisk } from "../middlewares/login-risk.middleware.js";
 import localAuth from "../middlewares/local-auth.middleware.js";
 import {
 	validateLogin,
@@ -107,8 +103,6 @@ userRouter
 	 * This example demonstrates registering a new user.
 	 */
 	.post(
-		authIpLimiter,
-		authEmailLimiter,
 		wrapAsync(validateRegisterUser),
 		wrapAsync(checkUserExists),
 		wrapAsync(validateOtp),
@@ -143,8 +137,6 @@ userRouter
 	 * This example demonstrates requesting an OTP for password reset.
 	 */
 	.post(
-		authIpLimiter,
-		otpRequestLimiter,
 		wrapAsync(validateRegisterOTP),
 		wrapAsync(checkUserExists),
 		wrapAsync(registerOTP)
@@ -178,8 +170,6 @@ userRouter
 	 * This example demonstrates verifying an OTP code.
 	 */
 	.post(
-		authIpLimiter,
-		authEmailLimiter,
 		wrapAsync(validateVerifyOTP),
 		wrapAsync(verifyOTP)
 	);
@@ -212,9 +202,8 @@ userRouter
 	 * This example demonstrates authenticating a user.
 	 */
 	.post(
-		authIpLimiter,
-		authEmailLimiter,
 		wrapAsync(validateLogin),
+		wrapAsync(assessLoginRisk),
 		wrapAsync(localAuth)
 	);
 
@@ -272,7 +261,6 @@ userRouter
 	 * This example demonstrates Google OAuth login.
 	 */
 	.post(
-		authIpLimiter,
 		wrapAsync(googleOAuthLogin)
 	);
 
@@ -306,8 +294,6 @@ userRouter
 	 * This example demonstrates resetting a user's password.
 	 */
 	.put(
-		authIpLimiter,
-		authEmailLimiter,
 		wrapAsync(validateResetPassword),
 		wrapAsync(validateOtp),
 		wrapAsync(resetPassword)

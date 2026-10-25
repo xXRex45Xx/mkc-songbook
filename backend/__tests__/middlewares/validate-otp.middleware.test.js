@@ -5,305 +5,47 @@ import { ClientFaultError } from "../../utils/error.util.js";
 jest.mock("../../models/otp.model.js");
 
 describe("validateOtp middleware", () => {
+  const buildReq = (otp = "123456") => ({ body: { email: "test@example.com", otp } });
+
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  describe("successful validation", () => {
-    it("should call next() when OTP matches", async () => {
-      const mockEmail = "test@example.com";
-      const mockOtp = 123456;
-      const mockReq = {
-        body: {
-          email: mockEmail,
-          otp: mockOtp.toString(),
-        },
-      };
-      const mockRes = {};
-      const mockNext = jest.fn();
+  it("should call next() when the code is accepted", async () => {
+    OTPModel.verifyCode.mockResolvedValue(true);
+    const next = jest.fn();
 
-      OTPModel.findOne.mockResolvedValue({
-        email: mockEmail,
-        otp: mockOtp,
-      });
+    await validateOtp(buildReq(), {}, next);
 
-      await validateOtp(mockReq, mockRes, mockNext);
-
-      expect(OTPModel.findOne).toHaveBeenCalledWith({ email: mockEmail });
-      expect(mockNext).toHaveBeenCalledTimes(1);
-    });
-
-    it("should handle OTP as string in request body", async () => {
-      const mockEmail = "test@example.com";
-      const mockOtp = 654321;
-      const mockReq = {
-        body: {
-          email: mockEmail,
-          otp: mockOtp.toString(),
-        },
-      };
-      const mockRes = {};
-      const mockNext = jest.fn();
-
-      OTPModel.findOne.mockResolvedValue({
-        email: mockEmail,
-        otp: mockOtp,
-      });
-
-      await validateOtp(mockReq, mockRes, mockNext);
-
-      expect(OTPModel.findOne).toHaveBeenCalledWith({ email: mockEmail });
-      expect(mockNext).toHaveBeenCalledTimes(1);
-    });
-
-    it("should compare OTP values correctly", async () => {
-      const mockEmail = "user@test.com";
-      const mockOtp = 999999;
-      const mockReq = {
-        body: {
-          email: mockEmail,
-          otp: "999999",
-        },
-      };
-      const mockRes = {};
-      const mockNext = jest.fn();
-
-      OTPModel.findOne.mockResolvedValue({
-        email: mockEmail,
-        otp: 999999,
-      });
-
-      await validateOtp(mockReq, mockRes, mockNext);
-
-      expect(mockNext).toHaveBeenCalledTimes(1);
-    });
+    expect(OTPModel.verifyCode).toHaveBeenCalledWith("test@example.com", "123456");
+    expect(next).toHaveBeenCalledTimes(1);
   });
 
-  describe("invalid OTP", () => {
-    it("should throw ClientFaultError when no OTP found for email", async () => {
-      const mockEmail = "nonexistent@example.com";
-      const mockOtp = 123456;
-      const mockReq = {
-        body: {
-          email: mockEmail,
-          otp: mockOtp.toString(),
-        },
-      };
-      const mockRes = {};
-      const mockNext = jest.fn();
+  it("should pass numeric codes through unchanged", async () => {
+    OTPModel.verifyCode.mockResolvedValue(true);
 
-      OTPModel.findOne.mockResolvedValue(null);
+    await validateOtp(buildReq(654321), {}, jest.fn());
 
-      await expect(validateOtp(mockReq, mockRes, mockNext)).rejects.toThrow(
-        ClientFaultError
-      );
-      await expect(validateOtp(mockReq, mockRes, mockNext)).rejects.toThrow(
-        "Verification code is invalid."
-      );
-      expect(mockNext).not.toHaveBeenCalled();
-    });
-
-    it("should throw ClientFaultError when OTP doesn't match", async () => {
-      const mockEmail = "test@example.com";
-      const storedOtp = 123456;
-      const providedOtp = 654321;
-      const mockReq = {
-        body: {
-          email: mockEmail,
-          otp: providedOtp.toString(),
-        },
-      };
-      const mockRes = {};
-      const mockNext = jest.fn();
-
-      OTPModel.findOne.mockResolvedValue({
-        email: mockEmail,
-        otp: storedOtp,
-      });
-
-      await expect(validateOtp(mockReq, mockRes, mockNext)).rejects.toThrow(
-        ClientFaultError
-      );
-      await expect(validateOtp(mockReq, mockRes, mockNext)).rejects.toThrow(
-        "Verification code is invalid."
-      );
-      expect(mockNext).not.toHaveBeenCalled();
-    });
-
-    it("should throw ClientFaultError when OTP is null", async () => {
-      const mockEmail = "test@example.com";
-      const mockReq = {
-        body: {
-          email: mockEmail,
-          otp: null,
-        },
-      };
-      const mockRes = {};
-      const mockNext = jest.fn();
-
-      OTPModel.findOne.mockResolvedValue({
-        email: mockEmail,
-        otp: 123456,
-      });
-
-      await expect(validateOtp(mockReq, mockRes, mockNext)).rejects.toThrow(
-        ClientFaultError
-      );
-      expect(mockNext).not.toHaveBeenCalled();
-    });
-
-    it("should throw ClientFaultError when OTP is empty string", async () => {
-      const mockEmail = "test@example.com";
-      const mockReq = {
-        body: {
-          email: mockEmail,
-          otp: "",
-        },
-      };
-      const mockRes = {};
-      const mockNext = jest.fn();
-
-      OTPModel.findOne.mockResolvedValue({
-        email: mockEmail,
-        otp: 123456,
-      });
-
-      await expect(validateOtp(mockReq, mockRes, mockNext)).rejects.toThrow(
-        ClientFaultError
-      );
-      expect(mockNext).not.toHaveBeenCalled();
-    });
+    expect(OTPModel.verifyCode).toHaveBeenCalledWith("test@example.com", 654321);
   });
 
-  describe("edge cases", () => {
-    it("should handle OTP with leading zeros", async () => {
-      const mockEmail = "test@example.com";
-      const mockOtp = 123;
-      const mockReq = {
-        body: {
-          email: mockEmail,
-          otp: "000123",
-        },
-      };
-      const mockRes = {};
-      const mockNext = jest.fn();
+  it("should throw ClientFaultError when the code is rejected", async () => {
+    OTPModel.verifyCode.mockResolvedValue(false);
+    const next = jest.fn();
 
-      OTPModel.findOne.mockResolvedValue({
-        email: mockEmail,
-        otp: 123,
-      });
-
-      await validateOtp(mockReq, mockRes, mockNext);
-
-      expect(mockNext).toHaveBeenCalledTimes(1);
-    });
-
-    it("should handle OTP with different string representations", async () => {
-      const mockEmail = "test@example.com";
-      const mockOtp = 123456;
-      const mockReq = {
-        body: {
-          email: mockEmail,
-          otp: "123456",
-        },
-      };
-      const mockRes = {};
-      const mockNext = jest.fn();
-
-      OTPModel.findOne.mockResolvedValue({
-        email: mockEmail,
-        otp: 123456,
-      });
-
-      await validateOtp(mockReq, mockRes, mockNext);
-
-      expect(mockNext).toHaveBeenCalledTimes(1);
-    });
-
-    it("should not modify request body", async () => {
-      const mockEmail = "test@example.com";
-      const mockOtp = 123456;
-      const mockReq = {
-        body: {
-          email: mockEmail,
-          otp: mockOtp.toString(),
-        },
-      };
-      const mockRes = {};
-      const mockNext = jest.fn();
-
-      const originalBody = { ...mockReq.body };
-
-      OTPModel.findOne.mockResolvedValue({
-        email: mockEmail,
-        otp: mockOtp,
-      });
-
-      await validateOtp(mockReq, mockRes, mockNext);
-
-      expect(mockReq.body).toEqual(originalBody);
-    });
-
-    it("should handle case where OTP model returns undefined", async () => {
-      const mockEmail = "test@example.com";
-      const mockReq = {
-        body: {
-          email: mockEmail,
-          otp: "123456",
-        },
-      };
-      const mockRes = {};
-      const mockNext = jest.fn();
-
-      OTPModel.findOne.mockResolvedValue(undefined);
-
-      await expect(validateOtp(mockReq, mockRes, mockNext)).rejects.toThrow(
-        ClientFaultError
-      );
-    });
+    await expect(validateOtp(buildReq(), {}, next)).rejects.toThrow(ClientFaultError);
+    await expect(validateOtp(buildReq(), {}, next)).rejects.toThrow(
+      "Verification code is invalid."
+    );
+    expect(next).not.toHaveBeenCalled();
   });
 
-  describe("database interaction", () => {
-    it("should query OTP model with correct email parameter", async () => {
-      const mockEmail = "query@test.com";
-      const mockReq = {
-        body: {
-          email: mockEmail,
-          otp: "123456",
-        },
-      };
-      const mockRes = {};
-      const mockNext = jest.fn();
+  it("should not modify the request body", async () => {
+    OTPModel.verifyCode.mockResolvedValue(true);
+    const req = buildReq();
 
-      OTPModel.findOne.mockResolvedValue({
-        email: mockEmail,
-        otp: 123456,
-      });
+    await validateOtp(req, {}, jest.fn());
 
-      await validateOtp(mockReq, mockRes, mockNext);
-
-      expect(OTPModel.findOne).toHaveBeenCalledWith({ email: mockEmail });
-    });
-
-    it("should only query once for OTP validation", async () => {
-      const mockEmail = "test@example.com";
-      const mockReq = {
-        body: {
-          email: mockEmail,
-          otp: "123456",
-        },
-      };
-      const mockRes = {};
-      const mockNext = jest.fn();
-
-      OTPModel.findOne.mockResolvedValue({
-        email: mockEmail,
-        otp: 123456,
-      });
-
-      await validateOtp(mockReq, mockRes, mockNext);
-
-      expect(OTPModel.findOne).toHaveBeenCalledTimes(1);
-    });
+    expect(req.body).toEqual({ email: "test@example.com", otp: "123456" });
   });
 });

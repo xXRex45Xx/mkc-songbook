@@ -4,6 +4,7 @@
  */
 
 import { Button, Label, TextInput } from "flowbite-react";
+import { Turnstile } from "@marsidev/react-turnstile";
 import {
 	Form,
 	Link,
@@ -16,7 +17,7 @@ import closedEye from "../assets/closed-eye.svg";
 import openEye from "../assets/open-eye.svg";
 import loginIcon from "../assets/login.svg";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { formButtonTheme } from "../config/button-theme.config";
 import GoogleLink from "./google-link.component";
 import { passwordInputTheme } from "../config/forms-theme.config";
@@ -44,6 +45,7 @@ const eyeWrapper = (onClick, icon) => (
  * - Password visibility toggle
  * - Forgot password link
  * - Google OAuth login option
+ * - Turnstile captcha, shown only when the server asks for it
  * - Form validation and error handling
  * - Loading states during submission
  */
@@ -61,6 +63,14 @@ const LoginForm = () => {
 	 * State for Google OAuth login errors
 	 */
 	const [googleLoginError, setGoogleLoginError] = useState("");
+
+	/**
+	 * Turnstile widget instance; its token works once, so it is reset after every result
+	 */
+	const turnstileRef = useRef(null);
+	useEffect(() => {
+		turnstileRef.current?.reset();
+	}, [error]);
 
 	/**
 	 * Toggles password visibility
@@ -118,6 +128,14 @@ const LoginForm = () => {
 						</Link>
 					</div>
 				</div>
+				{error?.captchaRequired && import.meta.env.VITE_TURNSTILE_SITE_KEY && (
+					<div className="flex justify-center">
+						<Turnstile
+							ref={turnstileRef}
+							siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY}
+						/>
+					</div>
+				)}
 				<span className="text-sm text-secondary text-center">
 					{error?.message || googleLoginError}
 				</span>
@@ -168,9 +186,10 @@ export const action = async ({ request }) => {
 	const formData = await request.formData();
 	const email = formData.get("email");
 	const password = formData.get("password");
+	const captchaToken = formData.get("cf-turnstile-response");
 
 	try {
-		const data = await login(email, password);
+		const data = await login(email, password, captchaToken);
 		if (!data.user || !data.user.id || !data.token)
 			throw { status: 500, message: "An unexpected error occured." };
 		localStorage.setItem("_s", data.token);
@@ -184,6 +203,8 @@ export const action = async ({ request }) => {
 			searchParams.get("redirect") ? searchParams.get("redirect") : "/"
 		);
 	} catch (error) {
+		if (error.status === 403 && error.code === "CAPTCHA_REQUIRED")
+			return { message: error.message, captchaRequired: true };
 		if (error.status === 400 || error.status === 401)
 			return {
 				emailMessage: error.emailMessage,

@@ -9,11 +9,14 @@ jest.mock("passport", () => {
   };
 });
 jest.mock("jsonwebtoken");
+jest.mock("../../middlewares/login-risk.middleware.js");
 
 import localAuth from "../../middlewares/local-auth.middleware.js";
 import * as passport from "passport";
 import jwt from "jsonwebtoken";
 import { ClientFaultError, ServerFaultError } from "../../utils/error.util.js";
+
+const flushPromises = () => new Promise((resolve) => setImmediate(resolve));
 
 describe("localAuth middleware", () => {
 	beforeEach(() => {
@@ -48,6 +51,7 @@ describe("localAuth middleware", () => {
 			});
 
 			await localAuth(mockReq, mockRes, mockNext);
+			await flushPromises();
 
 			expect(passport.authenticate).toHaveBeenCalledWith(
 				"local",
@@ -104,6 +108,7 @@ describe("localAuth middleware", () => {
 			jwt.sign.mockReturnValue(mockToken);
 
 			await localAuth(mockReq, mockRes, mockNext);
+			await flushPromises();
 
 			expect(jwt.sign).toHaveBeenCalledWith(
 				{ id: mockUser._id },
@@ -139,6 +144,7 @@ describe("localAuth middleware", () => {
 			jwt.sign.mockReturnValue(mockToken);
 
 			await localAuth(mockReq, mockRes, mockNext);
+			await flushPromises();
 
 			const expectedUser = {
 				id: mockUser._id,
@@ -171,6 +177,7 @@ describe("localAuth middleware", () => {
 			});
 
 			await localAuth(mockReq, mockRes, mockNext);
+			await flushPromises();
 
 			expect(mockNext).toHaveBeenCalledTimes(1);
 			const error = mockNext.mock.calls[0][0];
@@ -196,6 +203,7 @@ describe("localAuth middleware", () => {
 			});
 
 			await localAuth(mockReq, mockRes, mockNext);
+			await flushPromises();
 
 			expect(mockNext).toHaveBeenCalledTimes(1);
 			const error = mockNext.mock.calls[0][0];
@@ -219,6 +227,7 @@ describe("localAuth middleware", () => {
 			});
 
 			await localAuth(mockReq, mockRes, mockNext);
+			await flushPromises();
 
 			expect(mockNext).toHaveBeenCalledTimes(1);
 			const error = mockNext.mock.calls[0][0];
@@ -241,6 +250,7 @@ describe("localAuth middleware", () => {
 			});
 
 			await localAuth(mockReq, mockRes, mockNext);
+			await flushPromises();
 
 			expect(mockNext).toHaveBeenCalledTimes(1);
 			const error = mockNext.mock.calls[0][0];
@@ -278,6 +288,7 @@ describe("localAuth middleware", () => {
 			});
 
 			await localAuth(mockReq, mockRes, mockNext);
+			await flushPromises();
 
 			expect(mockNext).toHaveBeenCalledTimes(1);
 			const error = mockNext.mock.calls[0][0];
@@ -310,6 +321,7 @@ describe("localAuth middleware", () => {
 			jwt.sign.mockReturnValue("mock-token");
 
 			await localAuth(mockReq, mockRes, mockNext);
+			await flushPromises();
 
 			expect(mockNext).toHaveBeenCalledTimes(1);
 			const error = mockNext.mock.calls[0][0];
@@ -345,6 +357,7 @@ describe("localAuth middleware", () => {
 			jwt.sign.mockReturnValue(mockToken);
 
 			await localAuth(mockReq, mockRes, mockNext);
+			await flushPromises();
 
 			expect(mockRes.json).toHaveBeenCalledWith(
 				expect.objectContaining({
@@ -382,6 +395,7 @@ describe("localAuth middleware", () => {
 			jwt.sign.mockReturnValue(mockToken);
 
 			await localAuth(mockReq, mockRes, mockNext);
+			await flushPromises();
 
 			expect(mockRes.json).toHaveBeenCalledWith(
 				expect.objectContaining({
@@ -419,6 +433,7 @@ describe("localAuth middleware", () => {
 			jwt.sign.mockReturnValue(mockToken);
 
 			await localAuth(mockReq, mockRes, mockNext);
+			await flushPromises();
 
 			expect(mockNext).not.toHaveBeenCalled();
 		});

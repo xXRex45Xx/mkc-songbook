@@ -120,10 +120,11 @@ export const registerUser = async (email, otp, password, confirmPass, name) => {
  * Authenticates a user with email and password
  * @param {string} email - User's email address
  * @param {string} password - User's password
+ * @param {string} [captchaToken] - Turnstile token, sent when the server asked for a captcha
  * @returns {Promise<Object>} User data and authentication token
- * @throws {Object} Validation errors or server error response
+ * @throws {Object} Validation errors or server error response; `code` is `CAPTCHA_REQUIRED` when a captcha must be solved
  */
-export const login = async (email, password) => {
+export const login = async (email, password, captchaToken) => {
 	const error = { status: 400 };
 	let errorOccured = false;
 	if (!emailRegex.test(email)) {
@@ -139,15 +140,19 @@ export const login = async (email, password) => {
 	const response = await fetch(`${backendURL}/api/user/login`, {
 		method: "POST",
 		headers: { "Content-Type": "application/json" },
+		// Lets the server read and set the device cookie.
+		credentials: "include",
 		body: JSON.stringify({
 			email,
 			password,
+			...(captchaToken ? { captchaToken } : {}),
 		}),
 	});
 
 	const data = await response.json();
 
-	if (!response.ok) throw { message: data.message, status: response.status };
+	if (!response.ok)
+		throw { message: data.message, status: response.status, code: data.code };
 
 	return { success: true, ...data };
 };

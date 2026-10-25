@@ -15,6 +15,7 @@ A catalog, not a spec. Find the thing you are changing, open the listed cards, a
 | Logbook, incl. the planned playlist link | [Service logbook](../objects/data-model/service-logbook.md) | [Playlist](../objects/data-model/playlist.md) |
 | User fields or roles | [User](../objects/data-model/user.md) | [auth](../processes/auth.md), [user slice](../objects/app-state/user-slice.md), [users store](../objects/local-db/users-store.md) |
 | OTP, email, SMTP | [OTP](../objects/data-model/otp.md) | [auth](../processes/auth.md) |
+| Login risk checks, device cookie, captcha | [auth](../processes/auth.md) | [Device](../objects/data-model/device.md), [LoginAttempt](../objects/data-model/login-attempt.md) |
 | JWT secret, claim, expiry, `localStorage._s` | [auth](../processes/auth.md) | [pendingWrites store](../objects/local-db/pending-writes-store.md) (queued tokens) |
 | `?syncSince`, `?idsOnly`, sync triggers | [delta-sync](../processes/delta-sync.md) | [syncMeta store](../objects/local-db/sync-meta-store.md), [songs store](../objects/local-db/songs-store.md), [albums store](../objects/local-db/albums-store.md) |
 | IndexedDB `STORE_SCHEMAS`, `DB_VERSION` | the store's card in [local-db](../objects/local-db/_index.md) | every process that reads that store |

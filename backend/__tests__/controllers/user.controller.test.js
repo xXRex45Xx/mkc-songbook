@@ -33,19 +33,19 @@ describe("user controller", () => {
     global.fetch = jest.fn();
   });
 
-  it("should coerce string OTP values before verification", async () => {
+  it("should pass the submitted code to OTP verification", async () => {
     const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
-    OTPModel.findOne = jest.fn().mockResolvedValue({ _id: "otp-001" });
+    OTPModel.verifyCode = jest.fn().mockResolvedValue(true);
 
     await verifyOTP({ body: { email: "verify@example.com", otp: "123456" } }, res);
 
-    expect(OTPModel.findOne).toHaveBeenCalledWith({ email: "verify@example.com", otp: 123456 });
+    expect(OTPModel.verifyCode).toHaveBeenCalledWith("verify@example.com", "123456");
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({ success: true });
   });
 
   it("should throw for invalid OTP pairs", async () => {
-    OTPModel.findOne = jest.fn().mockResolvedValue(null);
+    OTPModel.verifyCode = jest.fn().mockResolvedValue(false);
 
     await expect(
       verifyOTP({ body: { email: "verify@example.com", otp: 123456 } }, {}),

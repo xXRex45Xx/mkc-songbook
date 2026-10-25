@@ -48,8 +48,9 @@ export const registerOTP = async (req, res) => {
 	const current = await OTPModel.findOne({ email });
 	if (current) {
 		current.otp = otp;
+		current.attempts = 0;
 		current.createdAt = Date.now();
-		current.save();
+		await current.save();
 	} else await OTPModel.create({ otp, email });
 	res.status(200).json({ success: true });
 };
@@ -78,10 +79,8 @@ export const registerOTP = async (req, res) => {
  * This example verifies the OTP code for user registration.
  */
 export const verifyOTP = async (req, res) => {
-	let { email, otp } = req.body;
-	if (typeof otp === "string") otp = parseInt(otp);
-	const storedOtp = await OTPModel.findOne({ email, otp });
-	if (!storedOtp)
+	const { email, otp } = req.body;
+	if (!(await OTPModel.verifyCode(email, otp)))
 		throw new ClientFaultError("The verification code is invalid");
 	return res.status(200).json({ success: true });
 };
@@ -189,17 +188,21 @@ export const getCurrentUser = async (req, res) => {
 export const googleOAuthLogin = async (req, res) => {
 	const { accessToken } = req.body;
 
-	// A token issued to another Google app must not sign in here: check audience first.
-	const tokenInfoResponse = await fetch(
-		"https://oauth2.googleapis.com/tokeninfo",
-		{
+	// A token issued to another Google app must not sign in here: check audience.
+	const [tokenInfoResponse, googleApiResponse] = await Promise.all([
+		fetch("https://oauth2.googleapis.com/tokeninfo", {
 			method: "POST",
 			headers: { "Content-Type": "application/x-www-form-urlencoded" },
 			body: new URLSearchParams({ access_token: accessToken }),
-		}
-	);
+			signal: AbortSignal.timeout(5000),
+		}),
+		fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+			headers: { Authorization: `Bearer ${accessToken}` },
+			signal: AbortSignal.timeout(5000),
+		}),
+	]);
 
-	if (!tokenInfoResponse.ok) {
+	if (!tokenInfoResponse.ok || !googleApiResponse.ok) {
 		throw new UnauthorizedError(
 			"Failed to sign up or login with google. Please, try again."
 		);
@@ -210,19 +213,6 @@ export const googleOAuthLogin = async (req, res) => {
 		!process.env.GOOGLE_CLIENT_ID ||
 		tokenInfo.aud !== process.env.GOOGLE_CLIENT_ID
 	) {
-		throw new UnauthorizedError(
-			"Failed to sign up or login with google. Please, try again."
-		);
-	}
-
-	const googleApiResponse = await fetch(
-		"https://www.googleapis.com/oauth2/v3/userinfo",
-		{
-			headers: { Authorization: `Bearer ${accessToken}` },
-		}
-	);
-
-	if (!googleApiResponse.ok) {
 		throw new UnauthorizedError(
 			"Failed to sign up or login with google. Please, try again."
 		);
