@@ -424,7 +424,7 @@ describe("song routes", () => {
 
       const response = await request(app).get("/api/song/song-001/audio");
 
-      expect(response.status).toBe(206);
+      expect(response.status).toBe(200);
       expect(response.headers["accept-ranges"]).toBe("bytes");
       expect(response.headers["content-type"]).toContain("audio/mpeg");
 

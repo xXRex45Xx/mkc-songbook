@@ -9,21 +9,62 @@ import { audioIdbService } from "../db/audio-idb-service.util";
 import { songIdbService } from "../db/song-idb-service.util";
 
 /**
- * Fetches a song's audio as a Blob
+ * Reads the total size from a Content-Range header ("bytes 0-499/1200")
+ *
+ * @param {Response} response - A 206 response
+ * @returns {number} Total byte size, or NaN when the header is missing or unparsable
+ * @private
+ */
+const totalFromContentRange = (response) => {
+	const match = /\/(\d+)\s*$/.exec(response.headers.get("content-range") || "");
+	return match ? Number(match[1]) : NaN;
+};
+
+/**
+ * Completes a partial (206) response by requesting the remaining byte ranges.
+ *
+ * @param {string} url - Audio URL
+ * @param {Response} first - The 206 response already received
+ * @returns {Promise<Blob[]>} Every part, in order, covering the whole file
+ * @throws {Error} If the total size is unknown or a part is missing or out of order
+ * @private
+ */
+const collectRemainingParts = async (url, first) => {
+	const total = totalFromContentRange(first);
+	if (!Number.isFinite(total)) throw new Error("Audio response is partial and has no total size");
+	const parts = [await first.blob()];
+	let received = parts[0].size;
+	while (received < total) {
+		const response = await fetch(url, { headers: { Range: `bytes=${received}-` } });
+		if (response.status !== 206) throw new Error("Failed to fetch audio file");
+		const part = await response.blob();
+		if (part.size === 0) throw new Error("Audio download stalled");
+		parts.push(part);
+		received += part.size;
+	}
+	if (received !== total) throw new Error("Audio download size mismatch");
+	return parts;
+};
+
+/**
+ * Fetches a song's complete audio as a Blob. A partial 206 response is never accepted as
+ * the whole file: the remaining ranges are fetched, or the call fails.
  *
  * @param {string} songId - Song identifier
  * @returns {Promise<{blob: Blob, mimeType: string}>} Audio bytes and content type
- * @throws {Error} If the request fails
+ * @throws {Error} If the request fails or the audio cannot be completed
  * @private
  */
 const fetchAudioBlob = async (songId) => {
-	const response = await fetch(`${backendURL}/api/song/${songId}/audio`);
+	const url = `${backendURL}/api/song/${songId}/audio`;
+	const response = await fetch(url);
 	if (!response.ok) throw new Error("Failed to fetch audio file");
-	const blob = await response.blob();
-	return {
-		blob,
-		mimeType: blob.type || response.headers.get("content-type") || "",
-	};
+	const contentType = response.headers.get("content-type") || "";
+	const blob =
+		response.status === 206
+			? new Blob(await collectRemainingParts(url, response), { type: contentType })
+			: await response.blob();
+	return { blob, mimeType: blob.type || contentType };
 };
 
 /**

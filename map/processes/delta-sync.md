@@ -1,7 +1,7 @@
 ---
 type: process
 status: verified
-verified: 2026-10-25 @ 7d5d104
+verified: 2026-10-25 @ aacc93d
 description: Pull songs and albums into IndexedDB, then only records changed since the last marker.
 consumes: [../objects/data-model/song.md, ../objects/data-model/album.md, ../objects/local-db/sync-meta-store.md]
 produces: [../objects/local-db/songs-store.md, ../objects/local-db/albums-store.md, ../objects/local-db/sync-meta-store.md, ../objects/app-state/pwa-slice.md]
@@ -34,25 +34,18 @@ cannot see deletions, so a separate pass compares id lists.
    [upload local playlists](local-playlist-upload.md), then sync data
    (`frontend/src/utils/pwa/pwa-register.util.js:67`).
 3. No `lastFullSync` → `initializePwaData`: `GET /api/song?all=true` and `GET /api/album`,
-   `bulkPut` both, set `lastSongSync` / `lastAlbumSync`
-   (`frontend/src/utils/pwa/sync-service.util.js:65`).
+   `bulkPut` both, set `lastSongSync` / `lastAlbumSync`, and write `lastFullSync` = now so the
+   next start takes step 4 (`frontend/src/utils/pwa/sync-service.util.js:66`).
 4. Otherwise `syncAll`: `syncSongs` and `syncAlbums` in parallel, each
-   `GET ...?syncSince=<marker>`, `bulkPut`, move the marker (`sync-service.util.js:241`).
+   `GET ...?syncSince=<marker>`, `bulkPut`, move the marker (`sync-service.util.js:246`).
    Server side: `updatedAt >= syncSince` (`backend/controllers/song.controller.js:43`,
    `backend/controllers/album.controller.js:45`).
 5. If both succeeded: `reconcileDeletions` fetches all ids (`?idsOnly`) and deletes local songs,
-   their saved audio, and albums the server no longer has (`sync-service.util.js:190`).
-6. Write `lastFullSync` = now (`sync-service.util.js:283`).
+   their saved audio, and albums the server no longer has (`sync-service.util.js:195`).
+6. Write `lastFullSync` = now (`sync-service.util.js:288`).
 
 The manual "sync now" button in `frontend/src/components/pwa-status.component.jsx:70` calls
 `syncAll` directly.
-
-## Known defects
-
-- The automatic path never writes `lastFullSync`: `initializePwaData` (step 3) sets only the
-  song and album markers, and step 6 lives in `syncAll`. So every online start re-downloads the
-  whole catalog and never reconciles deletions, until a user presses manual sync.
-  `frontend/src/utils/pwa/pwa-register.util.js:74`, `frontend/src/utils/pwa/sync-service.util.js:85`
 
 ## If you change this
 

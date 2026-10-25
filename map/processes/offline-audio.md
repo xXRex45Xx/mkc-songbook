@@ -1,7 +1,7 @@
 ---
 type: process
 status: verified
-verified: 2026-10-25 @ 7d5d104
+verified: 2026-10-25 @ aacc93d
 description: Save a recording to IndexedDB on request; the player prefers the saved copy over the stream.
 consumes: [../objects/data-model/song.md, ../objects/local-db/songs-store.md]
 produces: [../objects/local-db/audio-files-store.md]
@@ -26,31 +26,33 @@ what is saved and check staleness.
 
 ## Steps
 
-Save (`frontend/src/utils/api/audio-download.util.js:108`):
+Save (`frontend/src/utils/api/audio-download.util.js:149`):
 
-1. `fetchAudioBlob`: plain `fetch` of `/api/song/:id/audio`, no `Range` header (`:19`).
-2. Read the song's `updatedAt` from the [songs store](../objects/local-db/songs-store.md) (`:37`).
-3. `audioIdbService.store` with `{ _id, songId, blob, updatedAt, size, mimeType }` (`:112`).
-4. Save a copy to the device's files (`:121`).
+1. `fetchAudioBlob`: plain `fetch` of `/api/song/:id/audio`, no `Range` header (`:60`). The
+   backend answers `200` with the whole file. A `206` is never taken as complete: the client
+   fetches the remaining ranges from `Content-Range` and fails if the total size is not reached
+   (`collectRemainingParts`, `:28`).
+2. Read the song's `updatedAt` from the [songs store](../objects/local-db/songs-store.md) (`:78`).
+3. `audioIdbService.store` with `{ _id, songId, blob, updatedAt, size, mimeType }` (`:153`).
+4. Save a copy to the device's files (`:162`).
 
 The button and saved state live in `frontend/src/components/download-audio.component.jsx:48`.
 
 Play (`frontend/src/components/audio-player.component.jsx:76`):
 
 1. Saved blob exists and `isAudioStale` is false → play `URL.createObjectURL(blob)`.
-2. Otherwise → stream `/api/song/:id/audio`; the backend serves 500 KB ranges
-   (`backend/controllers/song.controller.js:396`).
+2. Otherwise → stream `/api/song/:id/audio`; a request with a `Range`
+   header (the audio element always sends one) gets a `206` of at most 500 KB
+   (`backend/controllers/song.controller.js:396`); a request without one gets the whole file
+   with `200` (`:400`).
 3. Stream error → fall back to a saved blob, or show "unavailable" (`audio-player.component.jsx:105`).
 
 Stale means the songs store has a newer `updatedAt` than the saved copy
-(`frontend/src/utils/api/audio-download.util.js:154`).
+(`frontend/src/utils/api/audio-download.util.js:195`).
 
 ## Known defects
 
-- Saved audio is cut at 500 KB. With no `Range` header the backend answers `206` with only
-  bytes 0–499,999 (`backend/controllers/song.controller.js:399`); `response.ok` is true for
-  `206`, so the partial blob is stored. Any recording over 500 KB plays only its start offline.
-  `frontend/src/utils/api/audio-download.util.js:20`
+None known.
 
 ## If you change this
 

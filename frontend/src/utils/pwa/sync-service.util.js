@@ -57,7 +57,8 @@ const computeMaxUpdatedAt = (records) => {
  * Performs the first-time PWA data load
  *
  * Fetches all songs and albums from the server, stores them in IndexedDB,
- * and sets initial sync timestamps based on max updatedAt values.
+ * sets initial sync timestamps based on max updatedAt values, and records
+ * the full-sync marker so the next start uses delta sync.
  *
  * @returns {Promise<{songsSynced: number, albumsSynced: number}>} Counts of stored records
  * @throws {Error} If any network or database operation fails
@@ -81,6 +82,10 @@ const runInitialSync = async () => {
   if (maxAlbumUpdatedAt) {
     await syncMetaIdbService.set(LAST_ALBUM_SYNC, maxAlbumUpdatedAt);
   }
+
+  // Marks the catalog as loaded so later starts take the delta path (with
+  // deletion reconciliation) instead of downloading everything again.
+  await syncMetaIdbService.set(LAST_FULL_SYNC, new Date().toISOString());
 
   return { songsSynced: songs.length, albumsSynced: albums.length };
 };

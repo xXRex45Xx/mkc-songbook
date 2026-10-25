@@ -229,7 +229,7 @@ describe("song controller", () => {
     });
   });
 
-  it("should stream the first audio chunk when no range header is present", async () => {
+  it("should stream the whole file with 200 when no range header is present", async () => {
     const pipe = jest.fn();
     mockSongFindById.mockResolvedValue({ songFilePath: "/tmp/song.mp3" });
     mockExistsSync.mockReturnValue(true);
@@ -239,14 +239,13 @@ describe("song controller", () => {
 
     await streamSongAudio({ params: { id: "song-001" }, headers: {} }, res);
 
-    expect(res.writeHead).toHaveBeenCalledWith(206, {
-      "Content-Range": "bytes 0-999/1000",
+    expect(res.writeHead).toHaveBeenCalledWith(200, {
       "Accept-Ranges": "bytes",
       "Content-Length": 1000,
       "Content-Type": "audio/mpeg",
       "Cache-Control": "no-store",
     });
-    expect(mockCreateReadStream).toHaveBeenCalledWith("/tmp/song.mp3", { start: 0, end: 999 });
+    expect(mockCreateReadStream).toHaveBeenCalledWith("/tmp/song.mp3");
     expect(pipe).toHaveBeenCalledWith(res);
   });
 

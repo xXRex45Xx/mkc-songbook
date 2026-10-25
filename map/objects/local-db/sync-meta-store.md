@@ -3,7 +3,7 @@ type: object
 cluster: local-db
 universe: live
 status: verified
-verified: 2026-10-24 @ 9db0d0c
+verified: 2026-10-25 @ aacc93d
 entity: frontend/src/utils/db/indexed-db.util.js:58
 code-name: syncMeta
 description: Key-value markers (lastSongSync, lastAlbumSync, lastFullSync) for ?syncSince delta sync.
@@ -17,8 +17,8 @@ Remembers how far the device has synced. Store name `syncMeta`.
 
 Delta sync asks the server for records with `updatedAt >= lastSync`. `lastSongSync` and `lastAlbumSync` are the highest
 `updatedAt` the device holds, not clock time, so client and server clocks need not agree.
-`lastFullSync` is device clock time (`frontend/src/utils/pwa/sync-service.util.js:283`); when
-it is missing, the next sync is a full sync.
+`lastFullSync` is device clock time, written by the first-time load (`frontend/src/utils/pwa/sync-service.util.js:88`)
+and by `syncAll` (`:288`); when it is missing, the next sync is a full sync.
 
 ## Shape
 

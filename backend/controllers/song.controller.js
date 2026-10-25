@@ -369,8 +369,8 @@ export const deleteSong = async (req, res) => {
 /**
  * Stream audio file for a song
  *
- * This function streams an audio file for a song. It handles range requests for partial downloads
- * and supports chunked streaming for efficient playback.
+ * Without a Range header the whole file is sent with status 200 (offline save needs every
+ * byte). With a Range header, at most 500 KB is sent with status 206 for chunked streaming.
  *
  * @param {Object} req - Express request object containing request data
  * @param {Object} req.params - Route parameters with explanation of what they represent
@@ -395,21 +395,16 @@ export const streamSongAudio = async (req, res) => {
 	const range = req.headers.range;
 	const CHUNK_SIZE = 500 * 1e3; // 500KB chunks
 
-	// If no range header, send first chunk with proper headers so browser knows total size
+	// No Range header: the caller wants the whole file (offline save). Send 200 with the full
+	// body. Media elements always send a Range header, so streaming playback is unchanged.
 	if (!range) {
-		const start = 0;
-		const end = Math.min(CHUNK_SIZE - 1, audioSize - 1);
-		const contentLength = end - start + 1;
-
-		res.writeHead(206, {
-			"Content-Range": `bytes ${start}-${end}/${audioSize}`,
+		res.writeHead(200, {
 			"Accept-Ranges": "bytes",
-			"Content-Length": contentLength,
+			"Content-Length": audioSize,
 			"Content-Type": "audio/mpeg",
 			"Cache-Control": "no-store",
 		});
-		const stream = fs.createReadStream(song.songFilePath, { start, end });
-		stream.pipe(res);
+		fs.createReadStream(song.songFilePath).pipe(res);
 		return;
 	}
 
