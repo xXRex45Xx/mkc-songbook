@@ -1,7 +1,7 @@
 ---
 type: process
 status: verified
-verified: 2026-10-24 @ c8aefb1
+verified: 2026-10-25 @ 7d5d104
 description: Save a recording to IndexedDB on request; the player prefers the saved copy over the stream.
 consumes: [../objects/data-model/song.md, ../objects/local-db/songs-store.md]
 produces: [../objects/local-db/audio-files-store.md]
@@ -39,7 +39,7 @@ Play (`frontend/src/components/audio-player.component.jsx:76`):
 
 1. Saved blob exists and `isAudioStale` is false → play `URL.createObjectURL(blob)`.
 2. Otherwise → stream `/api/song/:id/audio`; the backend serves 500 KB ranges
-   (`backend/controllers/song.controller.js:394`).
+   (`backend/controllers/song.controller.js:396`).
 3. Stream error → fall back to a saved blob, or show "unavailable" (`audio-player.component.jsx:105`).
 
 Stale means the songs store has a newer `updatedAt` than the saved copy
@@ -48,12 +48,9 @@ Stale means the songs store has a newer `updatedAt` than the saved copy
 ## Known defects
 
 - Saved audio is cut at 500 KB. With no `Range` header the backend answers `206` with only
-  bytes 0–499,999 (`backend/controllers/song.controller.js:397`); `response.ok` is true for
+  bytes 0–499,999 (`backend/controllers/song.controller.js:399`); `response.ok` is true for
   `206`, so the partial blob is stored. Any recording over 500 KB plays only its start offline.
   `frontend/src/utils/api/audio-download.util.js:20`
-
-See also: [Song](../objects/data-model/song.md) Known defects (`updatedAt` on edit), which
-also keeps the staleness check from ever firing.
 
 ## If you change this
 

@@ -1,7 +1,7 @@
 ---
 type: process
 status: verified
-verified: 2026-10-24 @ c8aefb1
+verified: 2026-10-25 @ 7d5d104
 description: Pull songs and albums into IndexedDB, then only records changed since the last marker.
 consumes: [../objects/data-model/song.md, ../objects/data-model/album.md, ../objects/local-db/sync-meta-store.md]
 produces: [../objects/local-db/songs-store.md, ../objects/local-db/albums-store.md, ../objects/local-db/sync-meta-store.md, ../objects/app-state/pwa-slice.md]
@@ -53,8 +53,6 @@ The manual "sync now" button in `frontend/src/components/pwa-status.component.js
   song and album markers, and step 6 lives in `syncAll`. So every online start re-downloads the
   whole catalog and never reconciles deletions, until a user presses manual sync.
   `frontend/src/utils/pwa/pwa-register.util.js:74`, `frontend/src/utils/pwa/sync-service.util.js:85`
-
-See also: [Song](../objects/data-model/song.md) Known defects (`updatedAt` on edit).
 
 ## If you change this
 

@@ -265,6 +265,7 @@ export const updateSong = async (req, res) => {
 		tempo: song.tempo,
 		rythm: song.rythm,
 	};
+	songInDb.updatedAt = new Date();
 
 	if (song.albums) {
 		for (const album of songInDb.albums) {
@@ -328,6 +329,7 @@ export const patchSong = async (req, res) => {
 		songInDb.songFilePath = req.file.path;
 	}
 	songInDb.youtubeLink = song["video-link"];
+	songInDb.updatedAt = new Date();
 
 	await songInDb.save();
 

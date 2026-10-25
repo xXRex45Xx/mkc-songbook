@@ -3,7 +3,7 @@ type: object
 cluster: data-model
 universe: live
 status: verified
-verified: 2026-10-24 @ 9db0d0c
+verified: 2026-10-25 @ 7d5d104
 entity: backend/models/song.model.js:49
 code-name: Song
 description: "A song: Amharic lyrics, chords, rhythm, tempo, optional audio."
@@ -48,13 +48,10 @@ streaming (`backend/routes/song.route.js:266`).
 
 ## Known defects
 
-- `updateSong` and `patchSong` never set `updatedAt`, and the schema has no `timestamps`
-  option, so edits are invisible to `?syncSince` delta sync. Offline clients keep old lyrics.
-  `backend/controllers/song.controller.js:244`, `:314`
 - Changing a song's `_id` deletes and recreates it without `songFilePath` or `youtubeLink`,
-  and copies a `mediaFiles` field the schema does not have. `:281`
+  and copies a `mediaFiles` field the schema does not have. `:282`
 - `deleteSong` pulls the id from albums only: playlists, favorites and logbook entries keep a
-  dangling id, and the audio file stays on disk. `:351`
+  dangling id, and the audio file stays on disk. `:353`
 
 ## If you change this
 
