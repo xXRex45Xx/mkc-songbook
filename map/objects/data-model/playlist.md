@@ -43,7 +43,7 @@ API: `/api/playlist` (`backend/routes/playlist.route.js:41`).
 ## Connected to
 
 - **owned-by:** [User](user.md) via `creator`.
-- **joins:** [Song](song.md) by id. Deleting a song does not remove it from playlists.
+- **joins:** [Song](song.md) by id; see Song's Known defects for what a delete leaves behind.
 - **looks-like-but-is-not:** [localPlaylists store](../local-db/local-playlists-store.md)
   (device-only, may point here by `remoteId`); [playlist slice](../app-state/playlist-slice.md)
   (playback queue); [Service logbook](service-logbook.md) (a scheduled service; a nullable

@@ -38,6 +38,4 @@ Atlas SRV lookup fails on Tailscale DNS: run `node --import ./scripts/dns-fix.js
 
 ## Environment (copy [.env.example](.env.example) to `.env`, not tracked)
 
-`DB_URI`, `JWT_SECRET`, `ALLOWED_ORIGINS` (comma-separated), `PORT` (required; no default),
-`DEFAULT_ADMIN_EMAIL`, `DEFAULT_ADMIN_NAME`, `DEFAULT_ADMIN_PHOTO_LINK`,
-`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `AUDIO_STORAGE`, `IMAGE_STORAGE`, `NODE_ENV`.
+Every variable, with a comment, is listed in [.env.example](.env.example).

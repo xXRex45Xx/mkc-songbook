@@ -37,7 +37,7 @@ drops `songList` from results and pages by 100 (`service-logbook.controller.js:3
 
 ## Connected to
 
-- **joins:** [Song](song.md) by id. Deleting a song leaves its id here.
+- **joins:** [Song](song.md) by id; see Song's Known defects for what a delete leaves behind.
 - **looks-like-but-is-not:** [Playlist](playlist.md).
 
 ## Known defects
@@ -46,7 +46,7 @@ drops `songList` from results and pages by 100 (`service-logbook.controller.js:3
   `frontend/src/main.jsx:180`
 - No endpoint sets `cancelled`; it is always `false`.
   `backend/models/service-logbook.model.js:43`
-- No update or delete endpoint, though `README.md` lists `PUT /api/logbook/:id`.
+- No update or delete endpoint, so an entry cannot be edited or removed.
   `backend/routes/service-logbook.route.js:34`
 
 ## If you change this

@@ -53,8 +53,8 @@ The manual "sync now" button in `frontend/src/components/pwa-status.component.js
   song and album markers, and step 6 lives in `syncAll`. So every online start re-downloads the
   whole catalog and never reconciles deletions, until a user presses manual sync.
   `frontend/src/utils/pwa/pwa-register.util.js:74`, `frontend/src/utils/pwa/sync-service.util.js:85`
-- Song edits never reach devices: the backend does not bump `Song.updatedAt` on update
-  (see [Song](../objects/data-model/song.md)). Album edits do.
+
+See also: [Song](../objects/data-model/song.md) Known defects (`updatedAt` on edit).
 
 ## If you change this
 

@@ -51,8 +51,9 @@ Stale means the songs store has a newer `updatedAt` than the saved copy
   bytes 0–499,999 (`backend/controllers/song.controller.js:397`); `response.ok` is true for
   `206`, so the partial blob is stored. Any recording over 500 KB plays only its start offline.
   `frontend/src/utils/api/audio-download.util.js:20`
-- Staleness never triggers after an audio replacement, because `updateSong` / `patchSong` do
-  not bump `Song.updatedAt` (see [Song](../objects/data-model/song.md)).
+
+See also: [Song](../objects/data-model/song.md) Known defects (`updatedAt` on edit), which
+also keeps the staleness check from ever firing.
 
 ## If you change this
 

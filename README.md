@@ -105,43 +105,15 @@ npm install
 
 4. Set up environment variables:
 
-Backend (.env):
+Copy each example file and fill in the values. Every variable is listed there with a comment.
 
-```env
-# Server Configuration
-PORT=5000
-DB_URI=your_mongodb_uri
-JWT_SECRET=your_jwt_secret
-
-# Google OAuth
-GOOGLE_CLIENT_ID=your_google_client_id
-
-# SMTP Configuration
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=your_email@gmail.com
-SMTP_PASS=your_app_specific_password
-SMTP_FROM=your_email@gmail.com
-
-# Client URLs (for CORS)
-ALLOWED_ORIGINS=http://localhost:5173,https://your-production-domain.com
-
-# Media Storage
-IMAGE_STORAGE=path_to_image_storage
-AUDIO_STORAGE=path_to_audio_storage
-
-# Default Admin User
-DEFAULT_ADMIN_EMAIL=admin@example.com
-DEFAULT_ADMIN_NAME=Admin
-DEFAULT_ADMIN_PHOTO_LINK=https://example.com/photo.jpg
+```bash
+cp backend/.env.example backend/.env
+cp frontend/.env.example frontend/.env
 ```
 
-Frontend (.env):
-
-```env
-VITE_BACKEND_URL=http://localhost:5000
-VITE_GOOGLE_CLIENT_ID=your_google_client_id
-```
+- Backend: [backend/.env.example](backend/.env.example)
+- Frontend: [frontend/.env.example](frontend/.env.example)
 
 ### Environment Configuration Details
 
@@ -289,7 +261,6 @@ Detailed API documentation is available in the [backend README](backend/README.m
 #### Service Logbook
 -   `GET /api/logbook` - Get service logs
 -   `POST /api/logbook` - Create log entry (admin)
--   `PUT /api/logbook/:id` - Update log entry (admin)
 
 See [backend/README.md](backend/README.md) for complete API documentation.
 

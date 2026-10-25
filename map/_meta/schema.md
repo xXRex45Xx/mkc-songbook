@@ -23,6 +23,10 @@ Clusters:
 - `local-db`: IndexedDB stores, `STORE_SCHEMAS` in `frontend/src/utils/db/indexed-db.util.js`.
 - `app-state`: Redux slices, `frontend/src/store/slices/*.slice.js`.
 
+### Citations
+
+`path:line` from the repo root. A bare `:NN` is a line in the last file the card named.
+
 ### Body sections
 
 In order: one-line summary, Why this shape, Shape, Connected to, Known defects (optional),

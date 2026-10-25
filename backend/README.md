@@ -141,36 +141,8 @@ Note: the service logbook request body uses `location` and `timestamp`, while th
 
 ## Environment Variables
 
-Create a `.env` file in the backend directory with the following variables:
-
-```env
-# Server Configuration
-PORT=5000
-DB_URI=your_mongodb_uri
-JWT_SECRET=your_jwt_secret
-
-# Google OAuth
-GOOGLE_CLIENT_ID=your_google_client_id
-
-# SMTP Configuration
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=your_email@gmail.com
-SMTP_PASS=your_app_specific_password
-SMTP_FROM=your_email@gmail.com
-
-# Client URLs (for CORS)
-ALLOWED_ORIGINS=http://localhost:5173,https://your-production-domain.com
-
-# Media Storage
-IMAGE_STORAGE=path_to_image_storage
-AUDIO_STORAGE=path_to_audio_storage
-
-# Default Admin User
-DEFAULT_ADMIN_EMAIL=admin@example.com
-DEFAULT_ADMIN_NAME=Admin
-DEFAULT_ADMIN_PHOTO_LINK=https://example.com/photo.jpg
-```
+Copy [.env.example](.env.example) to `.env` and fill in the values. Every variable is listed
+there with a comment.
 
 ### SMTP Configuration
 

@@ -24,11 +24,11 @@ them by absolute path.
 
 | Task | Read first |
 |---|---|
-| Change a model, API or store | `map/AGENTS.md`, then the card |
+| Change a model, API or store | `map/effects/CONTEXT.md`, then the listed cards |
 | Write or edit any code | `docs/conventions.md` |
 | Write JSDoc | `frontend/STYLE_GUIDE.md` or `backend/STYLE_GUIDE.md`, plus `TEMPLATES.md` |
 | Backend tests | `backend/TESTING.md` |
-| PWA / offline / sync | `docs/pwa/architecture.md` |
+| PWA / offline / sync | `map/processes/_index.md`; background in `docs/pwa/architecture.md` |
 | UI or visual work | `PRODUCT.md`, `DESIGN.md` |
 
 ## Git

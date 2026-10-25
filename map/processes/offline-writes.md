@@ -53,8 +53,10 @@ All paths are under `frontend/src/utils/api/`.
 - Queued edits do not update the local stores, so offline pages show the old data until replay
   and the next sync. `frontend/src/pages/edit-playlist.page.jsx:115`
 - Replay is last-write-wins with no conflict check; a stale queued edit overwrites newer server
-  data (`write-queue.util.js:12`). A token that expires while queued fails the write for good
-  (see [pendingWrites store](../objects/local-db/pending-writes-store.md)).
+  data (`write-queue.util.js:12`).
+
+See also: [pendingWrites store](../objects/local-db/pending-writes-store.md) Known defects
+(expired token).
 
 ## If you change this
 

@@ -32,9 +32,10 @@ No frontend test suite exists.
 ## Read before
 
 - JSDoc: [STYLE_GUIDE.md](STYLE_GUIDE.md) and [TEMPLATES.md](TEMPLATES.md).
-- Offline or sync work: [../docs/pwa/architecture.md](../docs/pwa/architecture.md).
+- Offline or sync work: [../map/processes/_index.md](../map/processes/_index.md); background in
+  [../docs/pwa/architecture.md](../docs/pwa/architecture.md).
 - UI work: [../PRODUCT.md](../PRODUCT.md), [../DESIGN.md](../DESIGN.md).
 
 ## Environment (copy [.env.example](.env.example) to `.env`, not tracked)
 
-`VITE_BACKEND_URL`, `VITE_CLIENT_URL`, `VITE_GOOGLE_CLIENT_ID`.
+Every variable, with a comment, is listed in [.env.example](.env.example).

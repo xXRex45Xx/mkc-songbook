@@ -112,12 +112,8 @@ frontend/
 
 ## Environment Variables
 
-Create a `.env` file in the frontend directory with the following variables:
-
-```env
-VITE_BACKEND_URL=http://localhost:5000
-VITE_GOOGLE_CLIENT_ID=your_google_client_id
-```
+Copy [.env.example](.env.example) to `.env` and fill in the values. Every variable is listed
+there with a comment.
 
 ## Installation
 
@@ -200,7 +196,6 @@ The frontend communicates with the backend through RESTful APIs. Key API endpoin
 
 -   `GET /api/logbook` - Get service logs
 -   `POST /api/logbook` - Create log entry (admin)
--   `PUT /api/logbook/:id` - Update log entry (admin)
 
 ## State Management
 

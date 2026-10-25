@@ -7,6 +7,7 @@ code. The code is the source of truth; cards cite it. How to walk: [CONTEXT.md](
 
 | Path | Holds |
 |---|---|
+| [objects/](objects/CONTEXT.md) | Noun cards; how to add one |
 | [objects/data-model/](objects/data-model/_index.md) | Mongoose models in `backend/models/` |
 | [objects/local-db/](objects/local-db/_index.md) | IndexedDB stores in `frontend/src/utils/db/` |
 | [objects/app-state/](objects/app-state/_index.md) | Redux slices in `frontend/src/store/slices/` |
@@ -28,7 +29,5 @@ code. The code is the source of truth; cards cite it. How to walk: [CONTEXT.md](
 
 ## Status
 
-All 20 object cards are `verified: 2026-10-24 @ 9db0d0c`; 2 are ghosts. All 6 process cards
-are `verified: 2026-10-24 @ c8aefb1`. Cards marked
-**Known defects** record bugs found while mapping; the code is unchanged. A bare `:NN` on a card
-is a line in the last file it named.
+Each card's status is in its folder's generated `_index.md`. Bugs: run
+`grep -rn -A12 '## Known defects' map/objects map/processes`.
