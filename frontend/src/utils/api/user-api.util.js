@@ -1,5 +1,16 @@
 import backendURL from "../../config/backend-url.config";
 import { sendMutation } from "../pwa/write-queue.util";
+import { apiFetch } from "./api-client.util";
+import {
+	clearLegacyToken,
+	endSession,
+	getLegacyToken,
+	isLogoutPending,
+	isSignedIn,
+	setLogoutPending,
+	setSignedIn,
+	startSession,
+} from "../session.util";
 import { emailRegex } from "../regex.util";
 
 /**
@@ -18,7 +29,7 @@ export const requestOTP = async (email, forgotPassword) => {
 	if (!emailRegex.test(email))
 		throw { message: "Please enter a valid email address.", status: 400 };
 
-	const response = await fetch(
+	const response = await apiFetch(
 		`${backendURL}/api/user/otp${
 			forgotPassword ? "?forgotPassword=true" : ""
 		}`,
@@ -57,7 +68,7 @@ export const verifyOTP = async ({ email, otp }) => {
 			status: 400,
 		};
 
-	const response = await fetch(`${backendURL}/api/user/verify-otp`, {
+	const response = await apiFetch(`${backendURL}/api/user/verify-otp`, {
 		method: "POST",
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify({
@@ -78,7 +89,7 @@ export const verifyOTP = async ({ email, otp }) => {
  * @param {string} password - User's password
  * @param {string} confirmPass - Password confirmation
  * @param {string} name - User's name
- * @returns {Promise<Object>} User data and authentication token
+ * @returns {Promise<Object>} User data; the server sets the session cookies
  * @throws {Object} Validation errors or server error response
  */
 export const registerUser = async (email, otp, password, confirmPass, name) => {
@@ -99,7 +110,7 @@ export const registerUser = async (email, otp, password, confirmPass, name) => {
 	}
 	if (errorOccured) throw error;
 
-	const response = await fetch(`${backendURL}/api/user`, {
+	const response = await apiFetch(`${backendURL}/api/user`, {
 		method: "POST",
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify({
@@ -121,7 +132,7 @@ export const registerUser = async (email, otp, password, confirmPass, name) => {
  * @param {string} email - User's email address
  * @param {string} password - User's password
  * @param {string} [captchaToken] - Turnstile token, sent when the server asked for a captcha
- * @returns {Promise<Object>} User data and authentication token
+ * @returns {Promise<Object>} User data; the server sets the session cookies
  * @throws {Object} Validation errors or server error response; `code` is `CAPTCHA_REQUIRED` when a captcha must be solved
  */
 export const login = async (email, password, captchaToken) => {
@@ -137,11 +148,9 @@ export const login = async (email, password, captchaToken) => {
 	}
 	if (errorOccured) throw error;
 
-	const response = await fetch(`${backendURL}/api/user/login`, {
+	const response = await apiFetch(`${backendURL}/api/user/login`, {
 		method: "POST",
 		headers: { "Content-Type": "application/json" },
-		// Lets the server read and set the device cookie.
-		credentials: "include",
 		body: JSON.stringify({
 			email,
 			password,
@@ -159,17 +168,12 @@ export const login = async (email, password, captchaToken) => {
 
 /**
  * Fetches currently logged in user's data
- * @param {string} token - Authentication token
  * @returns {Promise<Object>} Current user data
- * @throws {Object} Authentication error or server error response
+ * @throws {Object} Authentication error (401 once the session cannot be renewed) or server
+ *   error response
  */
-export const getCurrentLoggedInUser = async (token) => {
-	const response = await fetch(`${backendURL}/api/user/current-user`, {
-		method: "GET",
-		headers: {
-			Authorization: `bearer ${token}`,
-		},
-	});
+export const getCurrentLoggedInUser = async () => {
+	const response = await apiFetch(`${backendURL}/api/user/current-user`);
 	if (response.status === 401) throw { status: response.status };
 	const data = await response.json();
 
@@ -201,7 +205,7 @@ export const resetPassword = async (email, otp, password, confirmPass) => {
 	}
 	if (errorOccured) throw error;
 
-	const response = await fetch(`${backendURL}/api/user/reset-password`, {
+	const response = await apiFetch(`${backendURL}/api/user/reset-password`, {
 		method: "PUT",
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify({
@@ -220,7 +224,7 @@ export const resetPassword = async (email, otp, password, confirmPass) => {
 /**
  * Authenticates user with Google OAuth
  * @param {string} accessToken - Google OAuth access token
- * @returns {Promise<Object>} User data and authentication token
+ * @returns {Promise<Object>} User data; the server sets the session cookies
  * @throws {Object} Authentication error or server error response
  */
 export const googleOauthLogin = async (accessToken) => {
@@ -230,7 +234,7 @@ export const googleOauthLogin = async (accessToken) => {
 	};
 	if (!accessToken) throw error;
 
-	const response = await fetch(`${backendURL}/api/user/google/callback`, {
+	const response = await apiFetch(`${backendURL}/api/user/google/callback`, {
 		method: "POST",
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify({
@@ -250,24 +254,14 @@ export const googleOauthLogin = async (accessToken) => {
  * @param {string} [searchQuery.q] - Search query string
  * @param {string} [searchQuery.type] - Search type
  * @param {number} page - Page number for pagination
- * @param {string} token - Authentication token (defaults to token in localStorage)
  * @returns {Promise<Object>} User data from the server
  * @throws {Object} Error with message and status if request fails
  */
-export const getAllOrSearchUsers = async (
-	searchQuery = null,
-	page = 1,
-	token = localStorage.getItem("_s")
-) => {
-	const response = await fetch(
+export const getAllOrSearchUsers = async (searchQuery = null, page = 1) => {
+	const response = await apiFetch(
 		`${backendURL}/api/user?page=${page}${
 			searchQuery.q ? "&q=" + searchQuery.q : ""
-		}${searchQuery.type ? "&type=" + searchQuery.type : ""}`,
-		{
-			headers: {
-				Authorization: `bearer ${token}`,
-			},
-		}
+		}${searchQuery.type ? "&type=" + searchQuery.type : ""}`
 	);
 	const data = await response.json();
 	if (!response.ok) throw { message: data.message, status: response.status };
@@ -279,21 +273,13 @@ export const getAllOrSearchUsers = async (
  * Updates user role
  * @param {string} id - User ID to update
  * @param {string} role - New role to assign
- * @param {string} token - Authentication token (defaults to token in localStorage)
  * @returns {Promise<Object>} Updated user data
  * @throws {Object} Validation errors or server error response
  */
-export const updateUserRole = async (
-	id,
-	role,
-	token = localStorage.getItem("_s")
-) => {
-	const response = await fetch(`${backendURL}/api/user/${id}`, {
+export const updateUserRole = async (id, role) => {
+	const response = await apiFetch(`${backendURL}/api/user/${id}`, {
 		method: "PATCH",
-		headers: {
-			Authorization: `bearer ${token}`,
-			"Content-Type": "application/json",
-		},
+		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify({
 			role,
 		}),
@@ -310,15 +296,13 @@ export const updateUserRole = async (
  * @param {string[]} [favorites] - Array of favorite song IDs
  * @param {string|string[]} [addSongs] - Song ID(s) to add to favorites
  * @param {string|string[]} [removeSongs] - Song ID(s) to remove from favorites
- * @param {string} token - Authentication token (defaults to token in localStorage)
  * @returns {Promise<void>}
  * @throws {Object} Validation errors or server error response
  */
 export const updateFavoriteSongs = async (
 	favorites,
 	addSongs = null,
-	removeSongs = null,
-	token = localStorage.getItem("_s")
+	removeSongs = null
 ) => {
 	if (!favorites && !addSongs && !removeSongs)
 		throw { message: "Invalid request.", status: 400 };
@@ -332,10 +316,7 @@ export const updateFavoriteSongs = async (
 			addSongs: addSongs ? addSongs : undefined,
 			removeSongs: removeSongs ? removeSongs : undefined,
 		}),
-		headers: {
-			Authorization: `Bearer ${token}`,
-			"Content-Type": "application/json",
-		},
+		headers: { "Content-Type": "application/json" },
 		label: "Update favorites",
 	});
 
@@ -347,19 +328,104 @@ export const updateFavoriteSongs = async (
 
 /**
  * Fetches user's favorite songs
- * @param {string} token - Authentication token (defaults to token in localStorage)
  * @returns {Promise<Object>} Favorite songs data
  * @throws {Object} Error with message and status if request fails
  */
-export const getFavorites = async (token = localStorage.getItem("_s")) => {
-	const response = await fetch(`${backendURL}/api/user/favorites`, {
-		headers: {
-			Authorization: `Bearer ${token}`,
-		},
-	});
+export const getFavorites = async () => {
+	const response = await apiFetch(`${backendURL}/api/user/favorites`);
 
 	const data = await response.json();
 	if (!response.ok) throw { message: data.message, status: response.status };
 
 	return data;
+};
+
+/**
+ * Signs out of this browser: the server deletes the session and clears the cookies
+ * @returns {Promise<void>}
+ * @throws {Error} If the server is unreachable or refuses; the caller still ends the local session
+ */
+export const logout = async () => {
+	const response = await apiFetch(
+		`${backendURL}/api/user/session/logout`,
+		{ method: "POST" },
+		{ refresh: false }
+	);
+	if (!response.ok) throw new Error(`Sign-out refused with status ${response.status}.`);
+};
+
+/**
+ * Trades a login token from before the cookie session for a cookie session. Transition only.
+ * @param {string} legacyToken - Token left in localStorage by an older version of the app
+ * @returns {Promise<Object>} The signed-in user
+ * @throws {Object} Error with message and status if the token is no longer valid
+ */
+export const upgradeLegacySession = async (legacyToken) => {
+	const response = await apiFetch(
+		`${backendURL}/api/user/session/upgrade`,
+		{
+			method: "POST",
+			headers: { Authorization: `Bearer ${legacyToken}` },
+		},
+		{ refresh: false }
+	);
+	const data = await response.json();
+	if (!response.ok) throw { message: data.message, status: response.status };
+
+	return data.user;
+};
+
+/**
+ * Signs out: tells the server, then ends the session on this device. If the server cannot be
+ * reached the device is signed out anyway, and the server call is retried by
+ * `retryPendingLogout`.
+ * @returns {Promise<void>}
+ */
+export const signOut = async () => {
+	try {
+		await logout();
+	} catch (error) {
+		console.warn("Could not reach the server to sign out; will retry:", error);
+		setLogoutPending(true);
+	}
+	await endSession();
+};
+
+/**
+ * Sends a sign-out that failed earlier. Skipped when someone has signed in since, because the
+ * cookies then belong to the new session and must not be revoked.
+ * @returns {Promise<void>}
+ */
+export const retryPendingLogout = async () => {
+	if (!isLogoutPending()) return;
+	if (isSignedIn()) return setLogoutPending(false);
+
+	try {
+		await logout();
+		setLogoutPending(false);
+	} catch {
+		// Still offline: try again on the next sync.
+	}
+};
+
+/**
+ * Trades a login token left in localStorage by a version of the app from before the cookie
+ * session for a cookie session, then removes the token. A token the server refuses is dropped.
+ * On a network or server failure the token is kept and the browser is marked signed in, so an
+ * offline start still shows the cached user; the next sync tries again. Remove with the
+ * server's `/api/user/session/upgrade` route once legacy tokens have expired.
+ * @returns {Promise<void>}
+ */
+export const migrateLegacyToken = async () => {
+	const legacyToken = getLegacyToken();
+	if (!legacyToken) return;
+
+	try {
+		const user = await upgradeLegacySession(legacyToken);
+		clearLegacyToken();
+		await startSession(user);
+	} catch (error) {
+		if (typeof error?.status === "number" && error.status < 500) return clearLegacyToken();
+		setSignedIn(true);
+	}
 };

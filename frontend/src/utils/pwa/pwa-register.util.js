@@ -15,6 +15,8 @@ import {
   refreshWriteQueueSummary,
 } from "./write-queue.util";
 import { setupInstallListeners } from "./install.util";
+import { isSignedIn } from "../session.util";
+import { migrateLegacyToken, retryPendingLogout } from "../api/user-api.util";
 import store from "../../store/store";
 import {
   setOfflineReady,
@@ -80,6 +82,8 @@ let syncInFlight = null;
 const performSync = async () => {
   store.dispatch(setSyncing(true));
   try {
+    await migrateLegacyToken();
+    await retryPendingLogout();
     await flushPendingWrites();
     await syncLocalPlaylists();
 
@@ -104,14 +108,13 @@ const performSync = async () => {
  * @returns {Promise<void>}
  */
 const syncLocalPlaylists = async () => {
-  const token = localStorage.getItem("_s");
-  if (!token) return;
+  if (!isSignedIn()) return;
 
   try {
     const { syncAllUnsyncedPlaylists } = await import(
       "../api/local-playlist-api.util"
     );
-    await syncAllUnsyncedPlaylists(token);
+    await syncAllUnsyncedPlaylists();
   } catch (error) {
     console.warn("Local playlist sync failed:", error);
   }

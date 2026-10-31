@@ -170,18 +170,17 @@ export const removeSongFromLocalPlaylist = async (playlistId, songId) => {
  * in place (PUT to its `remoteId`) instead of being created again. A missing network throws.
  *
  * @param {string} id - Local playlist ID
- * @param {string} token - JWT authentication token
  * @returns {Promise<Object>} Server response with insertedId set to the server playlist id
  * @throws {Error} 404: If playlist not found
  * @throws {Error} 401: If not authenticated
  * @throws {Error} 500: If server upload fails
  * @example
  * ```javascript
- * const result = await syncPlaylistToServer('local_123', token);
+ * const result = await syncPlaylistToServer('local_123');
  * console.log('Uploaded:', result.insertedId);
  * ```
  */
-export const syncPlaylistToServer = async (id, token) => {
+export const syncPlaylistToServer = async (id) => {
   const playlist = await playlistIdbService.getById(id);
   if (!playlist) throw { message: "Playlist not found.", status: 404 };
 
@@ -193,7 +192,7 @@ export const syncPlaylistToServer = async (id, token) => {
   // Sent directly, never through the offline queue: the record stays unsynced until the
   // server answers, so a queued copy would be created a second time on the next sync.
   const send = (edit, remoteId) =>
-    addOrEditPlaylist(formData, edit, remoteId, token, { queue: false });
+    addOrEditPlaylist(formData, edit, remoteId, { queue: false });
 
   let result;
   let remoteId = playlist.remoteId;
@@ -224,22 +223,21 @@ export const syncPlaylistToServer = async (id, token) => {
 /**
  * Uploads all unsynced local playlists to the server
  *
- * @param {string} token - JWT authentication token
  * @returns {Promise<Array>} Array of results for each sync
  * @throws {Error} 401: If not authenticated
  * @example
  * ```javascript
- * const results = await syncAllUnsyncedPlaylists(token);
+ * const results = await syncAllUnsyncedPlaylists();
  * console.log('Uploaded:', results.filter(r => r.success).length);
  * ```
  */
-export const syncAllUnsyncedPlaylists = async (token) => {
+export const syncAllUnsyncedPlaylists = async () => {
   const unsynced = await playlistIdbService.getUnsynced();
   const results = [];
 
   for (const playlist of unsynced) {
     try {
-      const result = await syncPlaylistToServer(playlist.id, token);
+      const result = await syncPlaylistToServer(playlist.id);
       results.push({ id: playlist.id, success: true, insertedId: result.insertedId });
     } catch (error) {
       results.push({ id: playlist.id, success: false, error: error.message });

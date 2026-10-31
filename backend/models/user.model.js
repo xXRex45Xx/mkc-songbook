@@ -54,6 +54,7 @@ const userSchema = new Schema({
 	],
 	favorites: [{ type: String, ref: "Song" }],
 	photo: { type: String },
+	passwordChangedAt: { type: Date },
 	role: {
 		type: String,
 		enum: ["public", "member", "admin", "super-admin"],

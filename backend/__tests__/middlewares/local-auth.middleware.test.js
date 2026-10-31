@@ -8,12 +8,12 @@ jest.mock("passport", () => {
     use: jest.fn(),
   };
 });
-jest.mock("jsonwebtoken");
+jest.mock("../../utils/session.util.js");
 jest.mock("../../middlewares/login-risk.middleware.js");
 
 import localAuth from "../../middlewares/local-auth.middleware.js";
 import * as passport from "passport";
-import jwt from "jsonwebtoken";
+import { issueSession } from "../../utils/session.util.js";
 import { ClientFaultError, ServerFaultError } from "../../utils/error.util.js";
 
 const flushPromises = () => new Promise((resolve) => setImmediate(resolve));
@@ -22,17 +22,17 @@ describe("localAuth middleware", () => {
 	beforeEach(() => {
 		jest.clearAllMocks();
 		process.env.JWT_SECRET = "test-secret-key";
+		issueSession.mockResolvedValue();
 	});
 
 	describe("successful authentication", () => {
-		it("should authenticate user and return JWT token", async () => {
+		it("should authenticate user and start a cookie session", async () => {
 			const mockUser = {
 				_id: "user123",
 				name: "Test User",
 				email: "test@example.com",
 				role: "member",
 			};
-			const mockToken = "mock-jwt-token";
 			const mockReq = {
 				login: jest.fn((user, options, callback) => {
 					callback(null);
@@ -44,7 +44,6 @@ describe("localAuth middleware", () => {
 			};
 			const mockNext = jest.fn();
 
-			jwt.sign.mockReturnValue(mockToken);
 			passport.authenticate.mockImplementation((strategy, options, callback) => {
 				callback(null, mockUser);
 				return (req, res, next) => {};
@@ -63,11 +62,7 @@ describe("localAuth middleware", () => {
 				{ session: false },
 				expect.any(Function),
 			);
-			expect(jwt.sign).toHaveBeenCalledWith(
-				{ id: mockUser._id },
-				process.env.JWT_SECRET,
-				{ expiresIn: "30 days" },
-			);
+			expect(issueSession).toHaveBeenCalledWith(mockRes, mockUser);
 			expect(mockRes.status).toHaveBeenCalledWith(200);
 			expect(mockRes.json).toHaveBeenCalledWith({
 				user: {
@@ -76,19 +71,17 @@ describe("localAuth middleware", () => {
 					email: mockUser.email,
 					role: mockUser.role,
 				},
-				token: mockToken,
 			});
 			expect(mockNext).not.toHaveBeenCalled();
 		});
 
-		it("should create JWT with correct payload structure", async () => {
+		it("should start the session for the authenticated user", async () => {
 			const mockUser = {
 				_id: "unique-user-id",
 				name: "John Doe",
 				email: "john@example.com",
 				role: "admin",
 			};
-			const mockToken = "test-token";
 			const mockReq = {
 				login: jest.fn((user, options, callback) => {
 					callback(null);
@@ -105,16 +98,11 @@ describe("localAuth middleware", () => {
 				return (req, res, next) => {};
 			});
 
-			jwt.sign.mockReturnValue(mockToken);
 
 			await localAuth(mockReq, mockRes, mockNext);
 			await flushPromises();
 
-			expect(jwt.sign).toHaveBeenCalledWith(
-				{ id: mockUser._id },
-				expect.any(String),
-				{ expiresIn: "30 days" },
-			);
+			expect(issueSession).toHaveBeenCalledWith(mockRes, mockUser);
 		});
 
 		it("should return user object with all required fields", async () => {
@@ -124,7 +112,6 @@ describe("localAuth middleware", () => {
 				email: "jane@example.com",
 				role: "super-admin",
 			};
-			const mockToken = "mock-token";
 			const mockReq = {
 				login: jest.fn((user, options, callback) => {
 					callback(null);
@@ -141,7 +128,6 @@ describe("localAuth middleware", () => {
 				return (req, res, next) => {};
 			});
 
-			jwt.sign.mockReturnValue(mockToken);
 
 			await localAuth(mockReq, mockRes, mockNext);
 			await flushPromises();
@@ -155,7 +141,6 @@ describe("localAuth middleware", () => {
 
 			expect(mockRes.json).toHaveBeenCalledWith({
 				user: expectedUser,
-				token: mockToken,
 			});
 		});
 	});
@@ -283,9 +268,7 @@ describe("localAuth middleware", () => {
 				return (req, res, next) => {};
 			});
 
-			jwt.sign.mockImplementation(() => {
-				throw jwtError;
-			});
+			issueSession.mockRejectedValue(jwtError);
 
 			await localAuth(mockReq, mockRes, mockNext);
 			await flushPromises();
@@ -318,7 +301,6 @@ describe("localAuth middleware", () => {
 				return (req, res, next) => {};
 			});
 
-			jwt.sign.mockReturnValue("mock-token");
 
 			await localAuth(mockReq, mockRes, mockNext);
 			await flushPromises();
@@ -337,7 +319,6 @@ describe("localAuth middleware", () => {
 				email: "jose@example.com",
 				role: "member",
 			};
-			const mockToken = "mock-token";
 			const mockReq = {
 				login: jest.fn((user, options, callback) => {
 					callback(null);
@@ -354,7 +335,6 @@ describe("localAuth middleware", () => {
 				return (req, res, next) => {};
 			});
 
-			jwt.sign.mockReturnValue(mockToken);
 
 			await localAuth(mockReq, mockRes, mockNext);
 			await flushPromises();
@@ -375,7 +355,6 @@ describe("localAuth middleware", () => {
 				email: "test@example.com",
 				role: "",
 			};
-			const mockToken = "mock-token";
 			const mockReq = {
 				login: jest.fn((user, options, callback) => {
 					callback(null);
@@ -392,7 +371,6 @@ describe("localAuth middleware", () => {
 				return (req, res, next) => {};
 			});
 
-			jwt.sign.mockReturnValue(mockToken);
 
 			await localAuth(mockReq, mockRes, mockNext);
 			await flushPromises();
@@ -413,7 +391,6 @@ describe("localAuth middleware", () => {
 				email: "test@example.com",
 				role: "member",
 			};
-			const mockToken = "mock-token";
 			const mockReq = {
 				login: jest.fn((user, options, callback) => {
 					callback(null);
@@ -430,7 +407,6 @@ describe("localAuth middleware", () => {
 				return (req, res, next) => {};
 			});
 
-			jwt.sign.mockReturnValue(mockToken);
 
 			await localAuth(mockReq, mockRes, mockNext);
 			await flushPromises();

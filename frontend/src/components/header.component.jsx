@@ -16,12 +16,8 @@ import InstallPrompt from "./install-prompt.component";
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { buttonTheme } from "../config/button-theme.config";
 import { useDispatch, useSelector } from "react-redux";
-import {
-	resetCurrentUser,
-	setAdminType,
-	toggleRole,
-} from "../store/slices/user.slice";
-import { userIdbService } from "../utils/db/user-idb-service.util";
+import { toggleRole } from "../store/slices/user.slice";
+import { signOut } from "../utils/api/user-api.util";
 
 /**
  * Header Component
@@ -120,21 +116,11 @@ const Header = () => {
 		navLinks.find((link) => pathname.startsWith(link.to)) || navLinks[0];
 
 	/**
-	 * Handles user logout by clearing Redux store, the offline user cache,
-	 * and local storage
+	 * Handles user logout: ends the session on the server and on this device
 	 *
 	 * @returns {Promise<void>}
 	 */
-	const handleLogout = async () => {
-		dispatch(resetCurrentUser());
-		dispatch(setAdminType(null));
-		localStorage.removeItem("_s");
-		try {
-			await userIdbService.clear();
-		} catch (error) {
-			console.error("Failed to clear the cached user:", error);
-		}
-	};
+	const handleLogout = () => signOut();
 	return (
 		<>
 			<Navbar fluid theme={navbarTheme} border>

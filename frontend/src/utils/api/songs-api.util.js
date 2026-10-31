@@ -53,15 +53,13 @@ export const getSong = async (id) => {
  * @param {FormData} formData - Form data containing song details
  * @param {boolean} edit - If true, updates existing song; if false, creates new song
  * @param {string|null} songId - ID of song to edit (required if edit is true)
- * @param {string} token - Authentication token (defaults to token in localStorage)
  * @returns {Promise<Object>} Created or updated song data
  * @throws {Object} Validation errors or server error response
  */
 export const addOrEditSong = async (
 	formData,
 	edit = false,
-	songId = null,
-	token = localStorage.getItem("_s")
+	songId = null
 ) => {
 	const error = { status: 400 };
 	let errorOccured = false;
@@ -111,9 +109,6 @@ export const addOrEditSong = async (
 		url: `${backendURL}/api/song${edit ? "/" + songId : ""}`,
 		method: edit ? "PUT" : "POST",
 		body: formData,
-		headers: {
-			Authorization: `Bearer ${token}`,
-		},
 		label: edit ? `Update song ${songId}` : `Add song ${formData.get("id")}`,
 	});
 
@@ -124,15 +119,10 @@ export const addOrEditSong = async (
  * Updates a song by ID (partial update)
  * @param {FormData} formData - Form data containing song update fields
  * @param {string} songId - ID of song to update
- * @param {string} token - Authentication token (defaults to token in localStorage)
  * @returns {Promise<Object>} Updated song data
  * @throws {Object} Validation errors or server error response
  */
-export const patchSong = async (
-	formData,
-	songId,
-	token = localStorage.getItem("_s")
-) => {
+export const patchSong = async (formData, songId) => {
 	const error = { status: 400 };
 	let errorOccured = false;
 
@@ -153,7 +143,6 @@ export const patchSong = async (
 		url: `${backendURL}/api/song/${songId}`,
 		method: "PATCH",
 		body: formData,
-		headers: { Authorization: `Bearer ${token}` },
 		label: `Patch song ${songId}`,
 	});
 
@@ -206,20 +195,13 @@ export const getAllSongIds = async () => {
 /**
  * Deletes a song by ID
  * @param {string} songId - ID of song to delete
- * @param {string} token - Authentication token (defaults to token in localStorage)
  * @returns {Promise<void>}
  * @throws {Object} Error with message and status if deletion fails
  */
-export const deleteSong = async (
-	songId,
-	token = localStorage.getItem("_s")
-) => {
+export const deleteSong = async (songId) => {
 	const data = await sendMutation({
 		url: `${backendURL}/api/song/${songId}`,
 		method: "DELETE",
-		headers: {
-			Authorization: `Bearer ${token}`,
-		},
 		label: `Delete song ${songId}`,
 	});
 

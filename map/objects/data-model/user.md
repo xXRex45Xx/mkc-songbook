@@ -3,7 +3,7 @@ type: object
 cluster: data-model
 universe: live
 status: verified
-verified: 2026-10-24 @ 9db0d0c
+verified: 2026-10-31 @ 53dd641
 entity: backend/models/user.model.js:41
 code-name: User
 description: An account with role public, member, admin or super-admin.
@@ -16,7 +16,7 @@ A person with an account. Model `UserModel`, collection `users`.
 ## Why this shape
 
 `password` is optional because Google sign-in creates users without one
-(`backend/controllers/user.controller.js:206`), and the seeded super-admin is upserted with no
+(`backend/controllers/user.controller.js:240`), and the seeded super-admin is upserted with no
 password (`backend/init-db/init-db.js:52`). `role` drives every permission check; new accounts
 start as `public`.
 
@@ -28,12 +28,13 @@ start as `public`.
 - `searchHistory` [ObjectId ref SearchHistory] — nothing writes it. `:52`
 - `favorites` [String ref Song]. `:55`
 - `photo` String URL. `:56`
-- `role` `public` | `member` | `admin` | `super-admin`, default `public`. `:57`
+- `passwordChangedAt` Date, set by password reset; tokens issued before it are rejected. `:57`
+- `role` `public` | `member` | `admin` | `super-admin`, default `public`. `:58`
 
-Role rules (`backend/controllers/user.controller.js:357`): `super-admin` cannot be changed; only
+Role rules (`backend/controllers/user.controller.js:483`): `super-admin` cannot be changed; only
 a `super-admin` may change an `admin`.
 
-API: `/api/user` (`backend/routes/user.route.js:50`): register, `otp`, `verify-otp`, `login`,
+API: `/api/user` (`backend/routes/user.route.js:55`): register, `otp`, `verify-otp`, `login`,
 `current-user`, `google/callback`, `reset-password`, favorites, role.
 
 ## Connected to
@@ -59,7 +60,7 @@ API: `/api/user` (`backend/routes/user.route.js:50`): register, `otp`, `verify-o
 |---|---|
 | Sign-up, login, Google OAuth | writes |
 | Users page (admin) | reads, changes role |
-| Every authorized request (Passport JWT) | reads |
+| Every authorized request (Passport JWT from the `mkc_at` cookie) | reads |
 
 ## See
 

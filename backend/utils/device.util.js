@@ -9,7 +9,8 @@ import { createHash, randomBytes } from "crypto";
 export const DEVICE_COOKIE = "mkc_did";
 
 const DEVICE_COOKIE_MAX_AGE = 1000 * 60 * 60 * 24 * 180;
-const DEVICE_TOKEN = /^[A-Za-z0-9_-]{43}$/;
+/** Shape of the random tokens kept in HttpOnly cookies: 256 bits, base64url. */
+export const OPAQUE_TOKEN = /^[A-Za-z0-9_-]{43}$/;
 
 /**
  * Hashes a string with SHA-256.
@@ -27,15 +28,22 @@ export const sha256 = (value) => createHash("sha256").update(value).digest("hex"
  */
 export const readDeviceToken = (req) => {
 	const token = req.cookies?.[DEVICE_COOKIE];
-	return typeof token === "string" && DEVICE_TOKEN.test(token) ? token : null;
+	return typeof token === "string" && OPAQUE_TOKEN.test(token) ? token : null;
 };
+
+/**
+ * Creates a new random token for an HttpOnly cookie.
+ *
+ * @returns {string} 43-character base64url token (256 bits)
+ */
+export const createOpaqueToken = () => randomBytes(32).toString("base64url");
 
 /**
  * Creates a new random device token.
  *
  * @returns {string} 43-character base64url token (256 bits)
  */
-export const createDeviceToken = () => randomBytes(32).toString("base64url");
+export const createDeviceToken = createOpaqueToken;
 
 /**
  * Sets the device cookie. The frontend and API are on different origins in

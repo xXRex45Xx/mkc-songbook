@@ -50,7 +50,7 @@ describe("playlist routes", () => {
 
       const response = await request(app)
         .get("/api/playlist")
-        .set(authHeader(loginResponse.body.token));
+        .set(authHeader(loginResponse));
 
       expect(response.status).toBe(200);
       expect(response.body.playlists).toHaveLength(3);
@@ -71,7 +71,7 @@ describe("playlist routes", () => {
 
       const response = await request(app)
         .get("/api/playlist?myPlaylists=true")
-        .set(authHeader(loginResponse.body.token));
+        .set(authHeader(loginResponse));
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveLength(1);
@@ -119,7 +119,7 @@ describe("playlist routes", () => {
 
       const response = await request(app)
         .get(`/api/playlist/${playlist._id}`)
-        .set(authHeader(loginResponse.body.token));
+        .set(authHeader(loginResponse));
 
       expect(response.status).toBe(200);
       expect(response.body.name).toBe("Private Playlist");
@@ -136,7 +136,7 @@ describe("playlist routes", () => {
 
       const response = await request(app)
         .get(`/api/playlist/${playlist._id}`)
-        .set(authHeader(loginResponse.body.token));
+        .set(authHeader(loginResponse));
 
       expect(response.status).toBe(404);
       expect(response.body.message).toBe("Playlist not found");
@@ -153,7 +153,7 @@ describe("playlist routes", () => {
 
       const response = await request(app)
         .get(`/api/playlist/${playlist._id}`)
-        .set(authHeader(loginResponse.body.token));
+        .set(authHeader(loginResponse));
 
       expect(response.status).toBe(404);
       expect(response.body.message).toBe("Playlist not found");
@@ -189,7 +189,7 @@ describe("playlist routes", () => {
 
       const response = await request(app)
         .post("/api/playlist")
-        .set(authHeader(loginResponse.body.token))
+        .set(authHeader(loginResponse))
         .send({ name: "Practice Songs", visibility: "private", songs: ["song-001"] });
 
       expect(response.status).toBe(201);
@@ -211,7 +211,7 @@ describe("playlist routes", () => {
 
       const response = await request(app)
         .post("/api/playlist")
-        .set(authHeader(loginResponse.body.token))
+        .set(authHeader(loginResponse))
         .send({ name: "Practice Songs", visibility: "private", songs: ["song-404"] });
 
       expect(response.status).toBe(400);
@@ -225,7 +225,7 @@ describe("playlist routes", () => {
 
       const response = await request(app)
         .post("/api/playlist")
-        .set(authHeader(loginResponse.body.token))
+        .set(authHeader(loginResponse))
         .send({ name: "Members Playlist", visibility: "members", songs: ["song-001"] });
 
       expect(response.status).toBe(403);
@@ -241,7 +241,7 @@ describe("playlist routes", () => {
 
       const response = await request(app)
         .post("/api/playlist")
-        .set(authHeader(loginResponse.body.token))
+        .set(authHeader(loginResponse))
         .send({ name: "Practice Songs", songs: ["song-001"] });
 
       expect(response.status).toBe(201);
@@ -258,7 +258,7 @@ describe("playlist routes", () => {
 
       const response = await request(app)
         .put(`/api/playlist/${playlist._id}`)
-        .set(authHeader(loginResponse.body.token))
+        .set(authHeader(loginResponse))
         .send({ name: "Updated Playlist", visibility: "public", songs: ["song-001"] });
 
       expect(response.status).toBe(200);
@@ -273,7 +273,7 @@ describe("playlist routes", () => {
 
       const response = await request(app)
         .put(`/api/playlist/${playlist._id}`)
-        .set(authHeader(loginResponse.body.token))
+        .set(authHeader(loginResponse))
         .send({ name: "Updated Playlist", visibility: "public", songs: ["song-001"] });
 
       expect(response.status).toBe(403);
@@ -295,7 +295,7 @@ describe("playlist routes", () => {
 
       const response = await request(app)
         .put("/api/playlist/507f1f77bcf86cd799439011")
-        .set(authHeader(loginResponse.body.token))
+        .set(authHeader(loginResponse))
         .send({ name: "Updated Playlist", visibility: "public", songs: ["song-001"] });
 
       expect(response.status).toBe(404);
@@ -313,7 +313,7 @@ describe("playlist routes", () => {
 
       const response = await request(app)
         .patch(`/api/playlist/${playlist._id}`)
-        .set(authHeader(loginResponse.body.token))
+        .set(authHeader(loginResponse))
         .send({ visibility: "public", addSongs: ["song-002"], removeSongs: ["song-001"] });
 
       expect(response.status).toBe(200);
@@ -330,7 +330,7 @@ describe("playlist routes", () => {
 
       const response = await request(app)
         .patch(`/api/playlist/${playlist._id}`)
-        .set(authHeader(loginResponse.body.token))
+        .set(authHeader(loginResponse))
         .send({ visibility: "public" });
 
       expect(response.status).toBe(403);
@@ -351,7 +351,7 @@ describe("playlist routes", () => {
 
       const response = await request(app)
         .patch("/api/playlist/507f1f77bcf86cd799439011")
-        .set(authHeader(loginResponse.body.token))
+        .set(authHeader(loginResponse))
         .send({ visibility: "public" });
 
       expect(response.status).toBe(404);
@@ -365,7 +365,7 @@ describe("playlist routes", () => {
 
       const response = await request(app)
         .patch(`/api/playlist/${playlist._id}`)
-        .set(authHeader(loginResponse.body.token))
+        .set(authHeader(loginResponse))
         .send({ addSongs: ["song-404"] });
 
       expect(response.status).toBe(400);
@@ -381,7 +381,7 @@ describe("playlist routes", () => {
 
       const response = await request(app)
         .delete(`/api/playlist/${playlist._id}`)
-        .set(authHeader(loginResponse.body.token));
+        .set(authHeader(loginResponse));
 
       expect(response.status).toBe(200);
       expect(response.body).toEqual({ deleted: true });
@@ -395,7 +395,7 @@ describe("playlist routes", () => {
 
       const response = await request(app)
         .delete(`/api/playlist/${playlist._id}`)
-        .set(authHeader(loginResponse.body.token));
+        .set(authHeader(loginResponse));
 
       expect(response.status).toBe(403);
       expect(response.body.message).toBe("You are not authorized to delete this playlist");
@@ -413,7 +413,7 @@ describe("playlist routes", () => {
 
       const response = await request(app)
         .delete("/api/playlist/507f1f77bcf86cd799439011")
-        .set(authHeader(loginResponse.body.token));
+        .set(authHeader(loginResponse));
 
       expect(response.status).toBe(404);
       expect(response.body.message).toBe("Playlist not found");

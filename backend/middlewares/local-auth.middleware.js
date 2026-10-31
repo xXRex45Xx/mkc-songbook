@@ -5,20 +5,21 @@
 
 import passport from "passport";
 import { ClientFaultError, ServerFaultError } from "../utils/error.util.js";
-import jwt from "jsonwebtoken";
+import { issueSession } from "../utils/session.util.js";
 import { recordLoginFailure, recordLoginSuccess } from "./login-risk.middleware.js";
 
 /**
- * Authenticates a user using local strategy and generates a JWT token.
+ * Authenticates a user using local strategy and starts a cookie session.
  *
  * This middleware authenticates users using Passport's local strategy (email/password).
- * Upon successful authentication, it generates a JWT token containing the user's ID
- * that expires in 30 days. The token is used for subsequent authenticated requests.
+ * Upon successful authentication, it sets the `mkc_at` access cookie and the `mkc_rt`
+ * refresh cookie (see utils/session.util.js). No token is sent in the response body.
  *
- * @param {Object} req - Express request object containing login credentials with explanation of auth flow and token generation process
+ * @param {Object} req - Express request object containing login credentials, covering the
+ *   auth flow and session creation process
  * @param {Object} res - Express response object for sending responses back to client
  * @param {Function} next - Express next middleware function for continuing the request flow
- * @returns {Object} Response containing user data and JWT token with explanation of token structure and authentication process
+ * @returns {Object} Response containing user data, with the session in cookies
  * @throws {ClientFaultError} If authentication fails due to invalid credentials with clear explanation of authentication failure conditions and error context
  * @throws {ServerFaultError} If there's an internal server error during authentication with clear explanation of server error conditions and error context
  */
@@ -33,21 +34,15 @@ const localAuth = async (req, res, next) => {
             if (err) return next(new ServerFaultError(err));
             try {
                 await recordLoginSuccess(req, res, user);
-                const token = jwt.sign(
-                    {
-                        id: user._id,
-                    },
-                    process.env.JWT_SECRET,
-                    { expiresIn: "30 days" }
-                );
+                await issueSession(res, user);
                 return res.status(200).json({
                     user: {
                         id: user._id,
                         name: user.name,
                         email: user.email,
                         role: user.role,
+                        favorites: user.favorites,
                     },
-                    token,
                 });
             } catch (error) {
                 return next(new ServerFaultError(error));

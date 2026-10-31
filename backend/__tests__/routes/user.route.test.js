@@ -16,6 +16,8 @@ import {
   teardownDb,
 } from "../../jest/helpers/integration.helper.js";
 
+const sessionCookies = (response) => response.headers["set-cookie"] ?? [];
+
 const mockGoogle = ({ aud = process.env.GOOGLE_CLIENT_ID, profile = {} } = {}) => {
   global.fetch.mockImplementation(async (url) => ({
     ok: true,
@@ -158,7 +160,10 @@ describe("user routes", () => {
 
       expect(response.status).toBe(201);
       expect(response.body.user.email).toBe("register@example.com");
-      expect(response.body).toHaveProperty("token");
+      expect(response.body).not.toHaveProperty("token");
+      expect(sessionCookies(response)).toEqual(
+        expect.arrayContaining([expect.stringMatching(/^mkc_at=/), expect.stringMatching(/^mkc_rt=/)])
+      );
       expect(user).toBeTruthy();
       expect(await bcrypt.compare("password123", user.password)).toBe(true);
       expect(otp).toBeNull();
@@ -206,7 +211,10 @@ describe("user routes", () => {
 
       expect(response.status).toBe(200);
       expect(response.body.user.email).toBe("member@mkc.com");
-      expect(response.body).toHaveProperty("token");
+      expect(response.body).not.toHaveProperty("token");
+      expect(sessionCookies(response)).toEqual(
+        expect.arrayContaining([expect.stringMatching(/^mkc_at=/), expect.stringMatching(/^mkc_rt=/)])
+      );
     });
 
     it("should reject invalid credentials", async () => {
@@ -226,7 +234,7 @@ describe("user routes", () => {
 
       const response = await request(app)
         .get("/api/user/current-user")
-        .set(authHeader(loginResponse.body.token));
+        .set(authHeader(loginResponse));
 
       expect(response.status).toBe(200);
       expect(response.body.user.email).toBe("member@mkc.com");
@@ -365,7 +373,7 @@ describe("user routes", () => {
 
       const response = await request(app)
         .get("/api/user")
-        .set(authHeader(loginResponse.body.token));
+        .set(authHeader(loginResponse));
 
       expect(response.status).toBe(200);
       expect(response.body.users).toHaveLength(4);
@@ -378,7 +386,7 @@ describe("user routes", () => {
 
       const response = await request(app)
         .get("/api/user")
-        .set(authHeader(loginResponse.body.token));
+        .set(authHeader(loginResponse));
 
       expect(response.status).toBe(403);
       expect(response.body.message).toBe("You are not authorized to access this resource.");
@@ -390,7 +398,7 @@ describe("user routes", () => {
 
       const response = await request(app)
         .get("/api/user?q=Member&type=name")
-        .set(authHeader(loginResponse.body.token));
+        .set(authHeader(loginResponse));
 
       expect(response.status).toBe(200);
       expect(response.body.users).toHaveLength(1);
@@ -403,7 +411,7 @@ describe("user routes", () => {
 
       const response = await request(app)
         .get("/api/user?q=member@mkc.com&type=email")
-        .set(authHeader(loginResponse.body.token));
+        .set(authHeader(loginResponse));
 
       expect(response.status).toBe(200);
       expect(response.body.users).toHaveLength(1);
@@ -416,7 +424,7 @@ describe("user routes", () => {
 
       const response = await request(app)
         .get("/api/user?q=member&type=all")
-        .set(authHeader(loginResponse.body.token));
+        .set(authHeader(loginResponse));
 
       expect(response.status).toBe(200);
       expect(response.body.users.some((user) => user.email === "member@mkc.com")).toBe(true);
@@ -430,7 +438,7 @@ describe("user routes", () => {
 
       const response = await request(app)
         .patch(`/api/user/${memberUser._id}`)
-        .set(authHeader(loginResponse.body.token))
+        .set(authHeader(loginResponse))
         .send({ role: "admin" });
 
       expect(response.status).toBe(200);
@@ -450,7 +458,7 @@ describe("user routes", () => {
 
       const response = await request(app)
         .patch(`/api/user/${otherAdmin._id}`)
-        .set(authHeader(loginResponse.body.token))
+        .set(authHeader(loginResponse))
         .send({ role: "member" });
 
       expect(adminUser.role).toBe("admin");
@@ -464,7 +472,7 @@ describe("user routes", () => {
 
       const response = await request(app)
         .patch(`/api/user/${superAdminUser._id}`)
-        .set(authHeader(loginResponse.body.token))
+        .set(authHeader(loginResponse))
         .send({ role: "member" });
 
       expect(response.status).toBe(400);
@@ -477,7 +485,7 @@ describe("user routes", () => {
 
       const response = await request(app)
         .patch("/api/user/507f1f77bcf86cd799439011")
-        .set(authHeader(loginResponse.body.token))
+        .set(authHeader(loginResponse))
         .send({ role: "member" });
 
       expect(response.status).toBe(404);
@@ -494,7 +502,7 @@ describe("user routes", () => {
 
       const response = await request(app)
         .get("/api/user/favorites")
-        .set(authHeader(loginResponse.body.token));
+        .set(authHeader(loginResponse));
 
       expect(response.status).toBe(200);
       expect(response.body.name).toBe("Favorites");
@@ -511,7 +519,7 @@ describe("user routes", () => {
 
       const response = await request(app)
         .patch("/api/user/update-favorites")
-        .set(authHeader(loginResponse.body.token))
+        .set(authHeader(loginResponse))
         .send({ addSongs: ["song-002"], removeSongs: ["song-001"] });
 
       expect(response.status).toBe(200);
@@ -539,7 +547,7 @@ describe("user routes", () => {
 
       const response = await request(app)
         .patch("/api/user/update-favorites")
-        .set(authHeader(loginResponse.body.token))
+        .set(authHeader(loginResponse))
         .send({ favorites: ["song-404"] });
 
       expect(response.status).toBe(400);
@@ -556,7 +564,7 @@ describe("user routes", () => {
 
       const response = await request(app)
         .patch("/api/user/update-favorites")
-        .set(authHeader(loginResponse.body.token))
+        .set(authHeader(loginResponse))
         .send({ favorites: ["song-002"] });
 
       expect(response.status).toBe(200);
@@ -573,7 +581,7 @@ describe("user routes", () => {
 
       const response = await request(app)
         .patch("/api/user/update-favorites")
-        .set(authHeader(loginResponse.body.token))
+        .set(authHeader(loginResponse))
         .send({ addSongs: ["song-002"] });
 
       expect(response.status).toBe(200);
@@ -590,7 +598,7 @@ describe("user routes", () => {
 
       const response = await request(app)
         .patch("/api/user/update-favorites")
-        .set(authHeader(loginResponse.body.token))
+        .set(authHeader(loginResponse))
         .send({ removeSongs: ["song-001"] });
 
       expect(response.status).toBe(200);

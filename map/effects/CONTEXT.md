@@ -17,7 +17,8 @@ A catalog, not a spec. Find the thing you are changing, open the listed cards, a
 | User fields or roles | [User](../objects/data-model/user.md) | [auth](../processes/auth.md), [user slice](../objects/app-state/user-slice.md), [users store](../objects/local-db/users-store.md) |
 | OTP, email, SMTP | [OTP](../objects/data-model/otp.md) | [auth](../processes/auth.md) |
 | Login risk checks, device cookie, captcha | [auth](../processes/auth.md) | [Device](../objects/data-model/device.md), [LoginAttempt](../objects/data-model/login-attempt.md) |
-| JWT secret, claim, expiry, `localStorage._s` | [auth](../processes/auth.md) | [pendingWrites store](../objects/local-db/pending-writes-store.md) (queued tokens) |
+| JWT secret, claim, access or refresh lifetime, session cookies (`mkc_at`, `mkc_rt`), `mkc:signed-in` | [auth](../processes/auth.md) | [RefreshToken](../objects/data-model/refresh-token.md), [users store](../objects/local-db/users-store.md), [pendingWrites store](../objects/local-db/pending-writes-store.md) (`owner`) |
+| CSRF header, `ALLOWED_ORIGINS`, CORS `credentials` | [auth](../processes/auth.md) | every frontend API call goes through `frontend/src/utils/api/api-client.util.js`; see Outside consumers |
 | `?syncSince`, `?idsOnly`, sync triggers | [delta-sync](../processes/delta-sync.md) | [syncMeta store](../objects/local-db/sync-meta-store.md), [songs store](../objects/local-db/songs-store.md), [albums store](../objects/local-db/albums-store.md) |
 | IndexedDB `STORE_SCHEMAS`, `DB_VERSION` | the store's card in [local-db](../objects/local-db/_index.md) | every process that reads that store |
 | `X-Base-Updated-At`, `checkBaseVersion`, optimistic local writes | [offline-writes](../processes/offline-writes.md) | [pendingWrites store](../objects/local-db/pending-writes-store.md), [songs store](../objects/local-db/songs-store.md), [albums store](../objects/local-db/albums-store.md), [users store](../objects/local-db/users-store.md) |
@@ -56,7 +57,8 @@ or move files.
 | `backend/Dockerfile` | `index.js`, `EXPOSE 8080`; `.dockerignore` drops `uploads`, `.env` | entry file renamed; `EXPOSE` only documents 8080, so set `PORT=8080` to match |
 | Cloudflare Turnstile widget (Cloudflare dashboard) | `TURNSTILE_SECRET_KEY` (backend), `VITE_TURNSTILE_SITE_KEY` (frontend), the widget's hostname list | a key is rotated, or the frontend hostname is missing from the widget: every required login captcha fails, and in production a missing secret does the same |
 | Google Cloud OAuth client | `GOOGLE_CLIENT_ID` (backend), `VITE_GOOGLE_CLIENT_ID` (frontend) | the two ids differ or the backend one is unset: Google sign-in answers 401 |
-| Reverse proxy or host in front of the API | `TRUST_PROXY` (hop count) | the count is wrong or unset behind a proxy: every client shares one address, so rate limits and login failure counters hit everyone at once |
+| DNS and hosting of the frontend and API | the two must share a registrable domain (sibling subdomains): the session cookies are `SameSite=Lax` | they are on different registrable domains (for example a `vercel.app` frontend and another API domain): the browser drops the cookies and nobody can stay signed in |
+| Reverse proxy or host in front of the API | `TRUST_PROXY` (hop count), `Set-Cookie` pass-through, HTTPS to the browser | the count is wrong or unset behind a proxy: every client shares one address, so rate limits and login failure counters hit everyone at once; cookies stripped or served over plain HTTP in production (`Secure`): no session |
 | `.vscode/settings.json` | Prettier tabs, width 3 | formatting rules change (also `docs/conventions.md`) |
 
 No CI config (`.github/`) and no scheduled jobs exist in the repo.

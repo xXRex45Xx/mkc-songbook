@@ -15,6 +15,8 @@
 
 import { getDB } from "../db/indexed-db.util";
 import store from "../../store/store";
+import { apiFetch } from "../api/api-client.util";
+import { getCurrentUserId, isSignedIn } from "../session.util";
 import { setWriteQueueSummary } from "../../store/slices/pwa.slice";
 import {
   applyOptimisticWrite,
@@ -111,8 +113,8 @@ const deserializeBody = (payload) => {
  * @returns {Promise<Response>} The fetch response
  */
 /**
- * Copies headers without the login token. The token is stored nowhere in the queue: replay
- * reads the current one, so a token that expired while the write waited cannot fail it.
+ * Copies headers without any `Authorization` value. The session lives in cookies, so a queued
+ * write needs none; this also strips the Bearer header an older version of the app queued.
  *
  * @param {Object} headers - Request headers as given by the caller
  * @returns {Object} Headers without `Authorization`
@@ -136,24 +138,8 @@ const resourceKey = (entry) => {
   return target ? `${target.kind}:${target.id}` : entry.url;
 };
 
-/**
- * Reads the user id out of a login token, only to tell whose token it is. The token is not
- * verified here; the server does that on every request.
- *
- * @param {string|null|undefined} token - JWT from the login response
- * @returns {string|null} User id, or null when the token is missing or malformed
- */
-const tokenOwner = (token) => {
-  try {
-    const payload = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
-    return JSON.parse(atob(payload)).id ?? null;
-  } catch {
-    return null;
-  }
-};
-
 const performRequest = ({ url, method, headers, body }) =>
-  fetch(url, { method, headers, body });
+  apiFetch(url, { method, headers, body });
 
 /**
  * Reads a JSON response body without throwing on empty or malformed bodies
@@ -194,7 +180,7 @@ export const refreshWriteQueueSummary = async () => {
  * @param {Object} entry - Request definition
  * @param {string} entry.url - Absolute request URL
  * @param {string} entry.method - HTTP method
- * @param {Object} [entry.headers] - Request headers; the auth token is read for its owner, never stored
+ * @param {Object} [entry.headers] - Request headers; any `Authorization` value is dropped
  * @param {FormData|string} [entry.body] - Request body
  * @param {string} [entry.label] - Human readable description for diagnostics
  * @returns {Promise<void>}
@@ -229,7 +215,7 @@ export const queueWrite = async ({ url, method, headers, body, label }) => {
     attempts: 0,
     lastError: null,
     permanent: false,
-    owner: tokenOwner(headers?.Authorization?.replace(/^Bearer /, "")),
+    owner: await getCurrentUserId(),
   });
 
   await applyOptimisticWrite({ url, method, body: serializedBody });
@@ -313,8 +299,9 @@ const updateEntry = async (entry, patch) => {
 /**
  * Replays queued writes in order
  *
- * Sends the current login token, not the one saved at queue time, so a token that expired
- * while the write waited cannot fail it; a 401 keeps the entry for the next sign-in. A record
+ * Sends the session cookies, renewed on a 401 by the API client, so a session that expired
+ * while the write waited cannot fail it; a 401 that survives the renewal keeps the entry for
+ * the next sign-in. A record
  * edited offline is sent with the version the device saw (`X-Base-Updated-At`); a 409 means
  * the server copy is newer, so that entry and later edits of the same record are marked
  * permanent and the server version stays.
@@ -334,8 +321,8 @@ export const flushPendingWrites = async () => {
   }
 
   const entries = await getPendingWrites();
-  const token = localStorage.getItem("_s");
-  const currentOwner = tokenOwner(token);
+  const signedIn = isSignedIn();
+  const currentOwner = await getCurrentUserId();
   const conflicted = new Set();
   const checked = new Set();
   let flushed = 0;
@@ -346,7 +333,7 @@ export const flushPendingWrites = async () => {
     // An entry made by another account waits until that account signs in again.
     if (entry.owner && currentOwner && entry.owner !== currentOwner) continue;
 
-    if (!token) {
+    if (!signedIn) {
       await updateEntry(entry, { lastError: "Sign in to send this change." });
       break;
     }
@@ -363,7 +350,7 @@ export const flushPendingWrites = async () => {
 
     // The first replayed edit of a record proves nothing changed since the device last saw it;
     // later edits of the same record build on it, so they carry no base version.
-    const headers = { ...withoutAuthorization(entry.headers), Authorization: `Bearer ${token}` };
+    const headers = withoutAuthorization(entry.headers);
     if (entry.baseUpdatedAt && !checked.has(key)) headers[BASE_VERSION_HEADER] = entry.baseUpdatedAt;
     checked.add(key);
 

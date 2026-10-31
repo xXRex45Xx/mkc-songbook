@@ -19,6 +19,10 @@ import {
 	updateUserRole,
 	updateFavorites,
 	getFavorites,
+	refreshSession,
+	logout,
+	logoutAll,
+	upgradeSession,
 } from "../controllers/user.controller.js";
 import { assessLoginRisk } from "../middlewares/login-risk.middleware.js";
 import localAuth from "../middlewares/local-auth.middleware.js";
@@ -88,7 +92,7 @@ userRouter
 	 * @param {string} req.body.password - Password to hash and store for the account
 	 * @param {number} req.body.otp - Verification code previously issued to the email address
 	 * @param {Object} res - Express response object for sending responses back to client
-	 * @returns {Promise<void>} Sends JSON response with the created user and authentication token
+	 * @returns {Promise<void>} Sends JSON response with the created user and sets the session cookies
 	 * @throws {ClientFaultError} If the registration payload is invalid, the user already exists, or the OTP is invalid
 	 * @throws {ServerFaultError} If the account cannot be created
 	 * @example
@@ -189,7 +193,8 @@ userRouter
 	 * @param {string} req.body.email - Email address used to look up the user account
 	 * @param {string} req.body.password - Plain text password submitted for authentication
 	 * @param {Object} res - Express response object for sending responses back to client
-	 * @returns {Promise<void>} Sends JSON response with the authenticated user and JWT token
+	 * @returns {Promise<void>} Sends JSON response with the authenticated user and sets the
+	 *   session cookies
 	 * @throws {ClientFaultError} If the payload is invalid or the credentials do not match
 	 * @throws {ServerFaultError} If authentication fails unexpectedly
 	 * @example
@@ -248,7 +253,8 @@ userRouter
 	 * @param {Object} req - Express request object containing request data
 	 * @param {string} req.body.accessToken - Google OAuth access token to validate against Google APIs
 	 * @param {Object} res - Express response object for sending responses back to client
-	 * @returns {Promise<void>} Sends JSON response with the authenticated user and JWT token
+	 * @returns {Promise<void>} Sends JSON response with the authenticated user and sets the
+	 *   session cookies
 	 * @throws {ClientFaultError} If the request payload is invalid
 	 * @throws {UnauthorizedError} If the Google access token cannot be verified
 	 * @throws {ServerFaultError} If Google login fails unexpectedly
@@ -354,6 +360,86 @@ userRouter
 		wrapAsync(validateUpdateFavorites),
 		wrapAsync(updateFavorites)
 	);
+
+/**
+ * Routes for /api/user/session/*.
+ * Handle the cookie session: refresh, logout, logout of every browser, and the transition
+ * upgrade from a legacy Bearer token.
+ */
+userRouter
+	.route("/session/refresh")
+	/**
+	 * Exchange the refresh cookie for a new session.
+	 *
+	 * Rotates the `mkc_rt` refresh cookie and renews the `mkc_at` access cookie. Needs no
+	 * access token, only the refresh cookie.
+	 *
+	 * @param {Object} req - Express request object carrying the `mkc_rt` cookie
+	 * @param {Object} res - Express response object for sending responses back to client
+	 * @returns {Promise<void>} Sends JSON response with `{ success: true }` and sets the cookies
+	 * @throws {UnauthorizedError} If the refresh token is missing, unknown, expired, or replayed
+	 * @throws {ServerFaultError} If a database operation fails unexpectedly
+	 * @example
+	 * // Example usage:
+	 * POST /api/user/session/refresh
+	 * This example renews the session.
+	 */
+	.post(wrapAsync(refreshSession));
+
+userRouter
+	.route("/session/logout")
+	/**
+	 * Sign out of this browser.
+	 *
+	 * Deletes the refresh-token family named by the `mkc_rt` cookie and clears both cookies.
+	 *
+	 * @param {Object} req - Express request object carrying the `mkc_rt` cookie
+	 * @param {Object} res - Express response object for sending responses back to client
+	 * @returns {Promise<void>} Sends JSON response with `{ success: true }`
+	 * @throws {ServerFaultError} If a database operation fails unexpectedly
+	 * @example
+	 * // Example usage:
+	 * POST /api/user/session/logout
+	 * This example ends the session in this browser.
+	 */
+	.post(wrapAsync(logout));
+
+userRouter
+	.route("/session/logout-all")
+	/**
+	 * Sign out of every browser.
+	 *
+	 * Deletes all refresh tokens of the authenticated user and clears this browser's cookies.
+	 *
+	 * @param {Object} req - Express request object with the authenticated user
+	 * @param {Object} res - Express response object for sending responses back to client
+	 * @returns {Promise<void>} Sends JSON response with `{ success: true }`
+	 * @throws {UnauthorizedError} If the request is not authenticated
+	 * @throws {ServerFaultError} If a database operation fails unexpectedly
+	 * @example
+	 * // Example usage:
+	 * POST /api/user/session/logout-all
+	 * This example ends every session of the current user.
+	 */
+	.post(passport.authenticate("jwt", { session: false }), wrapAsync(logoutAll));
+
+userRouter
+	.route("/session/upgrade")
+	/**
+	 * Trade a legacy Bearer token for a cookie session. Transition only.
+	 *
+	 * @param {Object} req - Express request object carrying `Authorization: Bearer <token>`
+	 * @param {Object} res - Express response object for sending responses back to client
+	 * @returns {Promise<void>} Sends JSON response with the user and sets the cookies
+	 * @throws {UnauthorizedError} If no valid Bearer token was sent
+	 * @throws {ServerFaultError} If a database operation fails unexpectedly
+	 * @example
+	 * // Example usage:
+	 * POST /api/user/session/upgrade
+	 * Authorization: Bearer eyJhbGciOi...
+	 * This example starts a cookie session from an old token.
+	 */
+	.post(passport.authenticate("jwt", { session: false }), wrapAsync(upgradeSession));
 
 /**
  * Routes for /api/user/:id.

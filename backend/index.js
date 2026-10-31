@@ -21,6 +21,8 @@ import morgan from "morgan";
 import path from "path";
 import { wrapAsync } from "./utils/error.util.js";
 import { apiRateLimiter, audioRateLimiter } from "./middlewares/rate-limit.middleware.js";
+import { csrfProtection } from "./middlewares/csrf.middleware.js";
+import { getAllowedOrigins } from "./utils/origin.util.js";
 
 if (process.env.NODE_ENV !== "production") {
 	const configError = config().error;
@@ -135,22 +137,9 @@ app.use(
  *   })
  * );
  */
-/**
- * Parses the ALLOWED_ORIGINS environment variable into a normalized list.
- * Defaults to an empty list when the variable is unset, so the process does
- * not crash at boot. Each entry is trimmed and stripped of a trailing slash so
- * `http://example.com/` and `http://example.com` compare equal.
- *
- * @returns {string[]} Normalized list of allowed origins
- */
-const getAllowedOrigins = () => {
-	const raw = process.env.ALLOWED_ORIGINS;
-	if (!raw || typeof raw !== "string") return [];
-	return raw
-		.split(",")
-		.map((origin) => origin.trim().replace(/\/+$/, ""))
-		.filter(Boolean);
-};
+// With credentials on, "allow every origin" must not exist in production: fail at boot.
+if (process.env.NODE_ENV === "production" && getAllowedOrigins().length === 0)
+	throw new Error("ALLOWED_ORIGINS must be set in production.");
 
 app.use(
 	cors({
@@ -158,13 +147,14 @@ app.use(
 			const allowed = getAllowedOrigins();
 			// No Origin header = same-origin or non-browser request; allow.
 			if (!origin) return cb(null, true);
+			// An empty list allows every origin outside production (local development).
 			if (allowed.length === 0) return cb(null, true);
 			const normalized = origin.replace(/\/+$/, "");
 			if (allowed.includes(normalized)) return cb(null, true);
 			console.warn(`CORS rejected origin: ${origin}`);
 			return cb(new Error(`Not allowed by CORS: ${origin}`));
 		},
-		// The device cookie set at login needs credentialed cross-origin requests.
+		// The session and device cookies need credentialed cross-origin requests.
 		credentials: true,
 	})
 );
@@ -262,7 +252,7 @@ app.use(cookieParser());
  * // DELETE /api/playlist - Handled by playlistRouter
  * app.use("/api", apiRouter);
  */
-app.use("/api", apiRateLimiter, audioRateLimiter, apiRouter);
+app.use("/api", apiRateLimiter, audioRateLimiter, csrfProtection, apiRouter);
 
 /**
  * Global error handling middleware.

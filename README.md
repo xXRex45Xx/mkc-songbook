@@ -63,7 +63,7 @@ A comprehensive web application for managing choir songs, lyrics, playlists, and
 
 -   Node.js with Express
 -   MongoDB with Mongoose
--   Passport.js for authentication (JWT and Local strategies)
+-   Passport.js for authentication (JWT and Local strategies); the JWT travels in an HttpOnly cookie
 -   Joi for validation
 -   Multer for file uploads
 -   Nodemailer for email notifications
@@ -138,6 +138,9 @@ Configure allowed origins for security:
 -   Development: `http://localhost:5173`
 -   Production: Your production domain
 -   Multiple origins can be comma-separated in `ALLOWED_ORIGINS`
+-   `ALLOWED_ORIGINS` is required in production: the API refuses to start without it
+-   Sign-in uses HttpOnly cookies, so the frontend and API must share a registrable domain
+    (for example `app.example.org` and `api.example.org`) and be served over HTTPS in production
 
 5. Start the development servers:
 
@@ -229,11 +232,15 @@ Detailed API documentation is available in the [backend README](backend/README.m
 ### Key Endpoints
 
 #### Authentication
--   `POST /api/user/login` - Email/password login
--   `POST /api/user/google/callback` - Google OAuth
+-   `POST /api/user/login` - Email/password login (sets the session cookies)
+-   `POST /api/user/google/callback` - Google OAuth (sets the session cookies)
 -   `POST /api/user/otp` - Request OTP
 -   `POST /api/user/verify-otp` - Verify OTP
--   `POST /api/user` - Register user
+-   `POST /api/user` - Register user (sets the session cookies)
+-   `PUT /api/user/reset-password` - Reset password with OTP (ends every session)
+-   `POST /api/user/session/refresh` - Renew the session from the refresh cookie
+-   `POST /api/user/session/logout` - Sign out of this browser
+-   `POST /api/user/session/logout-all` - Sign out of every browser
 
 #### Songs
 -   `GET /api/song` - Get/search songs

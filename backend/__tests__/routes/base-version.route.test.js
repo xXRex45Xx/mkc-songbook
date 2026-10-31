@@ -36,7 +36,7 @@ describe("base-version check on replayed writes", () => {
   const admin = async () => {
     const users = await seedAuthUsers();
     const login = await loginUser("admin-route@mkc.com", "admin123");
-    return { token: login.body.token, users };
+    return { token: login, users };
   };
 
   it("should answer 409 and keep the song when the base version is older than the stored one", async () => {

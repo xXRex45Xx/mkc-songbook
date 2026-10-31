@@ -106,7 +106,7 @@ Each store gets a thin service module exposing CRUD helpers. They all follow the
 
 ## 4. Frontend API Layer: Sync + Download Functions
 
-`frontend/src/utils/api/` gained three new fetchers, all plain `fetch` + JSON (no auth headers — these rely on cookies / the SW cache):
+`frontend/src/utils/api/` gained three new fetchers, all plain `fetch` + JSON (the song and album readers send no credentials; authenticated calls go through `apiFetch` in `api-client.util.js`, which sends the HttpOnly session cookies):
 
 - **`songs-api.util.js`**
   - `getAllSongs()` → `GET /api/song?all=true` (initial full fetch)

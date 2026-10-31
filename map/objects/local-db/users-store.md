@@ -3,7 +3,7 @@ type: object
 cluster: local-db
 universe: live
 status: verified
-verified: 2026-10-24 @ 9db0d0c
+verified: 2026-10-31 @ 53dd641
 entity: frontend/src/utils/db/indexed-db.util.js:64
 code-name: users
 description: Offline cache of the signed-in user (shape of GET /api/user/current-user).
@@ -35,8 +35,9 @@ session and protected routes show the error page.
 
 ## If you change this
 
-- **Hits:** `frontend/src/App.jsx` root loader (caches the user `:85`, clears `:97`, reads
-  offline `:108`), `frontend/src/components/header.component.jsx:133` (clears on logout),
+- **Hits:** `frontend/src/App.jsx` root loader (caches the user through `startSession` `:89`,
+  reads offline `:103`), `frontend/src/utils/session.util.js` (`startSession` caches, `endSession`
+  clears), `frontend/src/components/header.component.jsx` (logout calls `signOut`),
   [user slice](../app-state/user-slice.md).
 - **Does not hit:** the users admin page, which always reads from the API.
 

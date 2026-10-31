@@ -9,7 +9,11 @@ import Header from "./components/header.component";
 import AudioPlayer from "./components/audio-player.component";
 import PwaStatus from "./components/pwa-status.component";
 import store from "./store/store";
-import { getCurrentLoggedInUser } from "./utils/api/user-api.util";
+import {
+	getCurrentLoggedInUser,
+	migrateLegacyToken,
+} from "./utils/api/user-api.util";
+import { isSignedIn, startSession } from "./utils/session.util";
 import { setAdminType, setCurrentUser } from "./store/slices/user.slice";
 import { setLocalPlaylists } from "./store/slices/local-playlists.slice";
 import { getAllLocalPlaylists } from "./utils/api/local-playlist-api.util";
@@ -53,8 +57,9 @@ export default App;
 
 /**
  * Route loader for the root application that handles user authentication
- * and session management. Checks for valid tokens and dispatches
- * user data to Redux store. On network failure, falls back to cached user
+ * and session management. When this browser holds a session (the signed-in hint), asks the
+ * server for the user and dispatches it to the Redux store. The API client renews an
+ * expired access cookie on its own. On network failure, falls back to the cached user
  * from IndexedDB to keep the app working offline.
  *
  * @param {Object} _ - Route params object (unused)
@@ -62,7 +67,7 @@ export default App;
  * @throws {Error} If an unexpected error occurs during authentication (not 401)
  */
 export const loader = async () => {
-	const token = localStorage.getItem("_s");
+	await migrateLegacyToken();
 
 	const loadLocalPlaylists = async () => {
 		try {
@@ -73,31 +78,21 @@ export const loader = async () => {
 		}
 	};
 
-	if (!token || store.getState().user.currentUser) {
+	if (!isSignedIn() || store.getState().user.currentUser) {
 		await loadLocalPlaylists();
 		return null;
 	}
 
 	const getUser = async () => {
 		try {
-			const data = await getCurrentLoggedInUser(token);
-			store.dispatch(setCurrentUser(data.user));
-			await userIdbService.put(data.user);
-			if (["admin", "super-admin"].includes(data.user.role)) {
-				store.dispatch(setAdminType(data.user.role));
-			} else {
-				store.dispatch(setAdminType(null));
-			}
+			const data = await getCurrentLoggedInUser();
+			await startSession(data.user);
 			await loadLocalPlaylists();
 			return null;
 		} catch (error) {
 			if (error.status === 401) {
-				localStorage.removeItem("_s");
-				try {
-					await userIdbService.clear();
-				} catch (cacheError) {
-					console.error("Failed to clear the cached user:", cacheError);
-				}
+				// The API client already ended the session if the server refused the
+				// refresh; otherwise the hint stays and the next load tries again.
 				await loadLocalPlaylists();
 				return null;
 			}

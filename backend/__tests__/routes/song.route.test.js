@@ -147,7 +147,7 @@ describe("song routes", () => {
 
       const response = await request(app)
         .post("/api/song")
-        .set(authHeader(loginResponse.body.token))
+        .set(authHeader(loginResponse))
         .send({
           id: "song-100",
           title: "Route Song",
@@ -168,7 +168,7 @@ describe("song routes", () => {
 
       const response = await request(app)
         .post("/api/song")
-        .set(authHeader(loginResponse.body.token))
+        .set(authHeader(loginResponse))
         .send({
           id: "song-100",
           title: "Route Song",
@@ -198,7 +198,7 @@ describe("song routes", () => {
 
       const response = await request(app)
         .post("/api/song")
-        .set(authHeader(loginResponse.body.token))
+        .set(authHeader(loginResponse))
         .send({
           id: "song-100",
           title: "Route Song",
@@ -218,7 +218,7 @@ describe("song routes", () => {
 
       const response = await request(app)
         .post("/api/song")
-        .set(authHeader(loginResponse.body.token))
+        .set(authHeader(loginResponse))
         .send({
           id: "song-100",
           title: "Route Song",
@@ -242,7 +242,7 @@ describe("song routes", () => {
 
       const response = await request(app)
         .put("/api/song/song-001")
-        .set(authHeader(loginResponse.body.token))
+        .set(authHeader(loginResponse))
         .send({
           id: "song-001",
           title: "New Title",
@@ -264,7 +264,7 @@ describe("song routes", () => {
 
       const response = await request(app)
         .put("/api/song/song-001")
-        .set(authHeader(loginResponse.body.token))
+        .set(authHeader(loginResponse))
         .send({
           id: "song-002",
           title: "Migrated Title",
@@ -285,7 +285,7 @@ describe("song routes", () => {
 
       const response = await request(app)
         .put("/api/song/missing-song")
-        .set(authHeader(loginResponse.body.token))
+        .set(authHeader(loginResponse))
         .send({
           id: "missing-song",
           title: "Missing",
@@ -307,7 +307,7 @@ describe("song routes", () => {
 
       const response = await request(app)
         .put("/api/song/song-001")
-        .set(authHeader(loginResponse.body.token))
+        .set(authHeader(loginResponse))
         .send({
           id: "song-002",
           title: "Migrated Title",
@@ -330,7 +330,7 @@ describe("song routes", () => {
 
       const response = await request(app)
         .delete("/api/song/song-001")
-        .set(authHeader(loginResponse.body.token));
+        .set(authHeader(loginResponse));
 
       expect(response.status).toBe(200);
       expect(response.body).toEqual({ deleted: true });
@@ -343,7 +343,7 @@ describe("song routes", () => {
 
       const response = await request(app)
         .delete("/api/song/missing-song")
-        .set(authHeader(loginResponse.body.token));
+        .set(authHeader(loginResponse));
 
       expect(response.status).toBe(404);
       expect(response.body.message).toBe("Song doesn't exist.");
@@ -366,7 +366,7 @@ describe("song routes", () => {
 
       const response = await request(app)
         .patch("/api/song/song-001")
-        .set(authHeader(loginResponse.body.token))
+        .set(authHeader(loginResponse))
         .send({ "video-link": "https://www.youtube.com/watch?v=dQw4w9WgXcQ" });
 
       expect(response.status).toBe(403);
@@ -379,7 +379,7 @@ describe("song routes", () => {
 
       const response = await request(app)
         .patch("/api/song/song-001")
-        .set(authHeader(loginResponse.body.token))
+        .set(authHeader(loginResponse))
         .send({ "video-link": "https://www.youtube.com/watch?v=dQw4w9WgXcQ" });
 
       expect(response.status).toBe(200);
@@ -396,7 +396,7 @@ describe("song routes", () => {
 
       const response = await request(app)
         .patch("/api/song/song-001")
-        .set(authHeader(loginResponse.body.token))
+        .set(authHeader(loginResponse))
         .send({ "video-link": "not-a-url" });
 
       expect(response.status).toBe(400);
@@ -408,7 +408,7 @@ describe("song routes", () => {
 
       const response = await request(app)
         .patch("/api/song/missing-song")
-        .set(authHeader(loginResponse.body.token))
+        .set(authHeader(loginResponse))
         .send({ "video-link": "https://www.youtube.com/watch?v=dQw4w9WgXcQ" });
 
       expect(response.status).toBe(404);

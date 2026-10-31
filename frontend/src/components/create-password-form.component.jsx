@@ -19,7 +19,7 @@ import getStarted from "../assets/get-started.svg";
 import { formButtonTheme } from "../config/button-theme.config";
 import { registerUser } from "../utils/api/user-api.util";
 import { useSelector } from "react-redux";
-import { setCurrentUser } from "../store/slices/user.slice";
+import { startSession } from "../utils/session.util";
 import store from "../store/store";
 import CustomTailSpin from "./custom-tail-spin.component";
 
@@ -192,10 +192,9 @@ export const action = async ({ request }) => {
             confirmPassword,
             name
         );
-        if (!data.user || !data.user.id || !data.token)
+        if (!data.user || !data.user.id)
             throw { status: 500, message: "An unexpected error occurred." };
-        localStorage.setItem("_s", data.token);
-        store.dispatch(setCurrentUser(data.user));
+        await startSession(data.user);
         return redirect("/");
     } catch (error) {
         if (error.status === 400)

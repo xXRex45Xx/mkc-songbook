@@ -3,7 +3,7 @@ type: object
 cluster: app-state
 universe: live
 status: verified
-verified: 2026-10-24 @ 9db0d0c
+verified: 2026-10-31 @ 53dd641
 entity: frontend/src/store/slices/user.slice.js:13
 code-name: user
 description: In-memory session (current user, admin type) plus sign-up and reset form state.
@@ -17,7 +17,7 @@ Redux state for who is signed in, plus the email and OTP carried between auth fo
 
 `adminType` remembers the real admin role so `toggleRole` can switch an admin's view to
 `member` and back without a new login. The toggle changes only the client view; the server still
-checks the real role from the JWT.
+checks the real role, read from the database for the session in the cookie.
 
 ## Shape
 

@@ -1,7 +1,7 @@
 ---
 type: process
 status: verified
-verified: 2026-10-25 @ 3515b77
+verified: 2026-10-31 @ 53dd641
 description: After sign-in, device-only playlists are uploaded once as private server playlists.
 consumes: [../objects/local-db/local-playlists-store.md]
 produces: [../objects/data-model/playlist.md, ../objects/local-db/local-playlists-store.md, ../objects/app-state/local-playlists-slice.md]
@@ -27,14 +27,14 @@ choosing it.
 
 ## Steps
 
-1. Runs in every sync, after the write queue and before data sync, only when a token exists
-   (`frontend/src/utils/pwa/pwa-register.util.js:106`).
+1. Runs in every sync, after the write queue and before data sync, only when the browser is signed in (`isSignedIn()`)
+   (`frontend/src/utils/pwa/pwa-register.util.js:110`).
 2. `syncAllUnsyncedPlaylists` loops the unsynced records one by one; a failure is recorded and
-   the loop continues (`frontend/src/utils/api/local-playlist-api.util.js:214`).
+   the loop continues (`frontend/src/utils/api/local-playlist-api.util.js:234`).
 3. `syncPlaylistToServer` builds `FormData` with `name`, `visibility: "private"` and each
-   song `_id`, then calls `addOrEditPlaylist` (`local-playlist-api.util.js:183`).
+   song `_id`, then calls `addOrEditPlaylist` (`local-playlist-api.util.js:195`).
 4. With the server id: `markSynced` in IndexedDB and `markAsSynced` in Redux
-   (`local-playlist-api.util.js:194`, `frontend/src/utils/db/playlist-idb-service.util.js:138`).
+   (`local-playlist-api.util.js:214`, `frontend/src/utils/db/playlist-idb-service.util.js:142`).
 
 ## Known defects
 

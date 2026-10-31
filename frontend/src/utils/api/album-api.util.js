@@ -33,15 +33,13 @@ export const getAllAlbums = async (namesOnly = false, searchQuery = null) => {
  * @param {FormData} formData - Form data containing album details
  * @param {boolean} edit - If true, updates existing album; if false, creates new album
  * @param {string|null} albumId - ID of album to edit (required if edit is true)
- * @param {string} token - Authentication token (defaults to token in localStorage)
  * @returns {Promise<Object>} Created or updated album data
  * @throws {Object} Validation errors or server error response
  */
 export const addOrEditAlbum = async (
 	formData,
 	edit = false,
-	albumId = null,
-	token = localStorage.getItem("_s")
+	albumId = null
 ) => {
 	const error = { status: 400 };
 	let errorOccured = false;
@@ -78,9 +76,6 @@ export const addOrEditAlbum = async (
 		url: `${backendURL}/api/album${edit ? "/" + albumId : ""}`,
 		method: edit ? "PUT" : "POST",
 		body: formData,
-		headers: {
-			Authorization: `Bearer ${token}`,
-		},
 		label: edit ? `Update album ${albumId}` : `Add album ${formData.get("id")}`,
 	});
 
@@ -138,19 +133,15 @@ export const getAllAlbumIds = async () => {
 /**
  * Deletes an album by ID
  * @param {string} id - ID of album to delete
- * @param {string} token - Authentication token (defaults to token in localStorage)
  * @returns {Promise<void>}
  * @throws {Object} Error with message and status if deletion fails
  */
-export const deleteAlbum = async (id, token = localStorage.getItem("_s")) => {
+export const deleteAlbum = async (id) => {
 	if (id.length === 0)
 		throw { message: "Album number is required.", status: 400 };
 	const data = await sendMutation({
 		url: `${backendURL}/api/album/${id}`,
 		method: "DELETE",
-		headers: {
-			Authorization: `Bearer ${token}`,
-		},
 		label: `Delete album ${id}`,
 	});
 

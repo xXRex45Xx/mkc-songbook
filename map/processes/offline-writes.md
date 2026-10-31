@@ -1,7 +1,7 @@
 ---
 type: process
 status: verified
-verified: 2026-10-25 @ 3515b77
+verified: 2026-10-31 @ 53dd641
 description: Mutations made offline are queued in IndexedDB and replayed in order on reconnect.
 consumes: [../objects/local-db/pending-writes-store.md]
 produces: [../objects/local-db/pending-writes-store.md, ../objects/app-state/pwa-slice.md]
@@ -24,23 +24,23 @@ updates the counts in the [pwa slice](../objects/app-state/pwa-slice.md).
 
 Workbox `backgroundSync` would do nothing on iOS Safari, so the queue lives in the app
 (`frontend/src/utils/pwa/write-queue.util.js:6`). A server answer (any HTTP status) is never
-queued: only a missing network is. Replay sends the current login token and, for the first
+queued: only a missing network is. Replay sends the current session cookies (the API client renews them on a 401) and, for the first
 edit of a record, `X-Base-Updated-At`; the backend answers 409 if the record is newer
 (`backend/middlewares/base-version.middleware.js`).
 
 ## Steps
 
 1. `sendMutation`: offline → queue; else send; HTTP error → throw to the caller; network
-   exception → queue (`frontend/src/utils/pwa/write-queue.util.js:325`).
-2. `queueWrite` stores url, method, headers without the token, body and the record version
+   exception → queue (`frontend/src/utils/pwa/write-queue.util.js:438`).
+2. `queueWrite` stores url, method, headers without any `Authorization` value, body and the record version
    (`baseUpdatedAt`); then `applyOptimisticWrite` patches the local copy: IndexedDB songs, albums
    and the current user's favorites, and the cached `api-playlists` response; `FormData` (including audio and image
-   files) is serialized so it survives in IndexedDB (`write-queue.util.js:61`, `:149`).
-3. Replay runs first in every sync (`frontend/src/utils/pwa/pwa-register.util.js:83`):
-   401 → keep and stop (sign in again); 409 → `permanent` with the server version kept, and later
+   files) is serialized so it survives in IndexedDB (`write-queue.util.js:75`, `:93`).
+3. Replay runs first in every sync (`frontend/src/utils/pwa/pwa-register.util.js:82`):
+   401 that survives the session refresh → keep and stop (sign in again); 409 → `permanent` with the server version kept, and later
    edits of that record likewise; other 4xx → `permanent`, continue; 5xx or network error →
    stop; success → remove
-   (`write-queue.util.js:257`).
+   (`write-queue.util.js:317`).
 4. The PWA status component shows pending and failed counts and can clear failed entries
    (`frontend/src/components/pwa-status.component.jsx`).
 
@@ -48,10 +48,10 @@ Queued callers:
 
 | Util | Function |
 |---|---|
-| `songs-api.util.js` | `addOrEditSong` `:110`, `patchSong` `:152`, `deleteSong` `:217` |
-| `album-api.util.js` | `addOrEditAlbum` `:77`, `deleteAlbum` `:148` |
-| `playlist-api.util.js` | `addOrEditPlaylist` `:76`, `patchPlaylist` `:114`, `deletePlaylist` `:170` |
-| `user-api.util.js` | `updateFavoriteSongs` `:322` |
+| `songs-api.util.js` | `addOrEditSong` `:108`, `patchSong` `:142`, `deleteSong` `:202` |
+| `album-api.util.js` | `addOrEditAlbum` `:75`, `deleteAlbum` `:142` |
+| `playlist-api.util.js` | `addOrEditPlaylist` `:66`, `patchPlaylist` `:100`, `deletePlaylist` `:142` |
+| `user-api.util.js` | `updateFavoriteSongs` `:311` |
 
 All paths are under `frontend/src/utils/api/`.
 

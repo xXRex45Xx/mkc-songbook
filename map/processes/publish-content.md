@@ -1,7 +1,7 @@
 ---
 type: process
 status: verified
-verified: 2026-10-25 @ 3515b77
+verified: 2026-10-31 @ 53dd641
 description: Admin uploads a song (with audio) or an album (with cover); both sides of the link are written.
 consumes: [../objects/data-model/user.md]
 produces: [../objects/data-model/song.md, ../objects/data-model/album.md]
@@ -23,13 +23,13 @@ reverse link on each linked [Song](../objects/data-model/song.md) or
 
 The song–album link is stored on both sides, so every write must update both. The file is
 saved by Multer before validation, so the global error handler deletes it when any later step
-fails (`backend/index.js:296`).
+fails (`backend/index.js:297`).
 
 ## Steps
 
-Song (`backend/routes/song.route.js:107`):
+Song (`backend/routes/song.route.js:109`):
 
-1. JWT, then `roleBasedAuthorization(["admin", "super-admin"])`.
+1. Access cookie (JWT), then `roleBasedAuthorization(["admin", "super-admin"])`.
 2. `audioUpload.single("audio-file")` — Multer, 50 MB max, to `AUDIO_STORAGE`
    (`backend/config/multer.config.js:110`).
 3. `validateCreateSong` (Joi), `checkSongNumberExists` — the `id` must be free
@@ -37,9 +37,9 @@ Song (`backend/routes/song.route.js:107`):
 4. `checkAlbumExists` — splits the comma list and swaps ids for album documents
    (`pre-add-song.middleware.js:43`, `:63`).
 5. `addSong` creates the song and pushes it onto each album's `songs`
-   (`backend/controllers/song.controller.js:175`).
+   (`backend/controllers/song.controller.js:214`).
 
-Album (`backend/routes/album.route.js:89`): same guard; `albumImageUpload.single("cover")`
+Album (`backend/routes/album.route.js:91`): same guard; `albumImageUpload.single("cover")`
 (30 MB, `backend/config/multer.config.js:75`); `checkAlbumExists`, `checkSongExists`; `addAlbum`
 sets `photoLink` under `/static/albums/images/` and pushes the album id onto each song
 (`backend/controllers/album.controller.js:104`).

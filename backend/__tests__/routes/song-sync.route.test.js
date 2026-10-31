@@ -25,7 +25,7 @@ describe("song edits reach delta sync", () => {
     await resetDatabase();
     await seedAuthUsers();
     await createSong({ _id: "song-001", updatedAt: new Date("2020-01-01") });
-    token = (await loginUser("admin-route@mkc.com", "admin123")).body.token;
+    token = (await loginUser("admin-route@mkc.com", "admin123"));
     before = new Date();
   });
 

@@ -22,8 +22,7 @@ import { formButtonTheme } from "../config/button-theme.config";
 import GoogleLink from "./google-link.component";
 import { passwordInputTheme } from "../config/forms-theme.config";
 import { login } from "../utils/api/user-api.util";
-import store from "../store/store";
-import { setAdminType, setCurrentUser } from "../store/slices/user.slice";
+import { startSession } from "../utils/session.util";
 import CustomTailSpin from "./custom-tail-spin.component";
 
 /**
@@ -190,15 +189,9 @@ export const action = async ({ request }) => {
 
 	try {
 		const data = await login(email, password, captchaToken);
-		if (!data.user || !data.user.id || !data.token)
+		if (!data.user || !data.user.id)
 			throw { status: 500, message: "An unexpected error occured." };
-		localStorage.setItem("_s", data.token);
-		store.dispatch(setCurrentUser(data.user));
-		if (["admin", "super-admin"].includes(data.user.role)) {
-			store.dispatch(setAdminType(data.user.role));
-		} else {
-			store.dispatch(setAdminType(null));
-		}
+		await startSession(data.user);
 		return redirect(
 			searchParams.get("redirect") ? searchParams.get("redirect") : "/"
 		);

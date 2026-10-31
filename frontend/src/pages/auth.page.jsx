@@ -5,6 +5,7 @@
 
 import { Outlet, redirect } from "react-router-dom";
 import AuthMainContainer from "../components/auth-main-container.component";
+import { isSignedIn } from "../utils/session.util";
 
 /**
  * Auth Page Component
@@ -42,6 +43,6 @@ export default Auth;
  * @returns {null|Response} null for authenticated users, redirect for logged-in users
  */
 export const loader = () => {
-    if (localStorage.getItem("_s")) return redirect("/");
+    if (isSignedIn()) return redirect("/");
     return null;
 };

@@ -9,6 +9,7 @@ import DeviceModel from "../../models/device.model.js";
 import LoginAttemptModel from "../../models/login-attempt.model.js";
 import OTPModel from "../../models/otp.model.js";
 import PlaylistModel from "../../models/playlist.model.js";
+import RefreshTokenModel from "../../models/refresh-token.model.js";
 import LogBookModel from "../../models/service-logbook.model.js";
 import SongModel from "../../models/song.model.js";
 import UserModel from "../../models/user.model.js";
@@ -58,6 +59,7 @@ export const resetDatabase = async () => {
   await Promise.all([
     OTPModel.deleteMany({}),
     DeviceModel.deleteMany({}),
+    RefreshTokenModel.deleteMany({}),
     LoginAttemptModel.deleteMany({}),
     PlaylistModel.deleteMany({}),
     LogBookModel.deleteMany({}),
@@ -114,6 +116,7 @@ export const seedAuthUsers = async () => {
 export const loginUser = async (email, password) => {
   const response = await request(app)
     .post("/api/user/login")
+    .set("X-Requested-With", "mkc")
     .send({ email, password });
 
   return response;
@@ -170,4 +173,19 @@ export const createOtp = async (overrides = {}) => {
   });
 };
 
-export const authHeader = (token) => ({ Authorization: `Bearer ${token}` });
+/**
+ * Builds the headers that authenticate a request as a logged-in user.
+ *
+ * @param {Object|string} login - The login (or register) response, whose `Set-Cookie` holds the
+ *   session cookies. A bare string is sent as a legacy Bearer token.
+ * @returns {Object} Headers for supertest's `.set()`
+ */
+export const authHeader = (login) => {
+  if (typeof login === "string") return { Authorization: `Bearer ${login}` };
+
+  const cookies = (login.headers["set-cookie"] ?? [])
+    .map((cookie) => cookie.split(";")[0])
+    .filter((pair) => !pair.endsWith("="));
+
+  return { Cookie: cookies.join("; "), "X-Requested-With": "mkc" };
+};

@@ -9,6 +9,7 @@ import {
   verifyOTP,
 } from "../../controllers/user.controller.js";
 import OTPModel from "../../models/otp.model.js";
+import RefreshTokenModel from "../../models/refresh-token.model.js";
 import UserModel from "../../models/user.model.js";
 import { ClientFaultError, UnauthorizedError } from "../../utils/error.util.js";
 
@@ -32,6 +33,7 @@ describe("user controller", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     global.fetch = jest.fn();
+    RefreshTokenModel.create = jest.fn().mockResolvedValue({});
   });
 
   it("should not report success when re-sending a code fails to email", async () => {
@@ -129,7 +131,7 @@ describe("user controller", () => {
   });
 
   it("should create a new Google user when one does not exist", async () => {
-    const res = { json: jest.fn() };
+    const res = { json: jest.fn(), cookie: jest.fn() };
     const createdUser = {
       _id: "user-001",
       email: "google@example.com",
@@ -150,7 +152,6 @@ describe("user controller", () => {
       photo: "https://example.com/google.jpg",
     });
     expect(res.json).toHaveBeenCalledWith({
-      token: "jwt-token",
       user: {
         id: "user-001",
         name: "Google User",
@@ -159,6 +160,9 @@ describe("user controller", () => {
         favorites: [],
       },
     });
+    expect(res.cookie).toHaveBeenCalledWith("mkc_at", "jwt-token", expect.objectContaining({ httpOnly: true }));
+    expect(res.cookie).toHaveBeenCalledWith("mkc_rt", expect.any(String), expect.objectContaining({ httpOnly: true }));
+    expect(RefreshTokenModel.create).toHaveBeenCalledWith(expect.objectContaining({ user: "user-001" }));
   });
 
   it("should reject a Google token issued to another app", async () => {
@@ -182,7 +186,7 @@ describe("user controller", () => {
   });
 
   it("should reuse an existing Google user without creating a duplicate", async () => {
-    const res = { json: jest.fn() };
+    const res = { json: jest.fn(), cookie: jest.fn() };
     const existingUser = {
       _id: "user-001",
       email: "google@example.com",
@@ -199,7 +203,6 @@ describe("user controller", () => {
 
     expect(UserModel.create).not.toHaveBeenCalled();
     expect(res.json).toHaveBeenCalledWith({
-      token: "jwt-token",
       user: {
         id: "user-001",
         name: "Existing User",

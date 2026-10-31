@@ -5,8 +5,7 @@
 
 import googleIcon from "../assets/google.svg";
 import { useGoogleLogin } from "@react-oauth/google";
-import store from "../store/store";
-import { setAdminType, setCurrentUser } from "../store/slices/user.slice";
+import { startSession } from "../utils/session.util";
 import { googleOauthLogin } from "../utils/api/user-api.util";
 import { useNavigate } from "react-router-dom";
 
@@ -26,13 +25,7 @@ const GoogleLink = ({ children, setErrorMessage, redirectOnSuccess = "/" }) => {
 		onSuccess: async (response) => {
 			try {
 				const data = await googleOauthLogin(response.access_token);
-				localStorage.setItem("_s", data.token);
-				store.dispatch(setCurrentUser(data.user));
-				if (["admin", "super-admin"].includes(data.user.role)) {
-					store.dispatch(setAdminType(data.user.role));
-				} else {
-					store.dispatch(setAdminType(null));
-				}
+				await startSession(data.user);
 				navigate(redirectOnSuccess);
 			} catch (error) {
 				setErrorMessage(error.message);

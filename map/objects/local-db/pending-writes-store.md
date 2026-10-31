@@ -3,7 +3,7 @@ type: object
 cluster: local-db
 universe: live
 status: verified
-verified: 2026-10-25 @ 3515b77
+verified: 2026-10-31 @ 53dd641
 entity: frontend/src/utils/db/indexed-db.util.js:74
 code-name: pendingWrites
 description: "Offline write queue: failed mutations replayed in order when the network returns."
@@ -17,7 +17,7 @@ Mutations made offline, waiting to reach the server. Store name `pendingWrites`.
 
 An app-level queue, not Workbox `backgroundSync`, because Safari lacks the Background Sync API
 (`frontend/src/utils/pwa/write-queue.util.js:6`). Replay is in creation order (`sequence` breaks
-same-millisecond ties). The token is not stored: replay reads the current `localStorage._s`.
+same-millisecond ties). No token is stored or needed: the session is in cookies, and replay sends whatever session is current (signed in is the `mkc:signed-in` hint).
 Each edit of a record carries the `updatedAt` the device last saw, and the backend refuses a
 stale one with 409.
 
@@ -25,17 +25,17 @@ stale one with 409.
 
 - keyPath `id`; index `createdAt`. `frontend/src/utils/db/indexed-db.util.js:74`
 - Record: `{ id, sequence, url, method, headers, body, label, createdAt, attempts, lastError,
-  permanent, baseUpdatedAt, owner }`. `frontend/src/utils/pwa/write-queue.util.js:155`
-- `headers` is stored without `Authorization`; `owner` is the user id read from the token, so an
+  permanent, baseUpdatedAt, owner }`. `frontend/src/utils/pwa/write-queue.util.js:205`
+- `headers` is stored without `Authorization`; `owner` is the id of the signed-in user at queue time (Redux, or the cached user after an offline reload), so an
   entry waits for its own account. `baseUpdatedAt` is the local copy's `updatedAt` at queue
   time, set only on the first queued edit of a record (later edits build on it).
 
-Flush (`frontend/src/utils/pwa/write-queue.util.js:257`):
+Flush (`frontend/src/utils/pwa/write-queue.util.js:317`):
 
 | Response | Result |
 |---|---|
 | network error | `attempts`+1, stop the flush |
-| 401 | keep the entry (`attempts`+1), stop: wait for a new sign-in |
+| 401 (after the API client refreshed the session once) | keep the entry (`attempts`+1), stop: wait for a new sign-in |
 | 409 | `permanent: true` (record changed on the server), later edits of that record too, continue |
 | other 4xx | `permanent: true`, skip, continue |
 | 5xx | `attempts`+1, stop the flush |
@@ -46,7 +46,7 @@ Flush (`frontend/src/utils/pwa/write-queue.util.js:257`):
 - **joins:** [pwa slice](../app-state/pwa-slice.md) via `setWriteQueueSummary`.
 - **looks-like-but-is-not:** [localPlaylists store](local-playlists-store.md) — local
   playlists upload through their own path, not this queue
-  (`frontend/src/utils/pwa/pwa-register.util.js:99`).
+  (`frontend/src/utils/pwa/pwa-register.util.js:110`).
 
 ## Known defects
 

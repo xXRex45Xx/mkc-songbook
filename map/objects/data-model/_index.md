@@ -6,6 +6,7 @@
 - [LoginAttempt](login-attempt.md) - Failed password attempts per account or client key; five in 15 minutes makes the next login need a captcha. (verified)
 - [OTP](otp.md) - One-time password for email verification and password reset; expires after 5 minutes or five wrong guesses. (verified)
 - [Playlist](playlist.md) - A server-side playlist owned by its creator; private, members or public. (verified)
+- [RefreshToken](refresh-token.md) - One link in a chain of rotating refresh tokens; one chain per browser sign-in. (verified)
 - [SearchHistory](search-history.md) - Ghost. Schema for a user's past searches; no route or controller reads or writes it. (verified)
 - [Service logbook](service-logbook.md) - A scheduled church service and its songs, created before the service; model LogBook. (verified)
 - [Song](song.md) - A song: Amharic lyrics, chords, rhythm, tempo, optional audio. (verified)

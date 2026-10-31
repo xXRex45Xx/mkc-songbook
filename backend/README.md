@@ -9,7 +9,7 @@ This is the backend server for the MKC Choir Song Book, built with Node.js, Expr
 - **MongoDB** - Database
 - **Mongoose** - MongoDB ODM
 - **Passport.js** - Authentication middleware (JWT and Local strategies)
-- **JWT** - JSON Web Tokens for authentication
+- **JWT** - Short-lived access token in an HttpOnly cookie, renewed with a rotating refresh token
 - **Joi** - Data validation
 - **Multer** - File upload handling
 - **Nodemailer** - Email notifications
@@ -44,14 +44,25 @@ backend/
 
 - `POST /api/user/login` - Email/password login
   - Requires: `email`, `password`
+  - Sets the `mkc_at` (access, 15 min) and `mkc_rt` (refresh, 30 days) HttpOnly cookies; the body holds only the user
 - `POST /api/user/google/callback` - Google OAuth login
   - Requires: Google access token
+  - Sets the session cookies
+- `POST /api/user/session/refresh` - Rotate the refresh token and renew the access cookie
+  - Requires: the `mkc_rt` cookie
+- `POST /api/user/session/logout` - Delete this browser's session and clear the cookies
+- `POST /api/user/session/logout-all` - Delete every session of the user
+  - Requires: JWT authentication
+- `POST /api/user/session/upgrade` - Trade a legacy Bearer token for cookies (transition only)
+  - Requires: `Authorization: Bearer <old token>`
+
+State-changing requests that carry a session cookie must also send `X-Requested-With: mkc`.
 - `POST /api/user/otp` - Request OTP for registration or password reset
   - Requires: `email`
   - Query params: `forgotPassword` (optional boolean)
 - `POST /api/user/verify-otp` - Verify OTP code
   - Requires: `email`, `otp`
-- `PUT /api/user/reset-password` - Reset password with OTP
+- `PUT /api/user/reset-password` - Reset password with OTP; deletes every session of the account
   - Requires: `email`, `password`, `otp`
 
 ### User Management

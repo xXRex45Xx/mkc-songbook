@@ -15,6 +15,7 @@ import { Strategy as JWTStrategy, ExtractJwt } from "passport-jwt";
 import UserModel from "../models/user.model.js";
 import bcrypt from "bcrypt";
 import { config } from "dotenv";
+import { ACCESS_COOKIE } from "../utils/session.util.js";
 
 // Load environment variables
 config();
@@ -62,7 +63,7 @@ passport.use(
  * JWT Strategy Configuration
  *
  * Handles token-based authentication by:
- * 1. Extracting JWT from Authorization header
+ * 1. Extracting JWT from the `mkc_at` cookie (or, for old clients, the Authorization header)
  * 2. Verifying the token using JWT_SECRET
  * 3. Finding the user by ID from token payload
  * 4. Returning the user object if token is valid
@@ -76,8 +77,13 @@ passport.use(
 passport.use(
 	new JWTStrategy(
 		{
-			jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+			// The Bearer header is only for clients that still hold a pre-cookie token.
+			jwtFromRequest: ExtractJwt.fromExtractors([
+				(req) => req?.cookies?.[ACCESS_COOKIE] ?? null,
+				ExtractJwt.fromAuthHeaderAsBearerToken(),
+			]),
 			secretOrKey: process.env.JWT_SECRET,
+			algorithms: ["HS256"],
 		},
 		async (payload, done) => {
 			try {
@@ -86,8 +92,15 @@ passport.use(
 					name: true,
 					role: true,
 					favorites: true,
+					passwordChangedAt: true,
 				});
 				if (!user) return done(null, false);
+				// iat has second precision, so compare against the reset time floored to seconds.
+				if (
+					user.passwordChangedAt &&
+					payload.iat < Math.floor(user.passwordChangedAt.getTime() / 1000)
+				)
+					return done(null, false);
 				done(null, user);
 			} catch (error) {
 				done(error, false);

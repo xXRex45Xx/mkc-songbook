@@ -137,7 +137,7 @@ describe("GET /api/user/favorites", () => {
 
     const response = await request(app)
       .get("/api/user/favorites")
-      .set(authHeader(loginResponse.body.token));
+      .set(authHeader(loginResponse));
 
     expect(response.status).toBe(200);
   });
@@ -154,12 +154,12 @@ describe("GET /api/user/favorites", () => {
 - `seedAuthUsers()` - creates public/member/admin/super-admin test users
 - `createUser()` - creates a single test user document with overridable defaults
 - `loginUser(email, password)` - logs in through the real auth route
-- `authHeader(token)` - returns a Bearer auth header object
+- `authHeader(loginResponse)` - returns the `Cookie` and `X-Requested-With` headers for a login (or register) response; a bare string is sent as a legacy Bearer token
 - `createSong()`, `createAlbum()`, `createPlaylist()`, `createOtp()` - direct model seeding helpers
 
 ### Other Helpers
 
-- `jest/helpers/auth.helper.js` - JWT helpers for token creation/decoding
+- `jest/helpers/auth.helper.js` - JWT helpers for token creation/decoding (unused by the route tests, which log in through `loginUser`)
 - `jest/helpers/request.helper.js` - convenience wrappers around Supertest requests
 - `jest/helpers/database.helper.js` - lower-level database cleanup helpers
 
@@ -194,6 +194,7 @@ The test suite sets defaults for:
 Defaults that change behaviour in tests:
 
 - Rate limiters are skipped when `NODE_ENV=test`; a test of a limiter sets `RATE_LIMIT_IN_TEST=on` (see `__tests__/middlewares/rate-limit.middleware.test.js`).
+- A state-changing request that carries a session cookie needs the header `X-Requested-With: mkc` or the CSRF middleware answers 403; `authHeader(loginResponse)` adds both the cookie and the header. A request with no session cookie (unauthenticated tests) passes it and fails auth on its own.
 - Login captcha checks are off while `TURNSTILE_SECRET_KEY` is unset; a test of them sets it and mocks `global.fetch` for the siteverify call (see `__tests__/routes/user.route.login-risk.test.js`).
 
 Note: integration tests do not rely on a preconfigured `DB_URI`; the in-memory database is started inside the integration helper.

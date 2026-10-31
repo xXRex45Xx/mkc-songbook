@@ -39,7 +39,7 @@ describe("service logbook routes", () => {
 
       const response = await request(app)
         .get("/api/logbook")
-        .set(authHeader(loginResponse.body.token));
+        .set(authHeader(loginResponse));
 
       expect(response.status).toBe(200);
       expect(response.body.logBook).toHaveLength(1);
@@ -64,7 +64,7 @@ describe("service logbook routes", () => {
 
       const response = await request(app)
         .get("/api/logbook?q=Mark&type=location")
-        .set(authHeader(loginResponse.body.token));
+        .set(authHeader(loginResponse));
 
       expect(response.status).toBe(200);
       expect(response.body.logBook).toHaveLength(1);
@@ -76,7 +76,7 @@ describe("service logbook routes", () => {
 
       const response = await request(app)
         .get("/api/logbook?q=Mark")
-        .set(authHeader(loginResponse.body.token));
+        .set(authHeader(loginResponse));
 
       expect(response.status).toBe(400);
     });
@@ -97,7 +97,7 @@ describe("service logbook routes", () => {
 
       const response = await request(app)
         .get("/api/logbook?q=2099-01-01T10:00:00.000Z&type=date")
-        .set(authHeader(loginResponse.body.token));
+        .set(authHeader(loginResponse));
 
       expect(response.status).toBe(200);
       expect(response.body.logBook).toHaveLength(1);
@@ -117,7 +117,7 @@ describe("service logbook routes", () => {
 
       const response = await request(app)
         .get("/api/logbook?page=2")
-        .set(authHeader(loginResponse.body.token));
+        .set(authHeader(loginResponse));
 
       expect(response.status).toBe(200);
       expect(response.body.totalPages).toBe(2);
@@ -133,7 +133,7 @@ describe("service logbook routes", () => {
 
       const response = await request(app)
         .post("/api/logbook")
-        .set(authHeader(loginResponse.body.token))
+        .set(authHeader(loginResponse))
         .send({
           location: "Saint Mark",
           timestamp: "2099-01-01T10:00:00.000Z",
@@ -152,7 +152,7 @@ describe("service logbook routes", () => {
 
       const response = await request(app)
         .post("/api/logbook")
-        .set(authHeader(loginResponse.body.token))
+        .set(authHeader(loginResponse))
         .send({
           location: "Saint Mark",
           timestamp: "2099-01-01T10:00:00.000Z",
@@ -180,7 +180,7 @@ describe("service logbook routes", () => {
 
       const response = await request(app)
         .post("/api/logbook")
-        .set(authHeader(loginResponse.body.token))
+        .set(authHeader(loginResponse))
         .send({
           location: "Saint Mark",
           timestamp: "2099-01-01T10:00:00.000Z",
@@ -205,7 +205,7 @@ describe("service logbook routes", () => {
 
       const response = await request(app)
         .put(`/api/logbook/${existing._id}`)
-        .set(authHeader(loginResponse.body.token))
+        .set(authHeader(loginResponse))
         .send({
           location: "Updated Church",
           timestamp: "2099-02-01T10:00:00.000Z",
