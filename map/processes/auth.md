@@ -69,7 +69,8 @@ Guess limits:
   ([OTPLimit](../objects/data-model/otp-limit.md)). Anyone can use this to lock a known email out
   of reset and sign-up for the rest of the hour.
 - Password login runs `assessLoginRisk` before the password is tried
-  (`backend/middlewares/login-risk.middleware.js:76`). A browser whose `mkc_did` cookie matches a
+  (`backend/middlewares/login-risk.middleware.js:124`), and that step counts the attempt at once
+  (one atomic increment per counter key), so parallel guesses cannot all slip under the limit. A browser whose `mkc_did` cookie matches a
   [Device](../objects/data-model/device.md) of that account skips every check. Anyone else needs
   a Turnstile captcha (`captchaToken` in the body; the server answers 403 with `code:
   "CAPTCHA_REQUIRED"`) when the request looks scripted (`backend/utils/bot-signal.util.js`: no

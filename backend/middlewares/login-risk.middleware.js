@@ -10,6 +10,9 @@
  *   the cookie does not reset the count.
  * - An account with five failed attempts in 15 minutes, from any clients, needs a captcha
  *   from every client that is not a known device. A captcha never locks anyone out.
+ * - An attempt is counted before its password is checked (a reservation), in one atomic
+ *   step with the read, so parallel requests cannot all slip under the limit. A success
+ *   clears the counters; a request stopped at the captcha gate gives its reservation back.
  * @module middlewares/login-risk
  */
 
@@ -65,8 +68,53 @@ const captchaRequired = (message) => {
 };
 
 /**
+ * Reserves one attempt on every key in a single atomic increment per key.
+ * The reservation stands as a failed attempt until a success clears it or
+ * `releaseLoginAttempt` gives it back, so the password check never runs uncounted.
+ *
+ * @param {string[]} keys - Counter keys from `clientKeys`
+ * @returns {Promise<number>} Failed attempts before this one: the largest count over the keys, minus this reservation
+ */
+const reserveLoginAttempt = async (keys) => {
+	const counters = await Promise.all(
+		keys.map((key) =>
+			LoginAttemptModel.findOneAndUpdate(
+				{ key },
+				{ $inc: { count: 1 }, $setOnInsert: { createdAt: new Date() } },
+				{ upsert: true, returnDocument: "after" }
+			)
+		)
+	);
+	return Math.max(...counters.map((counter) => counter.count)) - 1;
+};
+
+/**
+ * Gives back the attempt reserved by `assessLoginRisk`, for a request whose password
+ * was never checked. A database error is logged and ignored.
+ *
+ * @param {Request} req - Express request object after `assessLoginRisk`
+ * @returns {Promise<void>}
+ */
+export const releaseLoginAttempt = async (req) => {
+	try {
+		const keys = req.loginRisk?.keys ?? [];
+		if (keys.length)
+			await LoginAttemptModel.updateMany(
+				{ key: { $in: keys }, count: { $gt: 0 } },
+				{ $inc: { count: -1 } }
+			);
+	} catch (error) {
+		console.error("Failed to release login attempt", error);
+	}
+};
+
+/**
  * Checks the risk of a login request before the password is tried.
- * Sets `req.loginRisk = { keys }`; `keys` is empty for a known device.
+ * Sets `req.loginRisk = { keys }`; `keys` is empty for a known device. For any other
+ * client it also reserves this attempt on every key (see `reserveLoginAttempt`), and the
+ * captcha decision uses the count that reservation returns. The reservation counts as a
+ * failed attempt unless `recordLoginSuccess` clears it, or `releaseLoginAttempt` or a
+ * captcha rejection here gives it back.
  *
  * @param {Object} req - Express request object with a validated login body
  * @param {Object} _res - Express response object (unused)
@@ -97,44 +145,25 @@ export const assessLoginRisk = async (req, _res, next) => {
 	const keys = clientKeys(req, email, deviceToken);
 	req.loginRisk = { keys };
 
-	const counters = await LoginAttemptModel.find({ key: { $in: keys } });
-	const failures = Math.max(0, ...counters.map((counter) => counter.count));
+	const failures = await reserveLoginAttempt(keys);
 
 	if (
 		isCaptchaEnabled() &&
 		(isScriptLike(req) || failures >= CAPTCHA_AFTER_FAILURES)
 	) {
-		if (!captchaToken)
-			throw captchaRequired("Please complete the captcha to continue.");
-		if (!(await verifyCaptcha(captchaToken, req.ip)))
-			throw captchaRequired(
-				"Captcha verification failed. Please try again."
-			);
+		try {
+			if (!captchaToken)
+				throw captchaRequired("Please complete the captcha to continue.");
+			if (!(await verifyCaptcha(captchaToken, req.ip)))
+				throw captchaRequired(
+					"Captcha verification failed. Please try again."
+				);
+		} catch (error) {
+			await releaseLoginAttempt(req);
+			throw error;
+		}
 	}
 	next();
-};
-
-/**
- * Counts a failed password attempt against the client's keys.
- * A database error is logged and ignored so a failure never becomes a server error.
- *
- * @param {Request} req - Express request object after `assessLoginRisk`
- * @returns {Promise<void>}
- */
-export const recordLoginFailure = async (req) => {
-	try {
-		await Promise.all(
-			(req.loginRisk?.keys ?? []).map((key) =>
-				LoginAttemptModel.findOneAndUpdate(
-					{ key },
-					{ $inc: { count: 1 }, $setOnInsert: { createdAt: new Date() } },
-					{ upsert: true }
-				)
-			)
-		);
-	} catch (error) {
-		console.error("Failed to record login failure", error);
-	}
 };
 
 /**

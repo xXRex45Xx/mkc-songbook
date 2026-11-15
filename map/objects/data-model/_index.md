@@ -3,7 +3,7 @@
 
 - [Album](album.md) - A named album grouping songs, with cover image and updatedAt for delta sync. (verified)
 - [Device](device.md) - A browser that signed in to an account before; its login skips the captcha checks. (verified)
-- [LoginAttempt](login-attempt.md) - Failed password attempts per account or client key; five in 15 minutes makes the next login need a captcha. (verified)
+- [LoginAttempt](login-attempt.md) - Login attempts per account or client key, counted before the password is checked; five in 15 minutes makes the next login need a captcha. (verified)
 - [OTPLimit](otp-limit.md) - Code requests and wrong guesses per email over one hour; outlives any single OTP so a new code never resets the guess count. (verified)
 - [OTP](otp.md) - One-time password for email verification and password reset; expires after 5 minutes or five wrong guesses; a per-email limiter caps requests and guesses across codes. (verified)
 - [Playlist](playlist.md) - A server-side playlist owned by its creator; private, members or public. (verified)

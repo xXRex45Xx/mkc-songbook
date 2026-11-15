@@ -198,4 +198,22 @@ describe("login risk", () => {
 
     expect(response.status).toBe(403);
   });
+
+  it("should demand a captcha from a burst of parallel guesses after the fifth", async () => {
+    const responses = await Promise.all(Array.from({ length: 20 }, () => login(wrong)));
+
+    const triedPassword = responses.filter((response) => response.status === 400);
+    const askedForCaptcha = responses.filter((response) => response.status === 403);
+    expect(triedPassword.length).toBeLessThanOrEqual(5);
+    expect(askedForCaptcha).toHaveLength(responses.length - triedPassword.length);
+    expect(askedForCaptcha.every((response) => response.body.code === "CAPTCHA_REQUIRED")).toBe(true);
+  });
+
+  it("should not count a request turned away at the captcha gate", async () => {
+    for (let i = 0; i < 5; i++) await login(wrong);
+    for (let i = 0; i < 3; i++) expect((await login(member)).status).toBe(403);
+
+    const counters = await LoginAttemptModel.find({});
+    counters.forEach((counter) => expect(counter.count).toBe(5));
+  });
 });

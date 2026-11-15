@@ -6,7 +6,7 @@
 import passport from "passport";
 import { ClientFaultError, ServerFaultError } from "../utils/error.util.js";
 import { issueSession } from "../utils/session.util.js";
-import { recordLoginFailure, recordLoginSuccess } from "./login-risk.middleware.js";
+import { recordLoginSuccess, releaseLoginAttempt } from "./login-risk.middleware.js";
 
 /**
  * Authenticates a user using local strategy and starts a cookie session.
@@ -25,9 +25,12 @@ import { recordLoginFailure, recordLoginSuccess } from "./login-risk.middleware.
  */
 const localAuth = async (req, res, next) => {
     passport.authenticate("local", {}, async (err, user) => {
-        if (err) return next(new ServerFaultError(err));
+        if (err) {
+            await releaseLoginAttempt(req);
+            return next(new ServerFaultError(err));
+        }
         if (!user) {
-            await recordLoginFailure(req);
+            // The attempt was counted as a failure when it was reserved in assessLoginRisk.
             return next(new ClientFaultError("Invalid username or password."));
         }
         req.login(user, { session: false }, async (err) => {
