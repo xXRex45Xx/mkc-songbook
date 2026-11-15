@@ -35,12 +35,30 @@ describe("otp attempt limit", () => {
     expect((await verify(555555)).status).toBe(400);
   });
 
-  it("should give a freshly requested code its own five attempts", async () => {
+  it("should keep the wrong guesses already made when a new code is requested", async () => {
     await createOtp({ email: "fresh@example.com", otp: 555555 });
     for (let i = 0; i < 4; i++) await verify(111111);
 
     await request(app).post("/api/user/otp").send({ email: "fresh@example.com" });
+    await OTPModel.updateOne({ email: "fresh@example.com" }, { otp: 555555 });
+    await verify(111111);
 
-    expect((await OTPModel.findOne({ email: "fresh@example.com" })).attempts).toBe(0);
+    expect(await OTPModel.findOne({ email: "fresh@example.com" })).toBeNull();
+  });
+
+  it("should refuse a new code after ten wrong guesses within the hour", async () => {
+    for (let round = 0; round < 2; round++) {
+      expect(
+        (await request(app).post("/api/user/otp").send({ email: "fresh@example.com" })).status
+      ).toBe(200);
+      await OTPModel.updateOne({ email: "fresh@example.com" }, { otp: 555555 });
+      for (let i = 0; i < 5; i++) expect((await verify(111111)).status).toBe(400);
+    }
+
+    const response = await request(app)
+      .post("/api/user/otp")
+      .send({ email: "fresh@example.com" });
+
+    expect(response.status).toBe(429);
   });
 });

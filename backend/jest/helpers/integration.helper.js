@@ -7,6 +7,7 @@ import app from "../../index.js";
 import AlbumModel from "../../models/album.model.js";
 import DeviceModel from "../../models/device.model.js";
 import LoginAttemptModel from "../../models/login-attempt.model.js";
+import OTPLimitModel from "../../models/otp-limit.model.js";
 import OTPModel from "../../models/otp.model.js";
 import PlaylistModel from "../../models/playlist.model.js";
 import RefreshTokenModel from "../../models/refresh-token.model.js";
@@ -58,6 +59,7 @@ export const resetDatabase = async () => {
 
   await Promise.all([
     OTPModel.deleteMany({}),
+    OTPLimitModel.deleteMany({}),
     DeviceModel.deleteMany({}),
     RefreshTokenModel.deleteMany({}),
     LoginAttemptModel.deleteMany({}),

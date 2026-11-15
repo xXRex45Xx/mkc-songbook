@@ -15,7 +15,7 @@ A catalog, not a spec. Find the thing you are changing, open the listed cards, a
 | Playlist fields, visibility rules | [Playlist](../objects/data-model/playlist.md) | [local-playlist-upload](../processes/local-playlist-upload.md), [offline-writes](../processes/offline-writes.md) |
 | Logbook, incl. the planned playlist link | [Service logbook](../objects/data-model/service-logbook.md) | [Playlist](../objects/data-model/playlist.md) |
 | User fields or roles | [User](../objects/data-model/user.md) | [auth](../processes/auth.md), [user slice](../objects/app-state/user-slice.md), [users store](../objects/local-db/users-store.md) |
-| OTP, email, SMTP | [OTP](../objects/data-model/otp.md) | [auth](../processes/auth.md) |
+| OTP, OTP limits, email, SMTP | [OTP](../objects/data-model/otp.md) | [OTPLimit](../objects/data-model/otp-limit.md), [auth](../processes/auth.md) |
 | Login risk checks, device cookie, captcha | [auth](../processes/auth.md) | [Device](../objects/data-model/device.md), [LoginAttempt](../objects/data-model/login-attempt.md) |
 | JWT secret, claim, access or refresh lifetime, session cookies (`mkc_at`, `mkc_rt`), `mkc:signed-in` | [auth](../processes/auth.md) | [RefreshToken](../objects/data-model/refresh-token.md), [users store](../objects/local-db/users-store.md), [pendingWrites store](../objects/local-db/pending-writes-store.md) (`owner`) |
 | CSRF header, `ALLOWED_ORIGINS`, CORS `credentials` | [auth](../processes/auth.md) | every frontend API call goes through `frontend/src/utils/api/api-client.util.js`; see Outside consumers |

@@ -11,6 +11,7 @@
  */
 
 import OTPModel from "../models/otp.model.js";
+import OTPLimitModel from "../models/otp-limit.model.js";
 import generateOtp from "../utils/otp.util.js";
 import bcrypt from "bcrypt";
 import UserModel from "../models/user.model.js";
@@ -32,13 +33,16 @@ import {
  * Generate and send OTP for user registration
  *
  * This function generates a new OTP code and sends it to the specified email address.
- * It is used during user registration to verify the user's email address.
+ * It is used during user registration to verify the user's email address. An email may
+ * request only a few codes per hour and is locked after too many wrong guesses; a new code
+ * does not reset the count of wrong guesses.
  *
  * @param {Object} req - Express request object containing request data
  * @param {Object} req.body - Request body with email address
  * @param {string} req.body.email - User's email address for verification with description of validation rules and constraints
  * @param {Object} res - Express response object for sending responses back to client
  * @returns {Promise<void>} Sends JSON response with success status explaining the complete process flow, success conditions, and potential outcomes
+ * @throws {ClientFaultError} With status 429 if the email asked for too many codes or is locked by wrong guesses
  * @throws {ServerFaultError} If database operation fails due to server-side issues like connection problems or constraint violations
  * @example
  * // Example usage:
@@ -50,11 +54,15 @@ import {
  */
 export const registerOTP = async (req, res) => {
 	const { email } = req.body;
+	if (!(await OTPLimitModel.claimRequest(email)))
+		throw new ClientFaultError(
+			"Too many verification code requests. Please, try again later.",
+			429
+		);
 	let otp = generateOtp();
 	const current = await OTPModel.findOne({ email });
 	if (current) {
 		current.otp = otp;
-		current.attempts = 0;
 		current.createdAt = Date.now();
 		await current.save();
 	} else await OTPModel.create({ otp, email });

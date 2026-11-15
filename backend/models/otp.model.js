@@ -17,6 +17,7 @@
  */
 import { Schema, model } from "mongoose";
 import sendEmail from "../config/nodemailer.config.js";
+import OTPLimitModel from "./otp-limit.model.js";
 
 /** Failed verification attempts allowed per code before the entry is deleted. */
 export const MAX_OTP_ATTEMPTS = 5;
@@ -40,6 +41,7 @@ const otpSchema = new Schema({
 		required: true,
 		unique: true,
 		trim: true,
+		lowercase: true,
 		match: /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
 	},
 	otp: {
@@ -63,7 +65,9 @@ const otpSchema = new Schema({
  *
  * A wrong guess is counted with one atomic update, so parallel guesses cannot
  * exceed the limit. The entry is deleted when the fifth wrong guess lands, and a
- * locked entry never matches again.
+ * locked entry never matches again. Each wrong guess also counts against the email in
+ * `OTPLimitModel`, which outlives the entry: the entry is deleted too once the email has
+ * `MAX_OTP_FAILURES` wrong guesses, and no new code is issued until that window ends.
  *
  * @param {string} email - Email the code was issued to
  * @param {number|string} code - Submitted code
@@ -81,7 +85,8 @@ otpSchema.statics.verifyCode = async function (email, code) {
 		{ new: true }
 	);
 	if (wrong) {
-		if (wrong.attempts >= MAX_OTP_ATTEMPTS)
+		const locked = await OTPLimitModel.recordFailure(email);
+		if (wrong.attempts >= MAX_OTP_ATTEMPTS || locked)
 			await this.deleteOne({ _id: wrong._id });
 		return false;
 	}

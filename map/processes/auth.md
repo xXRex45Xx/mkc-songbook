@@ -3,7 +3,7 @@ type: process
 status: verified
 verified: 2026-10-31 @ 53dd641
 description: Sign-up by emailed code, password or Google sign-in, then an HttpOnly cookie session (15-minute access JWT, rotating 30-day refresh token).
-consumes: [../objects/data-model/user.md, ../objects/data-model/otp.md, ../objects/data-model/device.md, ../objects/data-model/login-attempt.md, ../objects/data-model/refresh-token.md]
+consumes: [../objects/data-model/user.md, ../objects/data-model/otp.md, ../objects/data-model/otp-limit.md, ../objects/data-model/device.md, ../objects/data-model/login-attempt.md, ../objects/data-model/refresh-token.md]
 produces: [../objects/data-model/user.md, ../objects/local-db/users-store.md, ../objects/app-state/user-slice.md]
 ---
 
@@ -32,15 +32,16 @@ of an XSS script. The frontend and API must share a registrable domain (sibling 
 
 Sign-up:
 
-1. `POST /api/user/otp` — refuses a known email (`backend/middlewares/check-user-exists.middleware.js:28`),
-   then creates or refreshes the OTP; saving it sends the email
-   (`backend/controllers/user.controller.js:51`, `backend/models/otp.model.js:108`).
+1. `POST /api/user/otp` — refuses a known email (`backend/middlewares/check-user-exists.middleware.js:29`),
+   then asks [OTPLimit](../objects/data-model/otp-limit.md) for a slot (429 after 5 codes or 10
+   wrong guesses per email per hour), then creates or refreshes the OTP; saving it sends the email
+   (`backend/controllers/user.controller.js:55`, `backend/models/otp.model.js:113`).
 2. `POST /api/user/verify-otp` — checks the code only; nothing is created
-   (`backend/controllers/user.controller.js:87`).
+   (`backend/controllers/user.controller.js:95`).
 3. `POST /api/user` — checks the code again (`backend/middlewares/validate-otp.middleware.js:26`),
    hashes the password with bcrypt cost 10, creates the [User](../objects/data-model/user.md)
    with role `public`, starts a session (cookies), returns the user, deletes the OTP
-   (`backend/controllers/user.controller.js:120`).
+   (`backend/controllers/user.controller.js:129`).
 
 Password login: `POST /api/user/login` — risk check (below), then Passport local strategy; a user with no password
 (Google-only) always fails (`backend/config/passport.config.js:49`); the session starts in
@@ -62,7 +63,11 @@ Guess limits:
   /api/user/login` gets the same 400 "Invalid username or password." as a wrong password, and
   every login response carries no `RateLimit`, `RateLimit-Policy` or `Retry-After` header, so a
   throttled attacker cannot tell the two apart; every other throttled request gets 429.
-- A code gets 5 wrong guesses, then it is deleted ([OTP](../objects/data-model/otp.md)).
+- A code gets 5 wrong guesses, then it is deleted ([OTP](../objects/data-model/otp.md)). An email
+  gets at most 5 codes and 10 wrong guesses per hour over all its codes, then `POST /api/user/otp`
+  answers 429 until the hour ends; a re-sent code keeps the guesses already made
+  ([OTPLimit](../objects/data-model/otp-limit.md)). Anyone can use this to lock a known email out
+  of reset and sign-up for the rest of the hour.
 - Password login runs `assessLoginRisk` before the password is tried
   (`backend/middlewares/login-risk.middleware.js:76`). A browser whose `mkc_did` cookie matches a
   [Device](../objects/data-model/device.md) of that account skips every check. Anyone else needs
@@ -143,8 +148,6 @@ Frontend:
   header-based and a script can copy browser headers. A proxy-supplied score would fix this.
 - The device cookie is cross-site when the frontend and API are on different registrable domains;
   Safari and some Chrome modes drop it, so those users look like unknown devices.
-- Nothing limits `/api/user/otp` per email, so one address can be mailed codes up to the generic
-  per-address limit.
 - Google sign-in does not register a Device or count failures.
 - An access token cannot be revoked: after logout or reuse detection it still works until its
   15 minutes end (a password reset does cut it at once), because the JWT strategy never looks up
@@ -160,6 +163,7 @@ Frontend:
 ## If you change this
 
 - **Hits:** [User](../objects/data-model/user.md), [OTP](../objects/data-model/otp.md),
+  [OTPLimit](../objects/data-model/otp-limit.md),
   `backend/config/passport.config.js`, `backend/middlewares/local-auth.middleware.js`,
   `validate-otp.middleware.js`, `check-user-exists.middleware.js`, `login-risk.middleware.js`,
   `frontend/src/utils/api/user-api.util.js`, the auth form components, `frontend/src/App.jsx`,

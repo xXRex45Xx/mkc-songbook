@@ -8,6 +8,7 @@ import {
   updateFavorites,
   verifyOTP,
 } from "../../controllers/user.controller.js";
+import OTPLimitModel from "../../models/otp-limit.model.js";
 import OTPModel from "../../models/otp.model.js";
 import RefreshTokenModel from "../../models/refresh-token.model.js";
 import UserModel from "../../models/user.model.js";
@@ -38,11 +39,41 @@ describe("user controller", () => {
 
   it("should not report success when re-sending a code fails to email", async () => {
     const save = jest.fn().mockRejectedValue(new Error("SMTP down"));
+    OTPLimitModel.claimRequest = jest.fn().mockResolvedValue(true);
     OTPModel.findOne = jest.fn().mockResolvedValue({ save });
     const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
 
     await expect(registerOTP({ body: { email: "a@example.com" } }, res)).rejects.toThrow("SMTP down");
 
+    expect(res.json).not.toHaveBeenCalled();
+  });
+
+  it("should keep the failed attempts when re-sending a code", async () => {
+    const current = { attempts: 4, save: jest.fn().mockResolvedValue() };
+    OTPLimitModel.claimRequest = jest.fn().mockResolvedValue(true);
+    OTPModel.findOne = jest.fn().mockResolvedValue(current);
+    const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+
+    await registerOTP({ body: { email: "a@example.com" } }, res);
+
+    expect(current.attempts).toBe(4);
+    expect(current.save).toHaveBeenCalled();
+    expect(res.status).toHaveBeenCalledWith(200);
+  });
+
+  it("should refuse a code request when the email is over its limit", async () => {
+    OTPLimitModel.claimRequest = jest.fn().mockResolvedValue(false);
+    OTPModel.findOne = jest.fn();
+    OTPModel.create = jest.fn();
+    const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+
+    await expect(
+      registerOTP({ body: { email: "a@example.com" } }, res)
+    ).rejects.toMatchObject({ statusCode: 429 });
+
+    expect(OTPLimitModel.claimRequest).toHaveBeenCalledWith("a@example.com");
+    expect(OTPModel.findOne).not.toHaveBeenCalled();
+    expect(OTPModel.create).not.toHaveBeenCalled();
     expect(res.json).not.toHaveBeenCalled();
   });
 

@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "@jest/globals";
 import nodemailer from "nodemailer";
 
+import OTPLimitModel, { MAX_OTP_FAILURES } from "../../models/otp-limit.model.js";
 import OTPModel from "../../models/otp.model.js";
 import {
   ensureDbConnection,
@@ -65,6 +66,27 @@ describe("otp model", () => {
       await OTPModel.create({ email, otp: 123456 });
 
       for (let i = 0; i < 5; i++) await OTPModel.verifyCode(email, 111111);
+
+      expect(await OTPModel.findOne({ email })).toBeNull();
+      expect(await OTPModel.verifyCode(email, 123456)).toBe(false);
+    });
+
+    it("should count wrong guesses against the email across codes", async () => {
+      await OTPLimitModel.claimRequest(email);
+      await OTPModel.create({ email, otp: 123456 });
+      for (let i = 0; i < 5; i++) await OTPModel.verifyCode(email, 111111);
+      await OTPModel.create({ email, otp: 654321 });
+      await OTPModel.verifyCode(email, 111111);
+
+      expect((await OTPLimitModel.findOne({ email })).failures).toBe(6);
+    });
+
+    it("should delete the entry once the email reaches its failure cap", async () => {
+      await OTPLimitModel.claimRequest(email);
+      await OTPLimitModel.updateOne({ email }, { failures: MAX_OTP_FAILURES - 1 });
+      await OTPModel.create({ email, otp: 123456 });
+
+      expect(await OTPModel.verifyCode(email, 111111)).toBe(false);
 
       expect(await OTPModel.findOne({ email })).toBeNull();
       expect(await OTPModel.verifyCode(email, 123456)).toBe(false);
