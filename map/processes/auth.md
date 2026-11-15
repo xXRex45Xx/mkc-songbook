@@ -118,8 +118,11 @@ was already issued: it works until its 15 minutes end.
 
 CSRF (`backend/middlewares/csrf.middleware.js`, mounted on `/api` in `backend/index.js`): a
 state-changing request (not GET, HEAD, OPTIONS) that carries a session cookie must also send
-`X-Requested-With: mkc`, and an `Origin` header, when present, must be in `ALLOWED_ORIGINS`. The
-custom header forces a CORS preflight that only allowed origins pass. A request with an
+`X-Requested-With: mkc`, and an `Origin` header, when present, must be in `ALLOWED_ORIGINS`
+(compared without trailing slashes by `isAllowedOrigin` in `backend/utils/origin.util.js`; an
+`Origin` over 256 characters is never allowed, and no regex runs on the raw header, so a long one
+cannot burn CPU; the CORS callback and the album image handler in `backend/index.js` use the same
+helpers). The custom header forces a CORS preflight that only allowed origins pass. A request with an
 `Authorization` header skips the header check (a browser never adds that header on its own).
 `ALLOWED_ORIGINS` is required in production: the process refuses to start without it, because
 CORS runs with `credentials: true`.

@@ -8,7 +8,7 @@
  * @module middlewares/csrf
  */
 import { ForbiddenError } from "../utils/error.util.js";
-import { getAllowedOrigins } from "../utils/origin.util.js";
+import { getAllowedOrigins, isAllowedOrigin } from "../utils/origin.util.js";
 import { ACCESS_COOKIE, REFRESH_COOKIE } from "../utils/session.util.js";
 
 export const CSRF_HEADER = "X-Requested-With";
@@ -32,7 +32,7 @@ export const csrfProtection = (req, _res, next) => {
 
 	const origin = req.headers.origin;
 	const allowed = getAllowedOrigins();
-	if (origin && allowed.length > 0 && !allowed.includes(origin.replace(/\/+$/, "")))
+	if (origin && allowed.length > 0 && !isAllowedOrigin(origin, allowed))
 		return next(new ForbiddenError("Request origin is not allowed."));
 
 	// A request with no session cookie has no ambient credentials to abuse; it fails auth on its own.

@@ -22,7 +22,7 @@ import path from "path";
 import { wrapAsync } from "./utils/error.util.js";
 import { apiRateLimiter, audioRateLimiter } from "./middlewares/rate-limit.middleware.js";
 import { csrfProtection } from "./middlewares/csrf.middleware.js";
-import { getAllowedOrigins } from "./utils/origin.util.js";
+import { getAllowedOrigins, isAllowedOrigin, normalizeOrigin } from "./utils/origin.util.js";
 
 if (process.env.NODE_ENV !== "production") {
 	const configError = config().error;
@@ -149,8 +149,7 @@ app.use(
 			if (!origin) return cb(null, true);
 			// An empty list allows every origin outside production (local development).
 			if (allowed.length === 0) return cb(null, true);
-			const normalized = origin.replace(/\/+$/, "");
-			if (allowed.includes(normalized)) return cb(null, true);
+			if (isAllowedOrigin(origin, allowed)) return cb(null, true);
 			console.warn(`CORS rejected origin: ${origin}`);
 			return cb(new Error(`Not allowed by CORS: ${origin}`));
 		},
@@ -203,8 +202,9 @@ app.use(
 		const origin = req.headers.origin;
 		const allowed = getAllowedOrigins();
 		if (origin) {
-			const normalized = origin.replace(/\/+$/, "");
-			if (allowed.length === 0 || allowed.includes(normalized)) {
+			// Null (over-long) is never echoed.
+			const normalized = normalizeOrigin(origin);
+			if (normalized !== null && (allowed.length === 0 || allowed.includes(normalized))) {
 				res.header("Access-Control-Allow-Origin", normalized);
 			}
 		} else if (allowed.length > 0) {

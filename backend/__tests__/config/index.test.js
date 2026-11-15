@@ -118,6 +118,45 @@ describe("app bootstrap and error handling", () => {
     expect(response.headers["access-control-allow-origin"]).toBe("http://localhost:3000");
   });
 
+  it("should accept an allowed origin written with a trailing slash in CORS and static headers", async () => {
+    await fsPromises.mkdir(staticDir, { recursive: true });
+    await fsPromises.writeFile(staticFile, "album image test");
+
+    const preflight = await request(app)
+      .options("/api/song")
+      .set("Origin", "http://localhost:3000/")
+      .set("Access-Control-Request-Method", "GET");
+    const staticResponse = await request(app)
+      .get("/static/albums/images/index-test.txt")
+      .set("Origin", "http://localhost:3000/");
+
+    expect(preflight.status).toBe(204);
+    expect(preflight.headers["access-control-allow-origin"]).toBe("http://localhost:3000/");
+    expect(staticResponse.headers["access-control-allow-origin"]).toBe("http://localhost:3000");
+  });
+
+  it("should reject an over-long slash-run Origin in CORS and static headers without a slow scan", async () => {
+    await fsPromises.mkdir(staticDir, { recursive: true });
+    await fsPromises.writeFile(staticFile, "album image test");
+    jest.spyOn(console, "warn").mockImplementation(() => {});
+    const hostile = `${"/".repeat(10000)}x`;
+    const start = process.hrtime.bigint();
+
+    const cors = await request(app)
+      .options("/api/song")
+      .set("Origin", hostile)
+      .set("Access-Control-Request-Method", "GET");
+    const staticResponse = await request(app)
+      .get("/static/albums/images/index-test.txt")
+      .set("Origin", hostile);
+
+    const elapsedMs = Number(process.hrtime.bigint() - start) / 1e6;
+    expect(cors.status).toBe(500);
+    expect(cors.headers["access-control-allow-origin"]).toBeUndefined();
+    expect(staticResponse.headers["access-control-allow-origin"]).toBeUndefined();
+    expect(elapsedMs).toBeLessThan(2000);
+  });
+
   it("should gzip compress eligible JSON responses when requested", async () => {
     const response = await request(app)
       .get("/__compression-test__")

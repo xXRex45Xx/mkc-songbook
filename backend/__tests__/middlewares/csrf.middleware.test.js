@@ -94,4 +94,31 @@ describe("csrfProtection", () => {
 
     expect(next).toHaveBeenCalledWith();
   });
+
+  it("should reject an Origin made of thousands of slashes without scanning it slowly", () => {
+    const req = buildReq({
+      headers: { Origin: `${"/".repeat(15000)}x`, "X-Requested-With": "mkc" },
+    });
+
+    const started = performance.now();
+    csrfProtection(req, {}, next);
+    const elapsed = performance.now() - started;
+
+    expect(next).toHaveBeenCalledWith(expect.any(ForbiddenError));
+    expect(elapsed).toBeLessThan(50);
+  });
+
+  it("should reject an allowed Origin padded with hundreds of trailing slashes", () => {
+    const req = buildReq({
+      cookies: { mkc_at: "x" },
+      headers: {
+        Origin: `http://localhost:3000${"/".repeat(300)}`,
+        "X-Requested-With": "mkc",
+      },
+    });
+
+    csrfProtection(req, {}, next);
+
+    expect(next).toHaveBeenCalledWith(expect.any(ForbiddenError));
+  });
 });
