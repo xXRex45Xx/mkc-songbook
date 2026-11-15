@@ -102,7 +102,11 @@ Session (all in `backend/utils/session.util.js`, routes under `/api/user/session
   no session.
 - `POST /session/logout-all` — needs a valid access cookie; deletes every refresh token of the user.
 - `POST /session/upgrade` — transition only. Trades a legacy `Authorization: Bearer` token (the
-  old 30-day JWT) for a cookie session. Remove it, the Bearer extractor in
+  old 30-day JWT) for a cookie session. A token that carries a `sid` claim, which every
+  cookie-session access token does, is refused with 401: the strategy hands the verified token's
+  `sid` on as `req.authInfo` (`backend/config/passport.config.js:105`) and `upgradeSession`
+  checks it (`backend/controllers/user.controller.js:391`), so a copied access token cannot start
+  a new refresh family after logout-all, reuse detection or the 90-day cap. Remove it, the Bearer extractor in
   `backend/config/passport.config.js` and the Bearer exemption in `csrf.middleware.js` once
   legacy tokens have expired (30 days after the release).
 
@@ -151,7 +155,8 @@ Frontend:
 - Google sign-in does not register a Device or count failures.
 - An access token cannot be revoked: after logout or reuse detection it still works until its
   15 minutes end (a password reset does cut it at once), because the JWT strategy never looks up
-  `sid`. `backend/config/passport.config.js:88`
+  `sid` in the database. It can no longer be traded for a new session at `/session/upgrade`, so
+  it just runs out. `backend/config/passport.config.js:88`
 - A retry after a lost refresh response is accepted for 1 hour; a thief who rotates a copied
   token first can make the owner's retry look benign. Shortening `REFRESH_RETRY_MS` narrows it.
   `backend/utils/session.util.js:206`

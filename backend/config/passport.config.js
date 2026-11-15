@@ -66,7 +66,7 @@ passport.use(
  * 1. Extracting JWT from the `mkc_at` cookie (or, for old clients, the Authorization header)
  * 2. Verifying the token using JWT_SECRET
  * 3. Finding the user by ID from token payload
- * 4. Returning the user object if token is valid
+ * 4. Returning the user object if token is valid, with the token's `sid` claim as `req.authInfo`
  *
  * @param {Object} options - Passport-JWT strategy configuration with extraction method and secret
  * @param {Function} options.jwtFromRequest - Function to extract JWT from request
@@ -101,7 +101,8 @@ passport.use(
 					payload.iat < Math.floor(user.passwordChangedAt.getTime() / 1000)
 				)
 					return done(null, false);
-				done(null, user);
+				// The sid claim reaches handlers as req.authInfo; only cookie-session tokens carry it.
+				done(null, user, { sid: payload.sid });
 			} catch (error) {
 				done(error, false);
 			}

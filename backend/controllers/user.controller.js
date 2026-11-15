@@ -370,13 +370,16 @@ export const logoutAll = async (req, res) => {
  * Trade a legacy Bearer token for a cookie session
  *
  * Transition endpoint for browsers that still hold a pre-cookie JWT in localStorage. The
- * Bearer header must be present, so a cookie alone cannot mint a second session.
+ * Bearer header must be present, so a cookie alone cannot mint a second session. The token
+ * must also be a legacy one, without a `sid` claim: a token from a cookie session belongs to a
+ * refresh family that logout-all, reuse detection and the 90-day cap end, and trading it for a
+ * new family would undo that.
  * Remove it, with the Bearer fallback in passport.config.js, once legacy tokens have expired.
  *
  * @param {Object} req - Express request object with the authenticated user
  * @param {Object} res - Express response object for sending responses back to client
  * @returns {Promise<void>} Sends the user and sets the cookies
- * @throws {UnauthorizedError} If no Bearer token was sent or it is not valid
+ * @throws {UnauthorizedError} If no Bearer token was sent, it is not valid, or it carries a `sid`
  * @throws {ServerFaultError} If a database operation fails unexpectedly
  * @example
  * // Example usage:
@@ -385,7 +388,7 @@ export const logoutAll = async (req, res) => {
  * This example starts a cookie session from an old token.
  */
 export const upgradeSession = async (req, res) => {
-	if (!req.headers.authorization?.startsWith("Bearer "))
+	if (!req.headers.authorization?.startsWith("Bearer ") || req.authInfo?.sid)
 		throw new UnauthorizedError("You must be logged in to access this resource.");
 	await issueSession(res, req.user);
 	res.status(200).json({

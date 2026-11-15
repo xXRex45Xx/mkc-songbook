@@ -471,6 +471,31 @@ describe("cookie session routes", () => {
 
       expect(response.status).toBe(401);
     });
+
+    it("should not trade a cookie-session access token sent as a Bearer token", async () => {
+      const { at } = await loginAs("member@mkc.com", "member123");
+
+      const upgrade = await request(app)
+        .post("/api/user/session/upgrade")
+        .set("Authorization", `Bearer ${at}`);
+
+      expect(upgrade.status).toBe(401);
+      expect(cookieValue(upgrade, "mkc_rt")).toBeUndefined();
+      expect(await RefreshTokenModel.countDocuments({})).toBe(1);
+    });
+
+    it("should not revive a signed-out session from its still-valid access token", async () => {
+      const session = await loginAs("member@mkc.com", "member123");
+      await request(app).post("/api/user/session/logout-all").set(sessionHeaders(session));
+      expect(await RefreshTokenModel.countDocuments({})).toBe(0);
+
+      const upgrade = await request(app)
+        .post("/api/user/session/upgrade")
+        .set("Authorization", `Bearer ${session.at}`);
+
+      expect(upgrade.status).toBe(401);
+      expect(await RefreshTokenModel.countDocuments({})).toBe(0);
+    });
   });
 
   describe("CSRF protection", () => {
