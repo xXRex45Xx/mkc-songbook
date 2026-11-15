@@ -3,6 +3,13 @@ import { regexBuilder } from "../utils/amharic-map.util.js";
 import { ForbiddenError, NotFoundError } from "../utils/error.util.js";
 
 /**
+ * Server-side time limit, in milliseconds, for the queries of a playlist name search.
+ * Bounds the work a single search request can make MongoDB do.
+ * @constant {number}
+ */
+const SEARCH_MAX_TIME_MS = 5000;
+
+/**
  * Get all playlists or search playlists with pagination
  *
  * This function retrieves playlists from the database based on specified criteria.
@@ -60,10 +67,16 @@ export const getAllOrSearchPlaylists = async (req, res) => {
 		selection.name = { $regex: regex };
 	}
 
-	const playlists = await PlaylistModel.find(selection, "name songs")
+	const listQuery = PlaylistModel.find(selection, "name songs")
 		.skip((page - 1) * 30)
 		.limit(30);
-	const totalDocuments = await PlaylistModel.find(selection).countDocuments();
+	const countQuery = PlaylistModel.find(selection).countDocuments();
+	if (q) {
+		listQuery.maxTimeMS(SEARCH_MAX_TIME_MS);
+		countQuery.maxTimeMS(SEARCH_MAX_TIME_MS);
+	}
+	const playlists = await listQuery;
+	const totalDocuments = await countQuery;
 	const totalPages = Math.floor(totalDocuments / 30) + 1;
 
 	res.status(200).json({

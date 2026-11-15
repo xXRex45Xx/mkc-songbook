@@ -17,7 +17,7 @@ Not the `playlist` Redux slice, which is the audio queue.
 ## Why this shape
 
 `creator` is the only owner, and only the creator may update or delete
-(`backend/controllers/playlist.controller.js:188`, `:252`), so an admin cannot edit another
+(`backend/controllers/playlist.controller.js:201`, `:265`), so an admin cannot edit another
 user's playlist. `visibility` has three levels so a songleader can share a setlist with the
 choir without making it public.
 
@@ -26,11 +26,11 @@ choir without making it public.
 - `name` String, required, indexed. `backend/models/playlist.model.js:38`
 - `visibility` `private` | `members` | `public`, default `private`. `:45`
 - `createdAt`, `updatedAt` Date. `:50` — `updatePlaylist` sets `updatedAt`
-  (`backend/controllers/playlist.controller.js:196`).
+  (`backend/controllers/playlist.controller.js:209`).
 - `creator` ObjectId ref User, required, indexed. `:58`
 - `songs` [String ref Song], ordered. `:59`
 
-Who sees what (`backend/controllers/playlist.controller.js:40`):
+Who sees what (`backend/controllers/playlist.controller.js:47`):
 
 | Viewer | Sees |
 |---|---|
