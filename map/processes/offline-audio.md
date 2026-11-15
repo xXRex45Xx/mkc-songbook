@@ -51,9 +51,9 @@ Play (`frontend/src/components/audio-player.component.jsx:76`):
 1. Saved blob exists and `isAudioStale` is false → play `URL.createObjectURL(blob)`.
 2. Otherwise → stream `/api/song/:id/audio`; a request with a `Range`
    header (the audio element always sends one) gets a `206` of at most 500 KB
-   (`backend/controllers/song.controller.js:429`); a request without one gets the whole file
-   with `200` (`:446`). A `Range` with an unreadable start or a non-numeric end gets `416`
-   (`:465`), before any `206` header is sent.
+   (`backend/controllers/song.controller.js:443`); a request without one gets the whole file
+   with `200` (`:460`). A `Range` with an unreadable start or a non-numeric end gets `416`
+   (`:479`), before any `206` header is sent.
 3. Stream error → fall back to a saved blob, or show "unavailable" (`audio-player.component.jsx:105`).
 
 Stale means the songs store has a newer `updatedAt` than the saved copy

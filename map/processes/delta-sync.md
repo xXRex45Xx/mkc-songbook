@@ -39,7 +39,7 @@ cannot see deletions, so a separate pass compares id lists.
    next start takes step 4 (`frontend/src/utils/pwa/sync-service.util.js:66`).
 4. Otherwise `syncAll`: `syncSongs` and `syncAlbums` in parallel, each
    `GET ...?syncSince=<marker>`, `bulkPut`, move the marker (`sync-service.util.js:246`).
-   Server side: `updatedAt >= syncSince` (`backend/controllers/song.controller.js:43`,
+   Server side: `updatedAt >= syncSince` (`backend/controllers/song.controller.js:95`,
    `backend/controllers/album.controller.js:45`).
 5. If both succeeded: `reconcileDeletions` fetches all ids (`?idsOnly`) and deletes local songs,
    their saved audio, and albums the server no longer has (`sync-service.util.js:195`).

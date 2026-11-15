@@ -37,7 +37,7 @@ Song (`backend/routes/song.route.js:109`):
 4. `checkAlbumExists` — splits the comma list and swaps ids for album documents
    (`pre-add-song.middleware.js:43`, `:63`).
 5. `addSong` creates the song and pushes it onto each album's `songs`
-   (`backend/controllers/song.controller.js:214`).
+   (`backend/controllers/song.controller.js:228`).
 
 Album (`backend/routes/album.route.js:91`): same guard; `albumImageUpload.single("cover")`
 (30 MB, `backend/config/multer.config.js:75`); `checkAlbumExists`, `checkSongExists`; `addAlbum`

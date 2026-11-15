@@ -393,6 +393,87 @@ describe("song controller", () => {
     });
   });
 
+  describe("getAllOrSearchSongs text search", () => {
+    const buildSearchChain = (result = []) => ({
+      maxTimeMS: jest.fn().mockReturnThis(),
+      sort: jest.fn().mockReturnThis(),
+      collation: jest.fn().mockReturnThis(),
+      populate: jest.fn().mockReturnThis(),
+      skip: jest.fn().mockReturnThis(),
+      limit: jest.fn().mockResolvedValue(result),
+      countDocuments: jest.fn().mockResolvedValue(result.length),
+    });
+
+    it("should match regex metacharacters in q literally", async () => {
+      SongModel.find = jest.fn().mockImplementation(() => buildSearchChain());
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+
+      await getAllOrSearchSongs({ query: { q: "(a+)+$.", type: "title" } }, res);
+
+      const [filter] = SongModel.find.mock.calls[0];
+      const regex = filter.title.$regex;
+      expect(regex).toBeInstanceOf(RegExp);
+      expect(regex.test("(a+)+$.")).toBe(true);
+      expect(regex.test("aaaa!")).toBe(false);
+      expect(res.status).toHaveBeenCalledWith(200);
+    });
+
+    it("should not throw on a malformed pattern in q", async () => {
+      SongModel.find = jest.fn().mockImplementation(() => buildSearchChain());
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+
+      await expect(
+        getAllOrSearchSongs({ query: { q: "(", type: "title" } }, res)
+      ).resolves.not.toThrow();
+      expect(res.status).toHaveBeenCalledWith(200);
+    });
+
+    it("should still map Amharic variants in q", async () => {
+      SongModel.find = jest.fn().mockImplementation(() => buildSearchChain());
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+
+      await getAllOrSearchSongs({ query: { q: "ሀ", type: "lyrics" } }, res);
+
+      const [filter] = SongModel.find.mock.calls[0];
+      expect(filter.lyrics.$regex.test("ሐ")).toBe(true);
+    });
+
+    it("should set maxTimeMS on every query of a title and lyrics search", async () => {
+      const chains = [];
+      SongModel.find = jest.fn().mockImplementation(() => {
+        const chain = buildSearchChain();
+        chains.push(chain);
+        return chain;
+      });
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+
+      await getAllOrSearchSongs({ query: { q: "grace" } }, res);
+
+      expect(chains).toHaveLength(4);
+      for (const chain of chains) {
+        expect(chain.maxTimeMS).toHaveBeenCalledTimes(1);
+        expect(chain.maxTimeMS).toHaveBeenCalledWith(expect.any(Number));
+        expect(chain.maxTimeMS.mock.calls[0][0]).toBeGreaterThan(0);
+      }
+    });
+
+    it("should set maxTimeMS on a typed title search", async () => {
+      const chains = [];
+      SongModel.find = jest.fn().mockImplementation(() => {
+        const chain = buildSearchChain();
+        chains.push(chain);
+        return chain;
+      });
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+
+      await getAllOrSearchSongs({ query: { q: "grace", type: "title" } }, res);
+
+      expect(chains).toHaveLength(2);
+      for (const chain of chains)
+        expect(chain.maxTimeMS).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe("getAllOrSearchSongs with idsOnly", () => {
     it("should return only song ids when all and idsOnly are set", async () => {
       const lean = jest.fn().mockResolvedValue([

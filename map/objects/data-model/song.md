@@ -29,7 +29,7 @@ changes with `?syncSince` delta sync.
 - `createdAt` String year (e.g. `"2016"`), not a Date. `:64`
 - `updatedAt` Date, indexed. `:69`
 - `songFilePath` server disk path of the audio; never sent to clients (replaced by
-  `hasAudio`). `:70`, `backend/controllers/song.controller.js:116`
+  `hasAudio`). `:70`, `backend/controllers/song.controller.js:200`
 - `youtubeLink` String. `:71`
 - `albums` [String ref Album]. `:72`
 

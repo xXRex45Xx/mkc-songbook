@@ -100,6 +100,47 @@ describe('regexBuilder', () => {
     });
   });
 
+  describe('regex metacharacter escaping', () => {
+    const metaChars = '.*+?^${}()|[]\\'.split('');
+
+    it.each(metaChars)('should escape %s so it matches literally', (ch) => {
+      const result = regexBuilder(ch);
+      expect(result).toBe(`\\${ch}`);
+      const regex = new RegExp(result);
+      expect(regex.test(ch)).toBe(true);
+    });
+
+    it('should not throw on patterns that would be invalid unescaped', () => {
+      for (const input of ['(', '[', '*', '+', '?', '{1', 'a(b', '\\']) {
+        expect(() => new RegExp(regexBuilder(input), 'i')).not.toThrow();
+      }
+    });
+
+    it('should treat a catastrophic-backtracking pattern as literal text', () => {
+      const input = '(a+)+$';
+      const regex = new RegExp(regexBuilder(input), 'i');
+      expect(regex.test('a'.repeat(40) + '!')).toBe(false);
+      expect(regex.test(input)).toBe(true);
+    });
+
+    it('should not let a dot match an arbitrary character', () => {
+      const regex = new RegExp(regexBuilder('a.b'), 'i');
+      expect(regex.test('axb')).toBe(false);
+      expect(regex.test('a.b')).toBe(true);
+    });
+
+    it('should keep Amharic character classes while escaping neighbouring metacharacters', () => {
+      expect(regexBuilder('ሀ(ሠ)')).toBe('[ሀሃሐሓኀኃኻ]\\([ሠሰ]\\)');
+      const regex = new RegExp(regexBuilder('ሀ.'), 'i');
+      expect(regex.test('ሃ.')).toBe(true);
+      expect(regex.test('ሃx')).toBe(false);
+    });
+
+    it('should leave plain Latin and digits untouched', () => {
+      expect(regexBuilder('Hello World 123')).toBe('Hello World 123');
+    });
+  });
+
   describe('regex pattern validity', () => {
     it('should generate valid regex patterns', () => {
       const result = regexBuilder('ሀ');

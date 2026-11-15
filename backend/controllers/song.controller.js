@@ -20,6 +20,13 @@ import { ClientFaultError, NotFoundError, ServerFaultError } from "../utils/erro
 import fs from "fs";
 
 /**
+ * Server-side time limit, in milliseconds, for each song search query. Bounds the work a
+ * search can force on MongoDB, since title and lyrics are scanned with a regular expression.
+ * @constant {number}
+ */
+const SEARCH_MAX_TIME_MS = 5000;
+
+/**
  * Remove a song id from every album, playlist, user favorites list and service logbook.
  * Albums, playlists and logbooks get a new `updatedAt` so delta sync sees the change.
  *
@@ -115,6 +122,7 @@ export const getAllOrSearchSongs = async (req, res) => {
 		else {
 			const queryPromises = [
 				SongModel.find({ title: regex }, projection)
+					.maxTimeMS(SEARCH_MAX_TIME_MS)
 					.sort(sortBy)
 					.collation({
 						locale: "en_US",
@@ -123,8 +131,11 @@ export const getAllOrSearchSongs = async (req, res) => {
 					.populate("albums", "name")
 					.skip((page - 1) * 100)
 					.limit(100),
-				SongModel.find({ title: regex }).countDocuments(),
+				SongModel.find({ title: regex })
+					.maxTimeMS(SEARCH_MAX_TIME_MS)
+					.countDocuments(),
 				SongModel.find({ lyrics: regex }, projection)
+					.maxTimeMS(SEARCH_MAX_TIME_MS)
 					.sort(sortBy)
 					.collation({
 						locale: "en_US",
@@ -133,7 +144,9 @@ export const getAllOrSearchSongs = async (req, res) => {
 					.populate("albums", "name")
 					.skip((page - 1) * 100)
 					.limit(100),
-				SongModel.find({ lyrics: regex }).countDocuments(),
+				SongModel.find({ lyrics: regex })
+					.maxTimeMS(SEARCH_MAX_TIME_MS)
+					.countDocuments(),
 			];
 			const [
 				titleMatch,
@@ -167,6 +180,7 @@ export const getAllOrSearchSongs = async (req, res) => {
 
 		const queryPromises = [
 			SongModel.find(query, projection)
+				.maxTimeMS(SEARCH_MAX_TIME_MS)
 				.sort(sortBy)
 				.collation({
 					locale: "en_US",
@@ -175,7 +189,7 @@ export const getAllOrSearchSongs = async (req, res) => {
 				.populate("albums", "name")
 				.skip((page - 1) * 100)
 				.limit(100),
-			SongModel.find(query).countDocuments(),
+			SongModel.find(query).maxTimeMS(SEARCH_MAX_TIME_MS).countDocuments(),
 		];
 		const [songsFromDb, totalDocuments] = await Promise.all(queryPromises);
 		totalPages = Math.max(1, Math.ceil(totalDocuments / 100));
