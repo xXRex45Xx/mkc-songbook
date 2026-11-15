@@ -35,4 +35,13 @@ describe('generateOtp', () => {
       expect(otp).toBeLessThanOrEqual(999999);
     });
   });
+
+  it('should not use Math.random, whose output can be predicted', () => {
+    const randomSpy = jest.spyOn(Math, 'random');
+
+    Array.from({ length: 50 }, generateOtp);
+
+    expect(randomSpy).not.toHaveBeenCalled();
+    randomSpy.mockRestore();
+  });
 });
