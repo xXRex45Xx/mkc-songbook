@@ -416,6 +416,7 @@ export const deleteSong = async (req, res) => {
  *
  * Without a Range header the whole file is sent with status 200 (offline save needs every
  * byte). With a Range header, at most 500 KB is sent with status 206 for chunked streaming.
+ * A Range header with an unreadable start or a non-numeric end gets 416.
  *
  * @param {Object} req - Express request object containing request data
  * @param {Object} req.params - Route parameters with explanation of what they represent
@@ -458,8 +459,15 @@ export const streamSongAudio = async (req, res) => {
 	const start = parseInt(parts[0], 10);
 	const requestedEnd = parts[1] ? parseInt(parts[1], 10) : audioSize - 1;
 
-	// Validate range start
-	if (isNaN(start) || start >= audioSize || start < 0) {
+	// Validate range start and end. A non-numeric end must be turned away before the 206
+	// headers are sent: fs.createReadStream throws on a NaN end, which would leave the
+	// response half-written.
+	if (
+		isNaN(start) ||
+		isNaN(requestedEnd) ||
+		start >= audioSize ||
+		start < 0
+	) {
 		res.writeHead(416, {
 			"Content-Range": `bytes */${audioSize}`,
 		});

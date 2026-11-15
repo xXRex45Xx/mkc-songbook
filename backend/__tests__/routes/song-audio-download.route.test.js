@@ -50,4 +50,13 @@ describe("offline audio download gets the whole file", () => {
     expect(Number(response.headers["content-length"])).toBe(FILE_SIZE);
     expect(response.body.length).toBe(FILE_SIZE);
   });
+
+  it("answers 416 instead of crashing when the Range end is not numeric", async () => {
+    const response = await request(app)
+      .get("/api/song/song-001/audio")
+      .set("Range", "bytes=0-abc");
+
+    expect(response.status).toBe(416);
+    expect(response.headers["content-range"]).toBe(`bytes */${FILE_SIZE}`);
+  });
 });
