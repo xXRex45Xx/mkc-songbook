@@ -26,7 +26,7 @@ cookie does not reset the count. The account key never locks anyone out: it only
 captcha, and a known device skips it.
 
 The count moves before the password is tried, in the same atomic step as the read: `assessLoginRisk`
-bumps every key with one `findOneAndUpdate` and decides on the number that returns. Reading the
+bumps every key with its own atomic `findOneAndUpdate` (one per key, run in parallel) and decides on the number that returns. Reading the
 counters first and writing the failure after the slow password check let a burst of parallel
 guesses all read a count under the limit and skip the captcha. A request the captcha gate turns
 away, or a server error in the password step, gives its attempt back; a success deletes the

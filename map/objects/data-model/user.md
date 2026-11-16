@@ -31,7 +31,7 @@ start as `public`.
 - `passwordChangedAt` Date, set by password reset; tokens issued before it are rejected. `:57`
 - `role` `public` | `member` | `admin` | `super-admin`, default `public`. `:58`
 
-Role rules (`backend/controllers/user.controller.js:483`): `super-admin` cannot be changed; only
+Role rules (`backend/controllers/user.controller.js:499-502`): `super-admin` cannot be changed; only
 a `super-admin` may change an `admin`.
 
 API: `/api/user` (`backend/routes/user.route.js:55`): register, `otp`, `verify-otp`, `login`,

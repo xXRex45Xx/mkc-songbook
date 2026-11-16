@@ -11,6 +11,11 @@ code. The code is the source of truth; cards cite it. How to walk: [CONTEXT.md](
 | [objects/data-model/](objects/data-model/_index.md) | Mongoose models in `backend/models/` |
 | [objects/local-db/](objects/local-db/_index.md) | IndexedDB stores in `frontend/src/utils/db/` |
 | [objects/app-state/](objects/app-state/_index.md) | Redux slices in `frontend/src/store/slices/` |
+| [areas/backend-api/](areas/backend-api/_index.md) | Routes, controllers, middlewares per resource |
+| [areas/backend-core/](areas/backend-core/_index.md) | `backend/index.js`, config, utils, env, Docker |
+| [areas/frontend-ui/](areas/frontend-ui/_index.md) | URL to page table, components |
+| [areas/frontend-core/](areas/frontend-core/_index.md) | API clients, IndexedDB and PWA utils, build config |
+| [areas/tests/](areas/tests/_index.md) | Jest suites, helpers, gaps |
 | [processes/](processes/_index.md) | Verb cards: auth, sync, offline writes and audio, uploads |
 | [effects/](effects/CONTEXT.md) | Change-impact index and outside consumers: open before a change |
 | [_meta/schema.md](_meta/schema.md) | Card types and frontmatter fields |

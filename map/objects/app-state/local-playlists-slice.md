@@ -20,8 +20,8 @@ IndexedDB is the source of truth; this slice is a render cache. Callers write th
 then dispatch the matching action (`frontend/src/components/playlist-form.component.jsx:163`).
 The API util functions and the slice actions share names (`updateLocalPlaylist`,
 `deleteLocalPlaylist`); components import the actions with an `Action` suffix. Route actions such as
-`frontend/src/pages/edit-playlist.page.jsx:106` write the store only; the root loader re-runs
-after every action and reloads the slice (`frontend/src/App.jsx:67`).
+`frontend/src/pages/edit-playlist.page.jsx:105` write the store only; the root loader re-runs
+after every action and reloads the slice (`frontend/src/App.jsx:69`).
 
 ## Shape
 
@@ -29,7 +29,7 @@ State (`frontend/src/store/slices/local-playlists.slice.js:15`): `localPlaylists
 `isLoading`.
 
 Actions: `setLocalPlaylists`, `addLocalPlaylist`, `updateLocalPlaylist`, `deleteLocalPlaylist`,
-`markAsSynced` (`:74`), `setLoading`.
+`markAsSynced` (`:76`), `setLoading`.
 
 ## Connected to
 
@@ -39,8 +39,8 @@ Actions: `setLocalPlaylists`, `addLocalPlaylist`, `updateLocalPlaylist`, `delete
 
 ## If you change this
 
-- **Hits:** `frontend/src/App.jsx:70` (initial load), `playlist-form.component.jsx`,
-  `playlist-viewer.component.jsx`, `frontend/src/utils/api/local-playlist-api.util.js:196`
+- **Hits:** `frontend/src/App.jsx:74-75` (initial load), `playlist-form.component.jsx`,
+  `playlist-viewer.component.jsx`, `frontend/src/utils/api/local-playlist-api.util.js:217`
   (`markAsSynced`), `frontend/src/pages/local-playlists.page.jsx`,
   `frontend/src/pages/playlists.page.jsx`, `frontend/src/components/pwa-status.component.jsx`.
 - **Does not hit:** the store schema — the slice holds whatever records the store returns.

@@ -35,12 +35,14 @@ changes with `?syncSince` delta sync.
 
 Deleting a song (`deleteSong`) pulls its id from every album, playlist, logbook and user
 favorites list, bumps `updatedAt` on the albums, playlists and logbooks it touched, then deletes
-the audio file. Changing a song's `_id` (`updateSong`) creates the new document first (keeping
-`songFilePath`, `youtubeLink`, `createdAt`), repoints the same four collections to the new id,
+the audio file. Changing a song's `_id` (`updateSong`) creates the new document first, copying
+every field by hand (`albums`, `createdAt`, `updatedAt`, `lyrics`, `musicElements`, `songFilePath`,
+`title`, `youtubeLink`: `backend/controllers/song.controller.js:341-351`; a new field must be added
+there), repoints the same four collections to the new id,
 then deletes the old document; both paths live in `backend/controllers/song.controller.js`.
 
-API: `/api/song` (`backend/routes/song.route.js:44`), plus `GET /api/song/:id/audio` range
-streaming (`backend/routes/song.route.js:266`).
+API: `/api/song` (`backend/routes/song.route.js:45`), plus `GET /api/song/:id/audio` range
+streaming (`backend/routes/song.route.js:271`).
 
 ## Connected to
 

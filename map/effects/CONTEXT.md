@@ -3,6 +3,34 @@
 A catalog, not a spec. Find the thing you are changing, open the listed cards, and read their
 **If you change this**. If this index and a card disagree, the card wins; fix this file.
 
+## Route a task to files
+
+Start here for any task. Find the feature; the **Backend** and **Frontend** columns are the area
+cards that name the files. A task touching both sides opens both.
+
+| Feature | Backend | Frontend |
+|---|---|---|
+| Sign-up, login, OTP, Google, session, favorites, roles | [user-api](../areas/backend-api/user-api.md) | [auth forms](../areas/frontend-ui/components-collections-auth-shell.md), [api clients](../areas/frontend-core/api-clients.md) |
+| Songs: list, search, edit, audio | [song-api](../areas/backend-api/song-api.md) | [songs components](../areas/frontend-ui/components-player-and-songs.md), [pages](../areas/frontend-ui/routes-and-pages.md) |
+| Albums | [album-api](../areas/backend-api/album-api.md) | [collections components](../areas/frontend-ui/components-collections-auth-shell.md), [pages](../areas/frontend-ui/routes-and-pages.md) |
+| Playlists | [playlist-and-logbook-api](../areas/backend-api/playlist-and-logbook-api.md) | [collections components](../areas/frontend-ui/components-collections-auth-shell.md), [pages](../areas/frontend-ui/routes-and-pages.md) |
+| Logbook (schedule page) | [playlist-and-logbook-api](../areas/backend-api/playlist-and-logbook-api.md) | `frontend/src/pages/schedule.page.jsx` and `logbook-api.util.js` only ([routes and pages](../areas/frontend-ui/routes-and-pages.md), [api clients](../areas/frontend-core/api-clients.md)); no component |
+| Audio player, queue, lyrics | [song-api](../areas/backend-api/song-api.md) (stream) | [player components](../areas/frontend-ui/components-player-and-songs.md) |
+| A new URL, guard, loader or action | none unless a new endpoint | [routes and pages](../areas/frontend-ui/routes-and-pages.md) |
+| New API endpoint end to end | resource card above, [middlewares](../areas/backend-api/middlewares.md), [data-model](../objects/data-model/_index.md) | [api clients](../areas/frontend-core/api-clients.md), then the page or component |
+| Offline, sync, queued writes, install | [song-api](../areas/backend-api/song-api.md) and [album-api](../areas/backend-api/album-api.md) (`?syncSince`), [middlewares](../areas/backend-api/middlewares.md) | [pwa and storage](../areas/frontend-core/pwa-and-storage.md), [build and config](../areas/frontend-core/build-and-config.md) |
+| Auth cookies, CSRF, rate limits, CORS, env vars, Docker, seeding | [middlewares](../areas/backend-api/middlewares.md), [bootstrap](../areas/backend-core/bootstrap-and-utils.md) | [api clients](../areas/frontend-core/api-clients.md) (`api-client.util.js`) |
+| File uploads (audio, covers) | [bootstrap](../areas/backend-core/bootstrap-and-utils.md) (`multer.config.js`), [middlewares](../areas/backend-api/middlewares.md) | form components |
+| Styling, themes, Tailwind | none | run the `impeccable` skill; [build and config](../areas/frontend-core/build-and-config.md) |
+| Search (online or offline), search categories | [song-api](../areas/backend-api/song-api.md) (`type` rules in the Joi schema) | `search-bar.component.jsx`, `offline-search.util.js` ([api clients](../areas/frontend-core/api-clients.md)), `songs.page.jsx` loader, `songs-table.component.jsx` |
+| Login captcha threshold, device cookie, bot signal | `login-risk.middleware.js` (`CAPTCHA_AFTER_FAILURES` :33) in [user-api](../areas/backend-api/user-api.md); `captcha.util.js`, `bot-signal.util.js` in [bootstrap](../areas/backend-core/bootstrap-and-utils.md) | `login-form.component.jsx` (Turnstile widget needs `VITE_TURNSTILE_SITE_KEY` at build time); also `backend/README.md:168` |
+| Offline copy of a new server list (e.g. logbook) | none | new `utils/db/*-idb-service.util.js`, `indexed-db.util.js` (`STORE_SCHEMAS`, `DB_VERSION`), `sync-service.util.js`, `session.util.js` (`endSession` clears per-user caches: decide whether church-wide data needs clearing), the page loader; see [pwa and storage](../areas/frontend-core/pwa-and-storage.md) |
+| A new field on song, album, playlist or user | model, Joi schema (unknown body keys get 400: add to create and update schemas), controller (PUT clears omitted fields; song id rename copies fields by hand at `song.controller.js:~340`) | form component, display component, `optimistic-write.util.js` (`applySongWrite` and playlist branch copy fields into IndexedDB), local-playlist utils for device playlists |
+| A new user field | also `passport.config.js:90` (JWT user projection) and the five hand-built user replies: `user.controller.js:141`, `:168`, `:262`, `:395`, `local-auth.middleware.js:42` | `user.slice.js`, `header.component.jsx` |
+| A new `PATCH /api/user/<x>` | declare it above `PATCH /:id` in `user.route.js` (`/:id` catches everything) | none |
+| Any backend change | the per-change test list in [backend tests](../areas/tests/backend-tests.md): unit tests as well as the route test | none (no frontend tests) |
+| Docs that quote behavior | `backend/README.md` (search `type` values :89, body field lists :127-138, captcha "five" :168); root `README.md` (endpoint list :268-270) | none |
+
 ## By what you change
 
 | Changing | Open first | Also open |

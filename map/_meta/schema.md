@@ -1,6 +1,33 @@
 # Map Schema — closed card types and fields
 
-Two card types. No others without editing this file first.
+Three card types. No others without editing this file first.
+
+## `area` — a code area (where to edit)
+
+Lives in `areas/<cluster>/<slug>.md`. Copy `_templates/area.md`. Objects say what the data is,
+processes say how it moves; an area card says **which files hold a slice of the code, what each
+does, and what calls it**. Use it to route a task to files.
+
+| Field | Values |
+|---|---|
+| `type` | `area` |
+| `cluster` | `backend-api`, `backend-core`, `frontend-ui`, `frontend-core`, `tests` |
+| `universe` | `live`, `leftover`, `ghost` |
+| `status` | `stub`, `verified`, `stale` |
+| `owns` | Globs of the files the card covers (coverage is counted from these) |
+| `description` | One line; feeds `_index.md`. Double-quote it if it contains `: ` or ` #` |
+| `verified` | `YYYY-MM-DD @ <commit>` — required when `status: verified` |
+
+Clusters:
+
+- `backend-api`: routes, controllers, middlewares and validation per resource.
+- `backend-core`: `backend/index.js`, `backend/config/`, `backend/utils/`, deploy and env.
+- `frontend-ui`: pages, routes, components.
+- `frontend-core`: `frontend/src/utils/`, `store/`, `hooks/`, build config.
+- `tests`: backend Jest suites and helpers.
+
+Body sections, in order: summary, Files, Entry points, Connected to, Known defects (optional),
+If you change this, See.
 
 ## `object` — a noun
 

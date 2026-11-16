@@ -32,7 +32,7 @@ choosing it.
 2. `syncAllUnsyncedPlaylists` loops the unsynced records one by one; a failure is recorded and
    the loop continues (`frontend/src/utils/api/local-playlist-api.util.js:234`).
 3. `syncPlaylistToServer` builds `FormData` with `name`, `visibility: "private"` and each
-   song `_id`, then calls `addOrEditPlaylist` (`local-playlist-api.util.js:195`).
+   song `_id`, then calls `addOrEditPlaylist` (`local-playlist-api.util.js:187-195`).
 4. With the server id: `markSynced` in IndexedDB and `markAsSynced` in Redux
    (`local-playlist-api.util.js:214`, `frontend/src/utils/db/playlist-idb-service.util.js:142`).
 

@@ -31,7 +31,7 @@ record whether and where the playlist was uploaded once the user signs in.
 ## Connected to
 
 - **joins:** [Playlist](../data-model/playlist.md) through `remoteId` after upload
-  (`frontend/src/utils/api/local-playlist-api.util.js:196`).
+  (`frontend/src/utils/api/local-playlist-api.util.js:214`).
 - **looks-like-but-is-not:** [localPlaylists slice](../app-state/local-playlists-slice.md),
   the in-memory mirror; [playlist slice](../app-state/playlist-slice.md), the audio queue.
 

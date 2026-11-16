@@ -33,7 +33,7 @@ The API body uses other names: `location`, `timestamp`, `songs`
 (`backend/controllers/service-logbook.controller.js:87`).
 
 API: `GET` and `POST /api/logbook` only (`backend/routes/service-logbook.route.js:34`). `GET`
-drops `songList` from results and pages by 100 (`service-logbook.controller.js:41`).
+drops `songList` from results and pages by 100 (`service-logbook.controller.js:42, :52`).
 
 ## Connected to
 

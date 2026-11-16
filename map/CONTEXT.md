@@ -9,6 +9,12 @@
    card's **If you change this**.
 5. For a flow (sign-in, sync, offline, upload), start in `processes/`; each card links its nouns.
 
+## Which card type
+
+- **Task, any size:** [effects/CONTEXT.md](effects/CONTEXT.md) "Route a task to files", then the area cards it names.
+- **Area cards** (`areas/`): which files, what each does, what calls it. Use them to find where to edit.
+- **Object cards** (`objects/`): what the data is. **Process cards** (`processes/`): how it moves.
+
 ## Universes
 
 | Universe | Meaning |
