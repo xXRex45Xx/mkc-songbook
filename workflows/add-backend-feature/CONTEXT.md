@@ -1,6 +1,6 @@
 # add-backend-feature — add a backend feature
 
-Trigger: Esrom asks for a new backend capability (an endpoint, a field, a rule), not a defect fix.
+Trigger: `workflows/add-feature/` assigns the backend half of a feature (new backend capability: an endpoint, a field, a rule; not a defect fix). Start every feature at `add-feature`, not here.
 
 ## Stages
 

@@ -1,6 +1,6 @@
 # add-frontend-feature — add a frontend feature
 
-Trigger: Esrom asks for a new frontend capability (a screen, a component, a flow, an offline behavior), not a defect fix.
+Trigger: `workflows/add-feature/` assigns the frontend half of a feature (new frontend capability: a screen, a component, a flow, an offline behavior; not a defect fix). Start every feature at `add-feature`, not here.
 
 ## Stages
 

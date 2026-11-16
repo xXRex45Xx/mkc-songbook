@@ -5,6 +5,8 @@ One job: turn a feature request into an agreed, scoped UX plan, file list and br
 ## Inputs
 
 - Working (this run): the feature as Esrom described it
+- Working (when started by `add-feature`): `workflows/add-feature/01_scope/output/{run}/plan.md`, and the backend
+  child's `spec.md`, whose API contract is the authority
 - Working (optional): a backend run's `map-update.md` frontend follow-up, e.g.
   `workflows/add-backend-feature/04_update-docs-and-map/output/{run}/map-update.md`
 - Reference (every run): `map/effects/CONTEXT.md` ("Route a task to files", then "By what you change")
@@ -20,7 +22,7 @@ files, earlier runs.
 1. If the feature is not stated, stop and ask for it. If it is a defect, stop and point to
    `workflows/fix-defect/`. If Esrom wants live iteration, stop: that is the `impeccable` skill's
    live mode, outside this workflow. Name the run: `{run}` = `<YYYYMMDD-HHMM>-<task-slug>`
-   (`workflows/CONTEXT.md` §5); say it in chat. Create `output/{run}/`.
+   (`workflows/CONTEXT.md` §5); say it in chat. Create `output/{run}/`. When `workflows/add-feature/` started this run, use the child run name and the feature text from its `plan.md` instead of asking.
 2. Confirm the working tree is committed and pushed (`git status -sb`). If not, run
    `workflows/review-commit/` first.
 3. Run the `impeccable` skill's `shape` command for the feature. It loads `PRODUCT.md` and

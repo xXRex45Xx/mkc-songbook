@@ -5,6 +5,8 @@ One job: turn a feature request into an agreed, scoped spec and file plan before
 ## Inputs
 
 - Working (this run): the feature as Esrom described it
+- Working (when started by `add-feature`): `workflows/add-feature/01_scope/output/{run}/plan.md`, whose draft
+  contract is a starting point; this stage's `spec.md` is the authority
 - Reference (every run): `map/effects/CONTEXT.md` ("Route a task to files", then "By what you change")
 - Reference (every run): `backend/TESTING.md`
 - Reference (every run): `docs/conventions.md`
@@ -17,7 +19,7 @@ files, earlier runs.
 
 1. If the feature is not stated, stop and ask for it. If it is a defect, stop and point to
    `workflows/fix-defect/`. Name the run: `{run}` = `<YYYYMMDD-HHMM>-<task-slug>`
-   (`workflows/CONTEXT.md` §5); say it in chat. Create `output/{run}/`.
+   (`workflows/CONTEXT.md` §5); say it in chat. Create `output/{run}/`. When `workflows/add-feature/` started this run, use the child run name and the feature text from its `plan.md` instead of asking.
 2. Confirm the working tree is committed and pushed (`git status -sb`). If not, run
    `workflows/review-commit/` first.
 3. In `map/effects/CONTEXT.md`, take the Backend column for the feature and every matching row
