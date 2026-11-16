@@ -15,7 +15,7 @@ What each model and route is: [../map/AGENTS.md](../map/AGENTS.md).
 | Unit (utils, middlewares) | `npm run test:unit` |
 | Integration (controllers, routes) | `npm run test:integration` |
 | E2E | `npm run test:e2e` — `__tests__/e2e/` is empty; no suite yet |
-| One file | `npm test -- __tests__/middlewares/local-auth.middleware.test.js` |
+| One file (no coverage gate) | `npx jest --coverage=false __tests__/middlewares/local-auth.middleware.test.js` |
 | By pattern | `npm test -- --testPathPattern=local-auth.middleware` |
 
 Atlas SRV lookup fails on Tailscale DNS: run `node --import ./scripts/dns-fix.js index.js`.

@@ -20,7 +20,7 @@ Do NOT load: source files, `map/` cards, `docs/pwa/`.
 | backend | `cd backend && npm test` (Jest, 80% coverage gate) |
 | frontend | `cd frontend && npm run lint && npm run build` |
 | map, docs, workflows, any `.md` | `python3 -I map/_tools/links.py . --skip node_modules dist dev-dist coverage` |
-| map cards | every frontmatter block in `map/` parses with `yaml.safe_load` |
+| map cards | `python3 -I workflows/_tools/frontmatter_check.py` (every frontmatter block in `map/` parses) |
 
 3. Record each command, its exit code and the last lines of its output that show the result.
    Do not fix failures here; a failure stops the run.

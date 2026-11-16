@@ -25,7 +25,7 @@ Do NOT load: the fix's target code beyond what the test needs, `map/`, other sta
 
 ## Check
 
-Backend — Type: Script. `cd backend && npm test -- <new test file>` exits non-zero, and the
+Backend — Type: Script. `cd backend && npx jest --coverage=false <new test file>` exits non-zero, and the
 failure is the assertion named in `repro.md`, not a syntax or setup error.
 
 Frontend — Type: Person. Esrom follows the steps in `repro.md` and confirms the defect shows.

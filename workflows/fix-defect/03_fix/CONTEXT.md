@@ -28,7 +28,7 @@ Do NOT load: `map/` cards (stage 04's job), unrelated code, earlier runs.
 ## Check
 
 Backend — Type: Script. All exit 0: the repro test
-(`cd backend && npm test -- <test file from repro.md>`), then `cd backend && npm test` (80%
+(`cd backend && npx jest --coverage=false <test file from repro.md>`), then `cd backend && npm test` (80%
 coverage gate).
 
 Frontend — Type: Script, then Person. `cd frontend && npm run lint && npm run build` exits 0;

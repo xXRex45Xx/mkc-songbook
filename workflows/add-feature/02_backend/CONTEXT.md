@@ -18,17 +18,17 @@ Do NOT load: the frontend workflow, frontend source, earlier runs.
    and `plan.md` as its optional input. Run it stage by stage, honoring every stage check, including
    the spec approval and the `review-commit` hand-off with the child run name.
 4. When the child's `review-commit` `04_commit` check says `pass`, record its commit hash and the
-   path to its `spec.md`.
+   paths to its `spec.md` and `map-update.md`.
 
 ## Outputs
 
 - `backend.md` -> `output/{run}/`: `skipped` and why, or the child run name, the commit hash, the
-  path to the child's `spec.md`, and any change to the draft contract.
+  paths to the child's `spec.md` and its `map-update.md`, and any change to the draft contract.
 
 ## Check
 
 Type: Script
 
 Skipped: `backend.md` states the reason from `plan.md`. Run: `workflows/review-commit/04_commit/output/{child run}/check.md`
-first line is `pass`, and `git status -sb` shows the branch even with `origin`. Write
+first line is `pass`, and `git status -sb` shows no `ahead` or `behind`. Write
 `output/{run}/check.md`: `pass` (`pass — skipped` when skipped) or `fail: <which>`.

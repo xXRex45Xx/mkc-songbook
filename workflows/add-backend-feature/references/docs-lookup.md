@@ -7,7 +7,7 @@ practice. Contracts point here; they do not restate it.
 
 Use the `context7-mcp` skill (run it with the Skill tool) before you rely on memory for:
 
-- **A dependency's API:** the packages in `backend/package.json` (Express, Mongoose, Joi, Passport,
+- **A dependency's API:** the packages in `backend/package.json` (Express, Mongoose, Joi, Passport and `passport-jwt`, `cookie-parser`,
   Multer, `jsonwebtoken`, `express-rate-limit`, Helmet, Nodemailer, `bcrypt`, Jest, Supertest,
   `mongodb-memory-server`, and any package the feature adds). This covers syntax, options, defaults,
   version differences and library-specific errors.
@@ -22,6 +22,7 @@ repo wins on style (`docs/conventions.md`); the docs win on how a library behave
 
 ## How to look up
 
+0. The `context7` tools may be deferred: load `resolve-library-id` and `query-docs` with ToolSearch first.
 1. Resolve the library first (`resolve-library-id`), using the library name and what you need. Prefer
    a version-specific ID that matches the version in `backend/package.json`; say so if none exists.
 2. Query once per concept (`query-docs`), as a full question, not a single word. Several concepts

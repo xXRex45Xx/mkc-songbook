@@ -15,11 +15,14 @@ Do NOT load: `map/` cards, backend source, files the feature did not change.
 ## Process
 
 1. If `implement.md` is missing or its check is not `pass`, stop and say which. Create `output/{run}/`.
-2. Start the dev server for `frontend/` and the backend it needs (start it with the harness's
-   preview tooling, not a plain shell), and open the app in the built-in browser.
-3. Follow each numbered acceptance step from `spec.md` with the role, width and network state it
-   names (offline through the browser's network controls). Record the result of each step:
-   `pass`, or what you saw instead. Use one batched round for desktop and mobile together.
+2. Start the backend and the frontend as background commands (`cd backend && npm run dev`, needs
+   MongoDB and `backend/.env`; `cd frontend && npm run dev`, serves `http://localhost:5173`). Open the
+   frontend URL in the built-in browser (`mcp__Claude_Browser__*`; `preview_start` with a `url` attaches to
+   a server that is already running). Use Claude in Chrome only if Esrom asks.
+3. Follow each numbered acceptance step from `spec.md` with the role and width it names. Steps
+   marked `manual` (offline, since the browser tools have no network switch) are left to Esrom at the
+   check; list them in `verify.md` as `manual`. Record the result of each other step: `pass`, or what
+   you saw instead. Use one batched round for desktop and mobile together.
 4. Run the `impeccable` skill's `audit` on the changed surface once, and `polish` if it finds
    issues. Fix everything found in one batch; allow at most one more round.
 5. After any fix, rerun `cd frontend && npm run lint && npm run build`. If a fix needs a file outside
@@ -35,6 +38,6 @@ Do NOT load: `map/` cards, backend source, files the feature did not change.
 
 Type: Person
 
-Esrom follows the acceptance steps in `verify.md` (or the ones that matter most to them), confirms
-the feature behaves as specified, and approves. Write `output/{run}/check.md`:
+Esrom follows the `manual` acceptance steps in `verify.md`, and any others they choose, confirms the
+feature behaves as specified, and approves. Write `output/{run}/check.md`:
 `pass — approved by Esrom` or `fail: <reason given>`.

@@ -44,7 +44,7 @@ Frontend callers: `frontend/src/utils/api/songs-api.util.js`; audio is fetched d
 - **processes:** [publish-content](../../processes/publish-content.md), [delta-sync](../../processes/delta-sync.md), [offline-audio](../../processes/offline-audio.md), [offline-writes](../../processes/offline-writes.md)
 - **areas:** [album-api](album-api.md), [middlewares](middlewares.md) (`file-upload`, `base-version`), [bootstrap](../backend-core/bootstrap-and-utils.md) (`multer.config.js`, `amharic-map.util.js`)
 
-- Search: with no `q` the list is a plain array. With `q`, `type` is required (`.and("q","type")`); `type=all` gives `{songs:{titleMatch,lyricsMatch},totalPages}`, other types give a flat array (`backend/README.md:89-90`). The flat list projects only `title songFilePath` (`song.controller.js:87`), so a new field appears only in `?all=true` responses. The query schema requires `q` and `type` together and allow-lists `type`. Offline matching also includes `_id` in a combined search (`frontend/src/utils/offline-search.util.js:72`); the server does not.
+- Search: with no `q` the list is a plain array. With `q`, `type` is required (`.and("q","type")`); `type=all` gives `{songs:{titleMatch,lyricsMatch},totalPages}`, other types give a flat array (`backend/README.md:89-90`). Both the no-`q` list and the flat search use the projection `title songFilePath` (`song.controller.js:87`, used at `:107`), so a new field reaches the client only in `?all=true` responses unless the projection changes. The query schema requires `q` and `type` together and allow-lists `type`. Offline matching also includes `_id` in a combined search (`frontend/src/utils/offline-search.util.js:72`); the server does not.
 
 ## Known defects
 

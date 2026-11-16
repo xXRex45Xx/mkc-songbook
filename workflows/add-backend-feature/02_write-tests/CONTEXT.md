@@ -34,7 +34,9 @@ Do NOT load: the files the feature will change beyond what a test must import, `
 
 Type: Script
 
-For each test file in `tests.md`: `cd backend && npm test -- <test file>` exits non-zero, and every
-failure is an assertion about the missing feature, not a syntax, import or setup error. Tests that
-cover unchanged behavior pass. Write `output/{run}/check.md`: each command with its exit code, then
-`pass` or `fail: <which>`.
+For each test file in `tests.md`: `cd backend && npx jest --coverage=false <test file>`. Do not use
+`npm test -- <file>` here: it runs the 80% coverage gate, which fails a correct single-file run.
+All true: the run exits non-zero; every failing test is listed in `tests.md` as covering new
+behavior and fails on an assertion about the missing feature, not on a syntax, import or setup
+error; every test `tests.md` marks as covering unchanged behavior passes. Write `output/{run}/check.md`:
+each command with its exit code, then `pass` or `fail: <which>`.

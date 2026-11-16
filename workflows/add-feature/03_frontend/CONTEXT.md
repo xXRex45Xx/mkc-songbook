@@ -5,7 +5,8 @@ One job: run `workflows/add-frontend-feature/` for the frontend half, or record 
 ## Inputs
 
 - Working (this run): `workflows/add-feature/01_scope/output/{run}/plan.md`
-- Working (this run): `workflows/add-feature/02_backend/output/{run}/backend.md`
+- Working (this run): `workflows/add-feature/02_backend/output/{run}/backend.md`, and the `spec.md` and
+  `map-update.md` paths it records
 - Reference (every run): `workflows/add-frontend-feature/CONTEXT.md`
 - Reference (UI or visual stages only): `.claude/skills/impeccable/SKILL.md` — run the skill
 
@@ -18,7 +19,7 @@ Do NOT load: the backend workflow, backend source, earlier runs.
    reason, and stop at the check.
 3. Otherwise start `workflows/add-frontend-feature/` with the frontend child run name from `plan.md`,
    `plan.md` as its optional input, and, when the backend ran, the backend child's `spec.md` as the
-   contract authority. Run it stage by stage, honoring every stage check, including both Person
+   contract authority and its `map-update.md` frontend follow-up. Run it stage by stage, honoring every stage check, including both Person
    checks, the impeccable steps and the `review-commit` hand-off with the child run name. Do not
    run the `impeccable` live mode.
 4. When the child's `review-commit` `04_commit` check says `pass`, record its commit hash.
@@ -33,5 +34,5 @@ Type: Script
 
 Skipped: `frontend.md` states the reason from `plan.md`. Run:
 `workflows/review-commit/04_commit/output/{child run}/check.md` first line is `pass`, and
-`git status -sb` shows the branch even with `origin`. Write `output/{run}/check.md`: `pass`
+`git status -sb` shows no `ahead` or `behind`. Write `output/{run}/check.md`: `pass`
 (`pass — skipped` when skipped) or `fail: <which>`.

@@ -24,7 +24,8 @@ Do NOT load: cards that `spec.md` and the effects index do not name.
    - process cards the feature moved;
    - `map/effects/CONTEXT.md`: a new row or changed Hits, and the per-change test row in
      `map/areas/tests/backend-tests.md` for each new test file;
-   - set `verified: <today> @ <HEAD commit>` on every card whose claims you rechecked.
+   - set `verified: <today> @ <short hash of HEAD now>` (the commit this change is built on; the
+     feature commit that `review-commit` makes follows it) on every card whose claims you rechecked.
 4. Correct every `path:line` the change moved in cards you touched. Where `spec.md` or `implement.md`
    recorded a library fact a card depends on (an option, a default, a version), state it in that card.
    Do not fetch new docs here (`references/docs-lookup.md`).
@@ -44,7 +45,6 @@ Do NOT load: cards that `spec.md` and the effects index do not name.
 Type: Script
 
 All true: `python3 -I map/_tools/links.py . --skip node_modules dist dev-dist coverage` reports 0
-broken; every `map/` frontmatter block parses with `yaml.safe_load`; every new non-test file under
-`backend/` (`git ls-files -o --exclude-standard backend`) has its basename in some card under
-`map/areas/` (`grep -rl <basename> map/areas`). Write `output/{run}/check.md`: `pass` or
-`fail: <which>`.
+broken; `python3 -I workflows/_tools/frontmatter_check.py` exits 0; every new file under `backend/` that is not a test
+(`git ls-files -o --exclude-standard backend`) has its basename in some card under `map/areas/`
+(`grep -rl <basename> map/areas`). Write `output/{run}/check.md`: `pass` or `fail: <which>`.

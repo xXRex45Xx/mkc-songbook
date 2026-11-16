@@ -25,7 +25,7 @@ Run the `impeccable` skill for visual changes. This card routes by behavior.
 | `music-element.component.jsx` | Chord, tempo, rhythm label pair | none |
 | `song-tools.component.jsx` | Per-song menu: favorite, queue, add to playlist, share, delete | `user`, `pwa`, `playlist` slices; `songs-api`, `playlist-api`, `local-playlist-api`, `user-api` |
 | `song-collection-tools.component.jsx` | Album and playlist header menu | none |
-| `song-form.component.jsx` | Create and edit song form; client checks audio 50 MB, mp3 or aac | router `Form`, no store |
+| `song-form.component.jsx` | Create and edit song form; client checks audio 50 MB (`:84`, copy at `:87`, `:219`), mp3 or aac | router `Form`, no store |
 | `songs-table.component.jsx` | Song list, paging, drag and drop (dnd-kit) | `configs.windowWidth`; `setPlaylist` |
 | `custom-row.component.jsx` | One draggable song row (exports `SongsTableRow`) | `pwa.audioDownloads`; renders `SongTools` |
 | `first-droppable-row.component.jsx` | Drop target at index 0 | dnd-kit |
@@ -33,7 +33,7 @@ Run the `impeccable` skill for visual changes. This card routes by behavior.
 | `sort-dropdown.component.jsx` | Writes `?sortby=` | router |
 | `search-bar.component.jsx` | Search form with category select | rendered by `header.component.jsx` |
 | `no-results.component.jsx` | Empty state | none |
-| `new-album-song.component.jsx` | Row editor inside album and playlist forms | `songs-api` `patchSong` |
+| `new-album-song.component.jsx` | Row editor inside album and playlist forms; also checks audio 50 MB (`:124`, copy at `:128`, `:184`) | `songs-api` `patchSong` |
 
 ## Entry points
 

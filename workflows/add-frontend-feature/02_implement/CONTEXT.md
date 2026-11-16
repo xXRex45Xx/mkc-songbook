@@ -17,8 +17,9 @@ Do NOT load: `map/` cards (stage 04's job), backend source, earlier runs.
 1. If `spec.md` is missing or its check is not `pass`, stop and say which. Create `output/{run}/`.
 2. Change only the files "Files to change, in order" names, in that order. If the feature needs
    another file, stop and ask Esrom to amend `spec.md`.
-3. For every component, page, style or theme edit, run the `impeccable` skill (new-work playbook
-   for a new surface, the matching command for a refinement) and honor its craft floor. Build the
+3. For every component, page, style or theme edit, run the `impeccable` skill: its new-work playbook
+   for a new surface or screen, and the matching command (`layout`, `clarify`, `adapt`, `harden`,
+   `polish`) for a change inside an existing surface. Honor its craft floor. Build the
    whole feature, then one batched inspection of desktop and mobile; fix everything it shows in one
    batch; at most one more round. Use the Flowbite theme files in `frontend/src/config/` and the
    Tailwind palette before adding new styles.
@@ -38,7 +39,12 @@ Do NOT load: `map/` cards (stage 04's job), backend source, earlier runs.
 
 Type: Script
 
-All exit 0, in order: `cd frontend && npm run lint`, `cd frontend && npm run build`, then
-`git diff HEAD --name-only` lists no file outside the spec's file list and `frontend/.env.example`;
-and `implement.md` has a `## Docs consulted` section (a table, or "none" with its reason). Write
-`output/{run}/check.md`: each command with its exit code, then `pass` or `fail: <which>`.
+All exit 0, in order:
+
+1. `cd frontend && npm run lint`
+2. `cd frontend && npm run build`
+3. `{ git diff HEAD --name-only; git ls-files -o --exclude-standard; } | sort -u`: every path listed is in
+   the spec's "Files to change" list or is `frontend/.env.example`. Any other path fails the check.
+4. `grep -q "## Docs consulted" output/{run}/implement.md` (a table, or "none" with its reason).
+
+Write `output/{run}/check.md`: each command with its exit code, then `pass` or `fail: <which>`.

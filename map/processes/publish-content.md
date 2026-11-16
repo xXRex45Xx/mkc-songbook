@@ -30,7 +30,7 @@ fails (`backend/index.js:297`).
 Song (`backend/routes/song.route.js:109`):
 
 1. Access cookie (JWT), then `roleBasedAuthorization(["admin", "super-admin"])`.
-2. `audioUpload.single("audio-file")` — Multer, 50 MB max, to `AUDIO_STORAGE`
+2. `audioUpload.single("audio-file")` — Multer, 50 MB max (`backend/config/multer.config.js:118`), to `AUDIO_STORAGE`
    (`backend/config/multer.config.js:110`).
 3. `validateCreateSong` (Joi), `checkSongNumberExists` — the `id` must be free
    (`backend/middlewares/pre-add-song.middleware.js:22`).

@@ -35,8 +35,13 @@ Do NOT load: `map/` cards (stage 04's job), frontend, unrelated code, earlier ru
 
 Type: Script
 
-All exit 0, in order: each new test file from `tests.md` (`cd backend && npm test -- <test file>`),
-then `cd backend && npm test` (80% coverage gate), then `git diff HEAD --name-only` lists no file
-outside the spec's file list, the tests, `backend/jest/`, and `backend/.env.example`; and
-`implement.md` has a `## Docs consulted` section (a table, or "none" with its reason). Write
-`output/{run}/check.md`: each command with its exit code, then `pass` or `fail: <which>`.
+All exit 0, in order:
+
+1. `cd backend && npx jest --coverage=false <each new test file from tests.md>`
+2. `cd backend && npm test` (the full suite with the 80% coverage gate)
+3. `{ git diff HEAD --name-only; git ls-files -o --exclude-standard; } | sort -u`: every path listed is in
+   the spec's "Files to change" list, a test file from `tests.md`, under `backend/jest/`, or
+   `backend/.env.example`. Any other path fails the check.
+4. `grep -q "## Docs consulted" output/{run}/implement.md` (a table, or "none" with its reason).
+
+Write `output/{run}/check.md`: each command with its exit code, then `pass` or `fail: <which>`.

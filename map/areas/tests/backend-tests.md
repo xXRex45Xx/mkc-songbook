@@ -38,6 +38,7 @@ Every change needs the unit tests, not just the route test. Paths are full from 
 | Playlist | `backend/__tests__/routes/playlist.route.test.js`, `backend/__tests__/controllers/playlist.controller.test.js`, `backend/__tests__/models/playlist.model.test.js`, `backend/__tests__/models/validation-schemas/playlist.validation-schema.test.js`, `backend/__tests__/middlewares/playlist-validation.middleware.test.js` |
 | Logbook | `backend/__tests__/routes/service-logbook.route.test.js`, `backend/__tests__/controllers/service-logbook.controller.test.js`, `backend/__tests__/models/service-logbook.model.test.js`, `backend/__tests__/models/validation-schemas/service-logbook.validation-schema.test.js`, `backend/__tests__/middlewares/service-logbook-validation.middleware.test.js` |
 | Base version, rate limit, CSRF | `backend/__tests__/routes/base-version.route.test.js`, `backend/__tests__/routes/api-rate-limit.route.test.js`, `backend/__tests__/middlewares/csrf.middleware.test.js`, `backend/__tests__/middlewares/rate-limit.middleware.test.js` |
+| Upload limits, multer options | `backend/__tests__/config/multer.config.test.js` (asserts the 30 and 50 MB limits), `backend/__tests__/middlewares/file-upload.middleware.test.js` |
 | Config, utils | `backend/__tests__/config/*.test.js`, `backend/__tests__/utils/<name>.test.js` (same basename as the source) |
 
 Fixtures that hold sample records: `jest/fixtures/songs.js`, `albums.js`, `playlists.js`, `users.js`. Add the new field there when a model gains one.

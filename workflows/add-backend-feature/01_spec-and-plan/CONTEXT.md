@@ -20,16 +20,15 @@ files, earlier runs.
 1. If the feature is not stated, stop and ask for it. If it is a defect, stop and point to
    `workflows/fix-defect/`. Name the run: `{run}` = `<YYYYMMDD-HHMM>-<task-slug>`
    (`workflows/CONTEXT.md` §5); say it in chat. Create `output/{run}/`. When `workflows/add-feature/` started this run, use the child run name and the feature text from its `plan.md` instead of asking.
-2. Confirm the working tree is committed and pushed (`git status -sb`). If not, run
-   `workflows/review-commit/` first.
+2. Run `git status -sb`. Uncommitted changes: stop and run `workflows/review-commit/` as its own
+   run first. A clean tree that is ahead of `origin`: ask Esrom to approve `git push origin HEAD`, then
+   continue.
 3. In `map/effects/CONTEXT.md`, take the Backend column for the feature and every matching row
    under "By what you change". Open only the cards they name; read each card's **Known defects**
    and **If you change this**.
-4. Check the request against the gotchas the cards list: Joi rejects unknown body keys (add the
-   field to create and update schemas); PUT clears omitted fields; list responses project only
-   some fields; the JWT user projection and the hand-built user replies; `PATCH /:id` route
-   order; the song id-rename copy list; a new model needs a line in
-   `backend/jest/helpers/integration.helper.js`.
+4. Apply every gotcha the cards and rows list: the "A new field", "A new route with a fixed path",
+   "New API endpoint end to end" and "Search" rows of `map/effects/CONTEXT.md`, the Known defects of
+   the cards you opened, and the per-change test table in `map/areas/tests/backend-tests.md`.
 5. Write the spec. Cite existing code as `path:line`. Keep every file path in full from the repo root.
 6. For every library, standard or best practice the contract or data design depends on, and for any
    new dependency, fetch current docs with the `context7-mcp` skill as `references/docs-lookup.md`
@@ -40,11 +39,16 @@ files, earlier runs.
 
 - `spec.md` -> `output/{run}/` with these sections, in order:
   - **Behavior:** what the feature does, for whom, in three sentences.
-  - **API contract:** per route: method, path, allowed roles, request fields with Joi rules, response
-    shape, status codes and error messages. Or "no new route".
+  - **API contract:** per route: method, path, allowed roles, request fields with Joi rules and their
+    unit (Joi `.max` counts UTF-16 code units), response shape, status codes and error messages. Or
+    "no new route".
   - **Data:** model fields, indexes, new models, existing documents that need a default or a migration,
-    seed changes in `backend/init-db/`.
+    seed changes in `backend/init-db/`, and whether
+    existing documents are backfilled or left without the field.
   - **Security and limits:** who may call it, rate limiting, input bounds, anything the gotchas touch.
+  - **Client-visible values:** any limit, default or flag the frontend enforces or displays today
+    (search `frontend/src/` for the number or the field) and how the client will learn the server's
+    value, or "none".
   - **Files to change, in order:** model, validation schema, middleware, controller, route, config or
     utils, `backend/.env.example`. Full paths.
   - **Tests to write:** full paths, from the per-change table in `map/areas/tests/backend-tests.md`.

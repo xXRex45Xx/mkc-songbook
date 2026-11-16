@@ -23,6 +23,7 @@ design (`DESIGN.md`); the docs win on how a library behaves.
 
 ## How to look up
 
+0. The `context7` tools may be deferred: load `resolve-library-id` and `query-docs` with ToolSearch first.
 1. Resolve the library first (`resolve-library-id`), preferring a version-specific ID that matches
    `frontend/package.json`; say so if none exists.
 2. Query once per concept (`query-docs`), as a full question. Several concepts mean several queries.

@@ -36,7 +36,7 @@ Every stage may read these; none copies them:
 - `docs/conventions.md`
 - `frontend/STYLE_GUIDE.md` and `frontend/TEMPLATES.md` (JSDoc)
 - `PRODUCT.md` and `DESIGN.md` (loaded through the `impeccable` skill)
-- `.claude/skills/impeccable/SKILL.md` (run the skill for every UI or visual step)
+- `.claude/skills/impeccable/SKILL.md` (run the skill for every step that plans or changes UI)
 - `map/effects/CONTEXT.md` and the cards it lists
 - `workflows/add-frontend-feature/references/docs-lookup.md` (library docs through the `context7-mcp` skill)
 

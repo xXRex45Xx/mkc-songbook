@@ -23,7 +23,8 @@ skill and then `workflows/review-commit/`.
 ## Done
 
 Every child run this feature needs has a pushed `review-commit` commit, and `summary.md` says the
-backend contract and the frontend client agree.
+backend contract and the frontend client agree. A run that stage 01 sends away is done when `plan.md`
+says `send away` and names the workflow or skill it goes to.
 
 ## Factory
 
