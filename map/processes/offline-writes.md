@@ -63,7 +63,7 @@ queues. Favorites carry no version, so they merge without a conflict check.
 ## If you change this
 
 - **Hits:** `frontend/src/utils/pwa/optimistic-write.util.js`, the `checkBaseVersion` routes
-  (song, album, playlist `PUT`/`PATCH`/`DELETE`), [pendingWrites store](../objects/local-db/pending-writes-store.md),
+  (song, album, playlist `PUT`/`PATCH`/`DELETE`; the playlist routes run `checkPlaylistWriteAccess` ahead of it, so keep that order), [pendingWrites store](../objects/local-db/pending-writes-store.md),
   [pwa slice](../objects/app-state/pwa-slice.md), every util in the table above,
   `frontend/src/components/pwa-status.component.jsx`, [delta-sync](delta-sync.md) step 2.
 - **Does not hit:** [local-playlist-upload](local-playlist-upload.md) — device playlists use

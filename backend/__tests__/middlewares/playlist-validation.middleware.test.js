@@ -1,4 +1,5 @@
 import {
+  checkPlaylistWriteAccess,
   validateCreatePlaylist,
   validateUpdatePlaylist,
   validatePatchPlaylist,
@@ -445,6 +446,111 @@ describe("playlist validation middleware", () => {
       await validatePatchPlaylist(mockReq, mockRes, mockNext);
 
       expect(mockNext).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("checkPlaylistWriteAccess", () => {
+    const buildReq = (user = { _id: "user-456", role: "member" }) => ({
+      params: { id: "playlist-123" },
+      user,
+    });
+    const stored = (overrides = {}) => ({
+      _id: "playlist-123",
+      creator: "user-456",
+      visibility: "private",
+      ...overrides,
+    });
+
+    it("should set req.playlist and call next() for the owner", async () => {
+      const mockReq = buildReq();
+      const mockNext = jest.fn();
+      const playlist = stored();
+      PlaylistModel.findById.mockResolvedValue(playlist);
+
+      await checkPlaylistWriteAccess("update")(mockReq, {}, mockNext);
+
+      expect(mockReq.playlist).toBe(playlist);
+      expect(mockNext).toHaveBeenCalledTimes(1);
+    });
+
+    it("should throw NotFoundError when the playlist does not exist", async () => {
+      const mockNext = jest.fn();
+      PlaylistModel.findById.mockResolvedValue(null);
+
+      await expect(
+        checkPlaylistWriteAccess("update")(buildReq(), {}, mockNext)
+      ).rejects.toThrow(NotFoundError);
+      expect(mockNext).not.toHaveBeenCalled();
+    });
+
+    it("should throw the same NotFoundError for another user's private playlist", async () => {
+      const mockNext = jest.fn();
+      PlaylistModel.findById.mockResolvedValue(stored({ creator: "user-999" }));
+      const missing = await checkPlaylistWriteAccess("delete")(buildReq(), {}, mockNext).catch((e) => e);
+      PlaylistModel.findById.mockResolvedValue(null);
+      const hidden = await checkPlaylistWriteAccess("delete")(buildReq(), {}, mockNext).catch((e) => e);
+
+      expect(hidden).toBeInstanceOf(NotFoundError);
+      expect(hidden.statusCode).toBe(missing.statusCode);
+      expect(hidden.message).toBe(missing.message);
+      expect(mockNext).not.toHaveBeenCalled();
+    });
+
+    it("should throw NotFoundError for another user's members playlist when the caller has the public role", async () => {
+      const mockNext = jest.fn();
+      PlaylistModel.findById.mockResolvedValue(
+        stored({ creator: "user-999", visibility: "members" })
+      );
+
+      await expect(
+        checkPlaylistWriteAccess("update")(buildReq({ _id: "user-456", role: "public" }), {}, mockNext)
+      ).rejects.toThrow(NotFoundError);
+      expect(mockNext).not.toHaveBeenCalled();
+    });
+
+    it("should throw ForbiddenError for a members playlist a member can read but does not own", async () => {
+      PlaylistModel.findById.mockResolvedValue(
+        stored({ creator: "user-999", visibility: "members" })
+      );
+
+      await expect(
+        checkPlaylistWriteAccess("update")(buildReq(), {}, jest.fn())
+      ).rejects.toThrow(new ForbiddenError("You are not authorized to update this playlist"));
+    });
+
+    it("should throw ForbiddenError naming the action for a readable public playlist", async () => {
+      PlaylistModel.findById.mockResolvedValue(
+        stored({ creator: "user-999", visibility: "public" })
+      );
+
+      await expect(
+        checkPlaylistWriteAccess("update")(buildReq(), {}, jest.fn())
+      ).rejects.toThrow("You are not authorized to update this playlist");
+      await expect(
+        checkPlaylistWriteAccess("delete")(buildReq(), {}, jest.fn())
+      ).rejects.toThrow("You are not authorized to delete this playlist");
+    });
+
+    it("should call next() without answering when the id is not a valid ObjectId", async () => {
+      const mockReq = buildReq();
+      const mockNext = jest.fn();
+      const castError = Object.assign(new Error("Cast to ObjectId failed"), { name: "CastError" });
+      PlaylistModel.findById.mockRejectedValue(castError);
+
+      await checkPlaylistWriteAccess("update")(mockReq, {}, mockNext);
+
+      expect(mockNext).toHaveBeenCalledTimes(1);
+      expect(mockReq.playlist).toBeUndefined();
+    });
+
+    it("should rethrow any other database error", async () => {
+      const mockNext = jest.fn();
+      PlaylistModel.findById.mockRejectedValue(new Error("connection lost"));
+
+      await expect(
+        checkPlaylistWriteAccess("update")(buildReq(), {}, mockNext)
+      ).rejects.toThrow("connection lost");
+      expect(mockNext).not.toHaveBeenCalled();
     });
   });
 

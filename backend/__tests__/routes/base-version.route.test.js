@@ -83,7 +83,7 @@ describe("base-version check on replayed writes", () => {
   it("should answer 409 for a stale playlist patch and keep the playlist unchanged", async () => {
     const { token, users } = await admin();
     const playlist = await createPlaylist({
-      creator: users.superAdminUser._id,
+      creator: users.adminUser._id,
       songs: ["song-001"],
     });
 

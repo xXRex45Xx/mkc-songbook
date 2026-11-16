@@ -38,7 +38,10 @@ Who sees what (`backend/controllers/playlist.controller.js:47`):
 | Signed in, role `public` | `public` + own `private` |
 | `member`, `admin`, `super-admin` | `members` + `public` + own `private` |
 
-API: `/api/playlist` (`backend/routes/playlist.route.js:41`).
+API: `/api/playlist` (`backend/routes/playlist.route.js:43`). `PUT`, `PATCH` and `DELETE` on `/:id` run
+`checkPlaylistWriteAccess` first (`playlist-validation.middleware.js`), before `checkBaseVersion`: a playlist
+that `GET /:id` would hide from the caller is answered 404 like a missing one, so the 409 version check never
+shows that a private playlist exists or when it changed; a readable non-owner gets 403.
 
 ## Connected to
 
