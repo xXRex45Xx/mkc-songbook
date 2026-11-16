@@ -5,3 +5,24 @@ input[type="range"]::-webkit-slider-thumb{
 input[type="range"]::-moz-range-thumb{
     background-color: #FABE1F !important;
 }
+
+@keyframes player-expand-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.player-expanded {
+    animation: player-expand-in 200ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .player-expanded {
+        animation: none;
+    }
+}

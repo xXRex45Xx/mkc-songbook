@@ -16,7 +16,9 @@ import {
 	setCurrentSongIdx,
 	toggleRepeat,
 } from "../store/slices/playlist.slice";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import CollapseSvg from "../assets/dropdown-arrow.svg?react";
+import LyricsLinkSvg from "../assets/lyrics-link.svg?react";
 import { updateFavoriteSongs } from "../utils/api/user-api.util";
 import { setUserFavorites } from "../store/slices/user.slice";
 import {
@@ -30,7 +32,9 @@ import {
  * A responsive audio player with playback controls and progress tracking.
  * Features:
  * - Progress slider with gradient background
- * - Time display (desktop only)
+ * - Time display (desktop, or mobile when expanded)
+ * - Mobile expand: tapping empty space in the compact bar grows it into a
+ *   taller bar with every control; chevron or swipe down collapses it
  * - Song title and album/artist information
  * - Playback controls via AudioControls
  * - Additional toolbox controls
@@ -58,6 +62,21 @@ const AudioPlayer = () => {
 	const currentSongIdx = useSelector((state) => state.playlist.currentSongIdx);
 	const repeat = useSelector((state) => state.playlist.repeat);
 	const user = useSelector((state) => state.user.currentUser);
+	const [expandedRequested, setExpandedRequested] = useState(false);
+	// Expansion only exists below the md breakpoint (768px); wider windows
+	// ignore it. Tracked here with matchMedia because the Redux windowWidth
+	// only updates while a table that runs useWindowSize is mounted.
+	const [isMobile, setIsMobile] = useState(
+		() => window.matchMedia("(max-width: 767.98px)").matches
+	);
+	useEffect(() => {
+		const query = window.matchMedia("(max-width: 767.98px)");
+		const onChange = (e) => setIsMobile(e.matches);
+		query.addEventListener("change", onChange);
+		return () => query.removeEventListener("change", onChange);
+	}, []);
+	const expanded = isMobile && expandedRequested;
+	const swipeStartRef = useRef(null);
 	const audioRef = useRef(null);
 	// Blob URL currently assigned to the <audio> element.
 	const blobUrlRef = useRef("");
@@ -224,9 +243,49 @@ const AudioPlayer = () => {
 		}
 	};
 
+	/**
+	 * True when a touch or click began on a control the player already owns
+	 * (button, link, slider), which must not toggle expansion or start a swipe.
+	 *
+	 * @param {EventTarget} target - Event target
+	 * @returns {boolean} Whether the target is inside an interactive element
+	 */
+	const isInteractive = (target) =>
+		target instanceof Element &&
+		Boolean(target.closest("button, a, input, [role='dialog']"));
+
+	const handlePanelClick = (e) => {
+		if (!isMobile || expanded || isInteractive(e.target)) return;
+		setExpandedRequested(true);
+	};
+
+	const handleTouchStart = (e) => {
+		if (!expanded || isInteractive(e.target)) {
+			swipeStartRef.current = null;
+			return;
+		}
+		const touch = e.touches[0];
+		swipeStartRef.current = { x: touch.clientX, y: touch.clientY };
+	};
+
+	const handleTouchEnd = (e) => {
+		const start = swipeStartRef.current;
+		swipeStartRef.current = null;
+		if (!start || !expanded) return;
+		const touch = e.changedTouches[0];
+		const dy = touch.clientY - start.y;
+		const dx = touch.clientX - start.x;
+		if (dy >= 48 && dy > Math.abs(dx)) setExpandedRequested(false);
+	};
+
 	return (
 		<div className="p-px bg-gradient-to-r from-secondary to-primary">
-			<div className="flex flex-col flex-nowrap bg-basewhite">
+			<div
+				className="flex flex-col flex-nowrap bg-basewhite"
+				onClick={handlePanelClick}
+				onTouchStart={handleTouchStart}
+				onTouchEnd={handleTouchEnd}
+			>
 				<CustomSlider
 					max={maxSliderValue}
 					onChange={(e) => {
@@ -236,8 +295,23 @@ const AudioPlayer = () => {
 					value={sliderValue}
 					show
 				/>
-				<div className="flex flex-col px-5 md:px-10 py-3.5 md:pt-3.5 md:pb-7 items-stretch">
-					<div className="hidden md:flex justify-between">
+				<div
+					className={`flex flex-col px-5 md:px-10 py-3.5 md:pt-3.5 md:pb-7 items-stretch ${
+						expanded ? "gap-5 pb-5 player-expanded" : ""
+					}`}
+				>
+					{isMobile && !expanded && (
+						<button
+							type="button"
+							className="sr-only"
+							aria-label="Expand player"
+							aria-expanded="false"
+							onClick={() => setExpandedRequested(true)}
+						/>
+					)}
+					<div
+						className={`${expanded ? "flex" : "hidden"} md:flex justify-between`}
+					>
 						<span className="text-neutrals-700 text-sm font-bold">
 							{audioRef.current &&
 								formatTime(audioRef.current.currentTime)}
@@ -246,12 +320,26 @@ const AudioPlayer = () => {
 							{audioRef.current && formatTime(audioRef.current.duration)}
 						</span>
 					</div>
-					<div className="flex justify-between items-center">
+					<div
+						className={`flex ${
+							expanded
+								? "flex-col items-stretch gap-8"
+								: "justify-between items-center"
+						}`}
+					>
 						<div className="flex flex-col items-stretch gap-1.5 ">
-							<span className="text-xs md:text-lg font-semibold text-baseblack">
+							<span
+								className={`${
+									expanded ? "text-lg" : "text-xs"
+								} md:text-lg font-semibold text-baseblack`}
+							>
 								{queue[currentSongIdx]?.title}
 							</span>
-							<span className="text-[0.625rem] md:text-sm font-semibold text-neutrals-700">
+							<span
+								className={`${
+									expanded ? "text-sm" : "text-[0.625rem]"
+								} md:text-sm font-semibold text-neutrals-700`}
+							>
 								{queue[currentSongIdx]?.albums
 									.map((album) => album.name)
 									.join(",")}
@@ -274,9 +362,32 @@ const AudioPlayer = () => {
 							)}
 							repeat={repeat}
 							onToggleRepeat={() => dispatch(toggleRepeat())}
+							expanded={expanded}
 						/>
 						<AudioPlayerToolbox />
 					</div>
+					{expanded && (
+						<div className="flex justify-between items-center md:hidden">
+							<button
+								type="button"
+								className="p-0"
+								aria-label="Collapse player"
+								aria-expanded="true"
+								onClick={() => setExpandedRequested(false)}
+							>
+								<CollapseSvg className="w-6 h-6" />
+							</button>
+							{queue[currentSongIdx] && (
+								<Link
+									to={`/songs/${queue[currentSongIdx]._id}`}
+									aria-label="Open lyrics"
+								>
+									<LyricsLinkSvg className="w-6 h-6" />
+								</Link>
+							)}
+							<AudioPlayerToolbox mobileMenu />
+						</div>
+					)}
 					{audioUnavailable && (
 						<div className="text-xs text-error-300 mt-2">
 							Audio not saved for offline playback. Save it from the

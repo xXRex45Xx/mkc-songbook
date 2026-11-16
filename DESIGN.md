@@ -249,7 +249,7 @@ Buttons read as tools: rectangular, crimson-forward, and quick to hit on a phone
 - **Mobile:** links collapse into a `max-w-[400px]` panel; the search row animates open under the navbar.
 
 ### Signature Component: Audio Player Bar
-A `1px` full-width gradient strip (`from-secondary to-primary`) sits above a paper panel: the progress slider (gradient fill, gold thumb), then title + album metadata on the left, transport cluster in the middle, toolbox on the right. On mobile the transport shrinks to `1.875rem` glyphs and prev/next hide. The gradient strip is the player's identity — nothing else in the app may use it.
+A `1px` full-width gradient strip (`from-secondary to-primary`) sits above a paper panel: the progress slider (gradient fill, gold thumb), then title + album metadata on the left, transport cluster in the middle, toolbox on the right. On mobile the transport shrinks to `1.875rem` glyphs and prev and repeat hide; tapping empty space in the bar expands it upward into a taller bar that shows every control, the elapsed and total time, a collapse chevron, a lyrics link and a three-dot menu (Queue, Save offline). The chevron or a swipe down collapses it. From `md` up the bar never expands. The gradient strip is the player's identity — nothing else in the app may use it.
 
 ### Signature Component: Song Row
 A table row that is also a drag handle and a navigation target: song number, title, album names (desktop only), then right-aligned tools. Dragged rows scale `105%`; drop zones are `0.5` height at rest and `10` height when hovered. The row is the unit of the working songbook — it must read at a glance and survive a thumb.

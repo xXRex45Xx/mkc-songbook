@@ -3,9 +3,9 @@ type: area
 cluster: frontend-ui
 universe: live
 status: verified
-owns: [frontend/src/components/audio-controls.component.jsx, frontend/src/components/audio-player-toolbox.component.jsx, frontend/src/components/audio-player.component.jsx, frontend/src/components/audio-player.styles.css, frontend/src/components/custom-slider.component.jsx, frontend/src/components/download-audio.component.jsx, frontend/src/components/lyric-viewer.component.jsx, frontend/src/components/music-element.component.jsx, frontend/src/components/song-collection-tools.component.jsx, frontend/src/components/song-tools.component.jsx, frontend/src/components/song-form.component.jsx, frontend/src/components/songs-table.component.jsx, frontend/src/components/sort-dropdown.component.jsx, frontend/src/components/search-bar.component.jsx, frontend/src/components/no-results.component.jsx, frontend/src/components/new-album-song.component.jsx, frontend/src/components/custom-table.component.jsx, frontend/src/components/custom-row.component.jsx, frontend/src/components/first-droppable-row.component.jsx]
+owns: [frontend/src/assets/lyrics-link.svg, frontend/src/components/audio-controls.component.jsx, frontend/src/components/audio-player-toolbox.component.jsx, frontend/src/components/audio-player.component.jsx, frontend/src/components/audio-player.styles.css, frontend/src/components/custom-slider.component.jsx, frontend/src/components/download-audio.component.jsx, frontend/src/components/lyric-viewer.component.jsx, frontend/src/components/music-element.component.jsx, frontend/src/components/song-collection-tools.component.jsx, frontend/src/components/song-tools.component.jsx, frontend/src/components/song-form.component.jsx, frontend/src/components/songs-table.component.jsx, frontend/src/components/sort-dropdown.component.jsx, frontend/src/components/search-bar.component.jsx, frontend/src/components/no-results.component.jsx, frontend/src/components/new-album-song.component.jsx, frontend/src/components/custom-table.component.jsx, frontend/src/components/custom-row.component.jsx, frontend/src/components/first-droppable-row.component.jsx]
 description: "Audio player, lyric viewer, song forms, song tables, search and sort components."
-verified: 2026-11-15 @ b2fce7d
+verified: 2026-11-16 @ 9ab0d65
 ---
 
 # Components: player and songs
@@ -16,9 +16,10 @@ Run the `impeccable` skill for visual changes. This card routes by behavior.
 
 | File | Role | Uses |
 |---|---|---|
-| `audio-player.component.jsx` | Persistent `<audio>` mounted once in `App.jsx:50`; prefers the IndexedDB blob, falls back to the stream | slices `playlist`, `user`; `audio-download.util`, `user-api.util`; `audio-player.styles.css` |
-| `audio-controls.component.jsx` | Play, prev, next, repeat, favorite buttons | `button-theme.config` |
-| `audio-player-toolbox.component.jsx` | Queue modal: reorder, remove, jump | `playlist` slice; renders `SongsTable`, `DownloadAudio` |
+| `audio-player.component.jsx` | Persistent `<audio>` mounted once in `App.jsx:50`; prefers the IndexedDB blob, falls back to the stream. Below 768px (`matchMedia`, local state `expandedRequested`) a tap on empty space expands the bar; chevron or swipe down (48px) collapses; lyrics link to `/songs/:id` | slices `playlist`, `user`; `audio-download.util`, `user-api.util`; `audio-player.styles.css` |
+| `audio-controls.component.jsx` | Play, prev, next, repeat, favorite buttons; prev and repeat show on mobile only when the `expanded` prop is true | `button-theme.config` |
+| `audio-player-toolbox.component.jsx` | Queue modal: reorder, remove, jump; `mobileMenu` prop renders the phone three-dot menu (Queue, Save offline) | `playlist` slice; renders `SongsTable`, `DownloadAudio` |
+| `lyrics-link.svg` (asset) | Lucide clapperboard icon (ISC) for the expanded player's lyrics link | imported `?react` by `audio-player.component.jsx` |
 | `custom-slider.component.jsx` | Range slider for progress, volume, font size | `forms-theme.config` |
 | `download-audio.component.jsx` | Save-offline button with progress | `pwa` slice; `audio-download.util`, `audio-idb-service` |
 | `lyric-viewer.component.jsx` | Lyric page body: highlight, font size, fullscreen | `configs` slice; `regexBuilder` from `amharic-map.util` |
@@ -52,6 +53,7 @@ Run the `impeccable` skill for visual changes. This card routes by behavior.
 
 - **Hits:** the stream URL `${backendURL}/api/song/:id/audio` ([song-api](../backend-api/song-api.md)); stale check uses song `updatedAt`; `song-tools` mutations rely on router revalidation.
 - **Does not hit:** saved playlists (the queue never touches them).
+- **Gotcha:** `state.configs.windowWidth` updates only while a table calling `useWindowSize()` is mounted (`songs-table`, `users-table`), so it is stale on other pages; the player uses its own `matchMedia` instead.
 
 ## See
 
