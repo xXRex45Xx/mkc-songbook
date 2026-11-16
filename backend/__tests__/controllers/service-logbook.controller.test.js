@@ -13,8 +13,15 @@ describe("service logbook controller", () => {
 
   it("should query by location when type is location", async () => {
     const entries = [{ _id: "log-001", churchName: "Saint Mark" }];
-    const listQuery = { skip: jest.fn().mockReturnThis(), limit: jest.fn().mockResolvedValue(entries) };
-    const countQuery = { countDocuments: jest.fn().mockResolvedValue(1) };
+    const listQuery = {
+      maxTimeMS: jest.fn().mockReturnThis(),
+      skip: jest.fn().mockReturnThis(),
+      limit: jest.fn().mockResolvedValue(entries),
+    };
+    const countQuery = {
+      maxTimeMS: jest.fn().mockReturnThis(),
+      countDocuments: jest.fn().mockResolvedValue(1),
+    };
     LogBookModel.find = jest.fn((query, projection) => {
       if (projection) {
         return listQuery;
@@ -32,6 +39,61 @@ describe("service logbook controller", () => {
       { songList: false },
     );
     expect(res.json).toHaveBeenCalledWith({ logBook: entries, totalPages: 1 });
+  });
+
+  describe("location search time limit", () => {
+    const entries = [{ _id: "log-001", churchName: "Saint Mark" }];
+
+    /** Mocks both finds with chainable queries and returns them for inspection. */
+    const mockFinds = () => {
+      const listQuery = {
+        maxTimeMS: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockResolvedValue(entries),
+      };
+      const countQuery = {
+        maxTimeMS: jest.fn().mockReturnThis(),
+        countDocuments: jest.fn().mockResolvedValue(1),
+      };
+      LogBookModel.find = jest.fn((query, projection) =>
+        projection ? listQuery : countQuery,
+      );
+      return { listQuery, countQuery };
+    };
+
+    it("should set a 5000 ms time limit on the list and count queries", async () => {
+      const { listQuery, countQuery } = mockFinds();
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+
+      await getAllOrSearchLogBook({ query: { q: "Mark", type: "location", page: 3 } }, res);
+
+      expect(listQuery.maxTimeMS).toHaveBeenCalledWith(5000);
+      expect(countQuery.maxTimeMS).toHaveBeenCalledWith(5000);
+      expect(res.json).toHaveBeenCalledWith({ logBook: entries, totalPages: 1 });
+    });
+
+    it("should keep paging on a location search", async () => {
+      const { listQuery } = mockFinds();
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+
+      await getAllOrSearchLogBook({ query: { q: "Mark", type: "location", page: 3 } }, res);
+
+      expect(listQuery.skip).toHaveBeenCalledWith(200);
+      expect(listQuery.limit).toHaveBeenCalledWith(100);
+    });
+
+    it("should not set a time limit when type is date", async () => {
+      const { listQuery, countQuery } = mockFinds();
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+
+      await getAllOrSearchLogBook(
+        { query: { q: "2099-01-01T10:00:00.000Z", type: "date", page: 1 } },
+        res,
+      );
+
+      expect(listQuery.maxTimeMS).not.toHaveBeenCalled();
+      expect(countQuery.maxTimeMS).not.toHaveBeenCalled();
+    });
   });
 
   it("should query by date when type is date", async () => {

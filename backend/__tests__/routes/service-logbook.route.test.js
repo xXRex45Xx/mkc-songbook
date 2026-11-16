@@ -70,6 +70,36 @@ describe("service logbook routes", () => {
       expect(response.body.logBook).toHaveLength(1);
     });
 
+    it("should treat regex metacharacters in a location search literally", async () => {
+      await seedAuthUsers();
+      await LogBookModel.create({
+        churchName: "Saint Mark",
+        serviceDate: new Date("2099-01-01T10:00:00.000Z"),
+        songList: ["song-001"],
+      });
+      await LogBookModel.create({
+        churchName: "St. Mark (North)",
+        serviceDate: new Date("2099-02-01T10:00:00.000Z"),
+        songList: ["song-001"],
+      });
+      const loginResponse = await loginUser("member@mkc.com", "member123");
+
+      const wildcardResponse = await request(app)
+        .get("/api/logbook")
+        .query({ q: ".*", type: "location" })
+        .set(authHeader(loginResponse));
+      const literalResponse = await request(app)
+        .get("/api/logbook")
+        .query({ q: "St. Mark (North)", type: "location" })
+        .set(authHeader(loginResponse));
+
+      expect(wildcardResponse.status).toBe(200);
+      expect(wildcardResponse.body.logBook).toHaveLength(0);
+      expect(literalResponse.status).toBe(200);
+      expect(literalResponse.body.logBook).toHaveLength(1);
+      expect(literalResponse.body.logBook[0].churchName).toBe("St. Mark (North)");
+    });
+
     it("should reject invalid query pairs", async () => {
       await seedAuthUsers();
       const loginResponse = await loginUser("member@mkc.com", "member123");
