@@ -35,6 +35,7 @@ This file routes only; content lives in the files it points at.
 | Commit changes | `workflows/review-commit/CONTEXT.md` |
 | Fix a bug or security issue | `workflows/fix-defect/CONTEXT.md` |
 | Add a backend feature | `workflows/add-backend-feature/CONTEXT.md` |
+| Add a frontend feature | `workflows/add-frontend-feature/CONTEXT.md` |
 | Merge branches | `workflows/merge-branches/CONTEXT.md` |
 | Run another repeatable job | `workflows/AGENTS.md`, then that workflow's `CONTEXT.md` |
 | Write or change a workflow | `workflows/CONTEXT.md` |

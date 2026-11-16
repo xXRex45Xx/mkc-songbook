@@ -8,6 +8,7 @@ One job: update the docs and every map card the feature touched, then hand off t
 - Working (this run): `workflows/add-backend-feature/03_implement/output/{run}/implement.md`
 - Reference (every run): `map/_meta/schema.md`
 - Reference (every run): `map/effects/CONTEXT.md`
+- Reference (every run): `workflows/add-backend-feature/references/docs-lookup.md`
 
 Do NOT load: cards that `spec.md` and the effects index do not name.
 
@@ -24,10 +25,12 @@ Do NOT load: cards that `spec.md` and the effects index do not name.
    - `map/effects/CONTEXT.md`: a new row or changed Hits, and the per-change test row in
      `map/areas/tests/backend-tests.md` for each new test file;
    - set `verified: <today> @ <HEAD commit>` on every card whose claims you rechecked.
-4. Correct every `path:line` the change moved in cards you touched.
+4. Correct every `path:line` the change moved in cards you touched. Where `spec.md` or `implement.md`
+   recorded a library fact a card depends on (an option, a default, a version), state it in that card.
+   Do not fetch new docs here (`references/docs-lookup.md`).
 5. Rebuild indexes: `python3 -I map/_tools/index.py map/objects/data-model map/objects/local-db map/objects/app-state map/processes map/areas/backend-api map/areas/backend-core map/areas/frontend-ui map/areas/frontend-core map/areas/tests`.
-6. Write the frontend follow-up from `spec.md` "Out of scope" into `map-update.md`, so a later run
-   can pick it up.
+6. Write the frontend follow-up from `spec.md` "Out of scope" into `map-update.md`, so a run of
+   `workflows/add-frontend-feature/` can pick it up.
 7. Hand off: start `workflows/review-commit/` with the same `{run}`, and `map-update.md` as its
    optional input.
 

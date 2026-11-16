@@ -14,7 +14,7 @@ Trigger: Esrom asks for a new backend capability (an endpoint, a field, a rule),
 
 Each stage's own `CONTEXT.md` holds its inputs, outputs and check. Nothing moves to the next
 stage until the current check passes. One run adds one feature. Backend only: the frontend half
-is recorded in `spec.md` and done by a later run of its own workflow.
+is recorded in `spec.md` and done by a run of `workflows/add-frontend-feature/`.
 
 A defect is not a feature: send it to `workflows/fix-defect/`.
 
@@ -29,6 +29,7 @@ Every stage may read these; none copies them:
 - `docs/conventions.md`
 - `backend/TESTING.md`
 - `backend/STYLE_GUIDE.md` and `backend/TEMPLATES.md` (JSDoc)
+- `workflows/add-backend-feature/references/docs-lookup.md` (when and how to fetch library docs with the `context7-mcp` skill)
 - `map/effects/CONTEXT.md` and the cards it lists
 
 Before stage 01 changes anything, the working tree is committed and pushed.

@@ -7,6 +7,7 @@ One job: write the tests that define the feature, and show they fail only becaus
 - Working (this run): `workflows/add-backend-feature/01_spec-and-plan/output/{run}/spec.md`
 - Reference (every run): `backend/TESTING.md`
 - Reference (every run): `docs/conventions.md`
+- Reference (every run): `workflows/add-backend-feature/references/docs-lookup.md`
 
 Do NOT load: the files the feature will change beyond what a test must import, `map/`, other stages.
 
@@ -19,12 +20,14 @@ Do NOT load: the files the feature will change beyond what a test must import, `
    `resetDatabase` in `backend/jest/helpers/integration.helper.js`.
 3. Cover each line of the contract: success, each error status, each role that is refused, each
    validation rule, and a case that shows existing behavior is unchanged.
-4. Do not change any file outside `backend/__tests__/` and `backend/jest/`. Do not change source code.
+4. For any Jest, Supertest or `mongodb-memory-server` API the tests use that you are not sure of,
+   fetch current docs with the `context7-mcp` skill as `references/docs-lookup.md` says.
+5. Do not change any file outside `backend/__tests__/` and `backend/jest/`. Do not change source code.
 
 ## Outputs
 
 - `tests.md` -> `output/{run}/`: each test file, and for each test the contract line it covers and
-  the failing assertion it produces now.
+  the failing assertion it produces now, then `## Docs consulted`.
 - The new and changed test files in `backend/__tests__/` and `backend/jest/`.
 
 ## Check

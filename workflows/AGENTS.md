@@ -23,6 +23,7 @@ Repo-wide reference files every workflow may read are listed in
 |---|---|
 | [fix-defect](fix-defect/CONTEXT.md) | A bug, security issue or map Known defect needs fixing |
 | [add-backend-feature](add-backend-feature/CONTEXT.md) | A new backend endpoint, field or rule is wanted (not a defect fix) |
+| [add-frontend-feature](add-frontend-feature/CONTEXT.md) | A new frontend screen, component, flow or offline behavior is wanted (not a defect fix, not impeccable live mode) |
 | [review-commit](review-commit/CONTEXT.md) | Esrom says commit, or another workflow hands off |
 | [merge-branches](merge-branches/CONTEXT.md) | One branch must be merged into another |
 

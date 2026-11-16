@@ -8,6 +8,7 @@ One job: turn a feature request into an agreed, scoped spec and file plan before
 - Reference (every run): `map/effects/CONTEXT.md` ("Route a task to files", then "By what you change")
 - Reference (every run): `backend/TESTING.md`
 - Reference (every run): `docs/conventions.md`
+- Reference (every run): `workflows/add-backend-feature/references/docs-lookup.md`
 
 Do NOT load: all of `map/`, frontend source or frontend cards beyond naming them, unrelated source
 files, earlier runs.
@@ -28,7 +29,10 @@ files, earlier runs.
    order; the song id-rename copy list; a new model needs a line in
    `backend/jest/helpers/integration.helper.js`.
 5. Write the spec. Cite existing code as `path:line`. Keep every file path in full from the repo root.
-6. Do not change any file other than `output/{run}/spec.md` in this stage.
+6. For every library, standard or best practice the contract or data design depends on, and for any
+   new dependency, fetch current docs with the `context7-mcp` skill as `references/docs-lookup.md`
+   says, before you commit to a design.
+7. Do not change any file other than `output/{run}/spec.md` in this stage.
 
 ## Outputs
 
@@ -43,8 +47,9 @@ files, earlier runs.
     utils, `backend/.env.example`. Full paths.
   - **Tests to write:** full paths, from the per-change table in `map/areas/tests/backend-tests.md`.
   - **Docs and cards to update:** `backend/README.md`, root `README.md` endpoint list, map cards.
+  - **Docs consulted:** per `references/docs-lookup.md`.
   - **Out of scope:** including the frontend work (screens, API client, offline handling), listed so a
-    later run can pick it up.
+    a run of `workflows/add-frontend-feature/` can pick it up.
 
 ## Check
 
