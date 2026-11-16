@@ -178,7 +178,7 @@ describe("album controller", () => {
     });
 
     it("should combine syncSince with search query", async () => {
-      AlbumModel.find = jest.fn().mockResolvedValue([]);
+      AlbumModel.find = jest.fn().mockReturnValue({ maxTimeMS: jest.fn().mockResolvedValue([]) });
       const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
 
       await getAllOrSearchAlbums({ query: { q: "Grace", syncSince: "2025-01-01T00:00:00.000Z" } }, res);
@@ -218,6 +218,74 @@ describe("album controller", () => {
         "_id"
       );
       expect(res.json).toHaveBeenCalledWith({ albumIds: ["a1"] });
+    });
+  });
+
+  describe("getAllOrSearchAlbums search time limit", () => {
+    // A query that accepts any chain order and resolves to `result` when awaited.
+    const chainable = (result, limits) => {
+      const query = {
+        maxTimeMS: jest.fn((ms) => {
+          limits.push(ms);
+          return query;
+        }),
+        lean: jest.fn(() => query),
+        then: (resolve, reject) => Promise.resolve(result).then(resolve, reject),
+      };
+      return query;
+    };
+
+    it("should limit the query of an album search to 5 seconds", async () => {
+      const limits = [];
+      const albums = [{ _doc: { _id: "album-001", name: "Grace" }, songs: ["song-001"] }];
+      AlbumModel.find = jest.fn(() => chainable(albums, limits));
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+
+      await getAllOrSearchAlbums({ query: { q: "Grace" } }, res);
+
+      expect(limits).toEqual([5000]);
+      expect(res.json).toHaveBeenCalledWith([
+        { _id: "album-001", name: "Grace", numOfSongs: 1, songs: undefined, photoPath: undefined },
+      ]);
+    });
+
+    it("should limit the ids-only query of an album search to 5 seconds", async () => {
+      const limits = [];
+      AlbumModel.find = jest.fn(() => chainable([{ _id: "a1" }], limits));
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+
+      await getAllOrSearchAlbums({ query: { q: "Grace", idsOnly: true } }, res);
+
+      expect(limits).toEqual([5000]);
+      expect(res.json).toHaveBeenCalledWith({ albumIds: ["a1"] });
+    });
+
+    it("should not limit the queries of a request without a search text", async () => {
+      const limits = [];
+      AlbumModel.find = jest.fn(() => chainable([], limits));
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+
+      await getAllOrSearchAlbums({ query: {} }, res);
+      await getAllOrSearchAlbums({ query: { idsOnly: true } }, res);
+
+      expect(limits).toEqual([]);
+    });
+
+    it("should keep the names projection and the syncSince filter next to the literal name match", async () => {
+      const limits = [];
+      AlbumModel.find = jest.fn(() => chainable([], limits));
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+
+      await getAllOrSearchAlbums(
+        { query: { q: "a.b", names: true, syncSince: "2025-01-01T00:00:00.000Z" } },
+        res,
+      );
+
+      const [filter, projection] = AlbumModel.find.mock.calls[0];
+      expect(projection).toEqual({ name: true });
+      expect(filter.updatedAt).toEqual({ $gte: expect.any(Date) });
+      expect(filter.name.$regex.test("a.b")).toBe(true);
+      expect(filter.name.$regex.test("axb")).toBe(false);
     });
   });
 });

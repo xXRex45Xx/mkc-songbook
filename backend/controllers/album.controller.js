@@ -15,6 +15,9 @@ import { regexBuilder } from "../utils/amharic-map.util.js";
 import { ClientFaultError, NotFoundError } from "../utils/error.util.js";
 import fs from "fs";
 
+/** Server-side time limit, in milliseconds, for album search queries. */
+const SEARCH_MAX_TIME_MS = 5000;
+
 /**
  * Get all albums or search albums with pagination
  *
@@ -53,15 +56,19 @@ export const getAllOrSearchAlbums = async (req, res) => {
 	// ID-only response used by clients to reconcile local deletions, which a
 	// delta sync cannot detect on its own.
 	if (idsOnly) {
-		const albumsWithIds = await AlbumModel.find(filter, "_id").lean();
+		let idsQuery = AlbumModel.find(filter, "_id");
+		if (q) idsQuery = idsQuery.maxTimeMS(SEARCH_MAX_TIME_MS);
+		const albumsWithIds = await idsQuery.lean();
 		return res.status(200).json({
 			albumIds: albumsWithIds.map((album) => album._id),
 		});
 	}
-	let albums = await AlbumModel.find(
+	let albumsQuery = AlbumModel.find(
 		filter,
 		names ? { name: true } : null
 	);
+	if (q) albumsQuery = albumsQuery.maxTimeMS(SEARCH_MAX_TIME_MS);
+	let albums = await albumsQuery;
 	if (!names)
 		albums = albums.map((album) => ({
 			...album._doc,

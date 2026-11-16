@@ -42,7 +42,7 @@ Song (`backend/routes/song.route.js:109`):
 Album (`backend/routes/album.route.js:91`): same guard; `albumImageUpload.single("cover")`
 (30 MB, `backend/config/multer.config.js:75`); `checkAlbumExists`, `checkSongExists`; `addAlbum`
 sets `photoLink` under `/static/albums/images/` and pushes the album id onto each song
-(`backend/controllers/album.controller.js:104`).
+(`backend/controllers/album.controller.js:111`).
 
 Frontend: `frontend/src/pages/upload-song.page.jsx`, `upload-album.page.jsx`, through
 `addOrEditSong` / `addOrEditAlbum`, which may [queue offline](offline-writes.md).

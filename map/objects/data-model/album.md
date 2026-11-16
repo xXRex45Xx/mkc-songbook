@@ -23,7 +23,7 @@ recreates the document. `updatedAt` is indexed for `?syncSince` delta sync, and 
 
 - `_id` String, required. `backend/models/album.model.js:38`
 - `name` String, required. `:39` — the API body calls it `title`
-  (`backend/controllers/album.controller.js:215`).
+  (`backend/controllers/album.controller.js:118`).
 - `createdAt` String year, not a Date. `:40`
 - `updatedAt` Date, indexed. `:46`
 - `photoPath` server disk path; `photoLink` public URL under `/static/albums/images/`. `:47`
@@ -31,13 +31,13 @@ recreates the document. `updatedAt` is indexed for `?syncSince` delta sync, and 
 
 API: `/api/album` (`backend/routes/album.route.js:44`). `GET ?syncSince=` filters on
 `updatedAt`; `?idsOnly` returns ids so clients can detect deletions
-(`backend/controllers/album.controller.js:45`).
+(`backend/controllers/album.controller.js:58`).
 
 ## Connected to
 
 - **owns:** the cover image file at `photoPath`.
 - **joins:** [Song](song.md) both ways. `updateAlbum` and `deleteAlbum` keep `Song.albums` in
-  step with `$pull` / `$push` (`backend/controllers/album.controller.js:238`, `:295`).
+  step with `$pull` / `$push` (`backend/controllers/album.controller.js:245`, `:303`).
 - **looks-like-but-is-not:** [albums store](../local-db/albums-store.md), the offline copy.
 
 ## If you change this
