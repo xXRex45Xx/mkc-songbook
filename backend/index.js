@@ -18,6 +18,7 @@ import { MulterError } from "multer";
 import fs from "fs";
 import helmet from "helmet";
 import morgan from "morgan";
+import mongoose from "mongoose";
 import path from "path";
 import { wrapAsync } from "./utils/error.util.js";
 import { apiRateLimiter, audioRateLimiter } from "./middlewares/rate-limit.middleware.js";
@@ -112,6 +113,15 @@ export const shouldCompress = (req, res) => {
  * // 5. Response sent with status code and JSON body
  */
 app.use(helmet());
+
+// Liveness/readiness probe for Docker and the deploy pipeline. Mounted before the
+// request logger, CORS and rate limiters so probes neither spam logs nor count
+// against a client limit. 503 until the database connection is up.
+app.get("/healthz", (_req, res) => {
+	const dbUp = mongoose.connection.readyState === 1;
+	res.status(dbUp ? 200 : 503).json({ status: dbUp ? "ok" : "unavailable" });
+});
+
 app.use(
 	morgan(
 		":method :url :status :res[content-length] - :response-time ms :error :fileerror"

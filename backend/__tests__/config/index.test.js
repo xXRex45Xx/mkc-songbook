@@ -3,6 +3,7 @@ import fs from "fs";
 import fsPromises from "fs/promises";
 import path from "path";
 import request from "supertest";
+import mongoose from "mongoose";
 import { MulterError } from "multer";
 
 import app, { shouldCompress } from "../../index.js";
@@ -95,6 +96,26 @@ describe("app bootstrap and error handling", () => {
     expect(req.error).toBe(internalError);
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.json).toHaveBeenCalledWith({ message: "An unexpected error occurred." });
+  });
+
+  it("should report 503 on /healthz while the database is not connected", async () => {
+    const response = await request(app).get("/healthz");
+
+    expect(response.status).toBe(503);
+    expect(response.body).toEqual({ status: "unavailable" });
+  });
+
+  it("should report 200 on /healthz once the database is connected", async () => {
+    // readyState is a non-configurable getter over _readyState, so set the backing field.
+    const previous = mongoose.connection._readyState;
+    mongoose.connection._readyState = 1;
+
+    const response = await request(app).get("/healthz");
+
+    mongoose.connection._readyState = previous;
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ status: "ok" });
   });
 
   it("should serve static album files with cross-origin headers", async () => {
