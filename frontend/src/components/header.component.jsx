@@ -3,7 +3,7 @@
  * Provides logo, search bar, notifications, user profile dropdown, and navigation links
  */
 
-import { Avatar, Button, Dropdown, Navbar } from "flowbite-react";
+import { Button, Dropdown, Navbar } from "flowbite-react";
 import { navbarTheme } from "../config/navbar-theme.config";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
 
@@ -12,6 +12,7 @@ import heart from "../assets/heart.svg";
 import SearchBar from "./search-bar.component";
 import SearchToggleSvg from "../assets/search-toggle.svg?react";
 import MenuSvg from "../assets/menu.svg?react";
+import UserSvg from "../assets/user.svg?react";
 import InstallPrompt from "./install-prompt.component";
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { buttonTheme } from "../config/button-theme.config";
@@ -165,11 +166,10 @@ const Header = () => {
 						arrowIcon={false}
 						inline
 						label={
-							<Avatar
-								alt="User settings"
-								img="https://flowbite.com/docs/images/people/profile-picture-5.jpg"
-								rounded
-							/>
+							<span className="flex h-10 w-10 items-center justify-center rounded-full border border-baseblack/20 hover:bg-baseblack/5">
+								<span className="sr-only">User settings</span>
+								<UserSvg className="*:stroke-baseblack" />
+							</span>
 						}
 					>
 						{user ? (
