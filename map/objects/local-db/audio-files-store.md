@@ -3,7 +3,7 @@ type: object
 cluster: local-db
 universe: live
 status: verified
-verified: 2026-10-24 @ 9db0d0c
+verified: 2026-11-17 @ 387d8f8
 entity: frontend/src/utils/db/indexed-db.util.js:67
 code-name: audioFiles
 description: Audio blobs saved explicitly for offline playback, keyed by song id.
@@ -22,8 +22,11 @@ offline"). `_id` equals the song id, so one song has at most one saved file.
 ## Shape
 
 - keyPath `_id`; indexes `songId`, `updatedAt`. `frontend/src/utils/db/indexed-db.util.js:67`
-- Record: `{ _id, songId, blob, updatedAt, size, mimeType }`.
-  `frontend/src/utils/db/audio-idb-service.util.js:33`
+- Record: `{ _id, songId, blob, updatedAt, size, mimeType }`, `blob` a `Blob`, `updatedAt` the song's
+  `updatedAt` at save time. `frontend/src/utils/db/audio-idb-service.util.js:59`
+- Records saved before 2026-11-17 hold the whole record where the Blob belongs (`blob` is
+  `{ _id, songId, blob, updatedAt, size, mimeType }`, outer `updatedAt` = save time). Reads unwrap them
+  (`normalizeEntry`, `audio-idb-service.util.js:23`); the stored data is not rewritten.
 - Version 3 backfilled `songId` and `updatedAt` onto older records; unknown `updatedAt` is
   `null`. `frontend/src/utils/db/indexed-db.util.js:191`
 

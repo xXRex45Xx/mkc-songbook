@@ -390,8 +390,8 @@ const AudioPlayer = () => {
 					)}
 					{audioUnavailable && (
 						<div className="text-xs text-error-300 mt-2">
-							Audio not saved for offline playback. Save it from the
-							download button to listen while offline.
+							Audio not saved for offline playback. Save it by clicking the
+							download button to listen when offline.
 						</div>
 					)}
 				</div>

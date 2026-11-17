@@ -138,7 +138,7 @@ export const saveAudioOffline = async (songId, onProgress) => {
 	const { blob, mimeType } = await fetchAudioBlob(songId, onProgress);
 	const remoteUpdatedAt = await lookupRemoteUpdatedAt(songId);
 
-	await audioIdbService.store(songId, {
+	await audioIdbService.store({
 		_id: songId,
 		songId,
 		blob,
