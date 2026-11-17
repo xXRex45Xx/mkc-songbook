@@ -11,10 +11,11 @@ import {
   getAllSongIds,
 } from "../api/songs-api.util";
 import {
-  getAllAlbums,
+  getAllAlbumsDetailed,
   getAlbumsSince,
   getAllAlbumIds,
 } from "../api/album-api.util";
+import { prefetchAlbumImages } from "./album-image-cache.util";
 import { songIdbService } from "../db/song-idb-service.util";
 import { albumIdbService } from "../db/album-idb-service.util";
 import { audioIdbService } from "../db/audio-idb-service.util";
@@ -56,9 +57,11 @@ const computeMaxUpdatedAt = (records) => {
 /**
  * Performs the first-time PWA data load
  *
- * Fetches all songs and albums from the server, stores them in IndexedDB,
- * sets initial sync timestamps based on max updatedAt values, and records
- * the full-sync marker so the next start uses delta sync.
+ * Fetches all songs and all albums (with their songs populated) from the
+ * server, stores them in IndexedDB, sets initial sync timestamps based on max
+ * updatedAt values, and records the full-sync marker so the next start uses
+ * delta sync. Album cover images are then downloaded in the background; that
+ * download is not awaited and its failure never fails the sync.
  *
  * @returns {Promise<{songsSynced: number, albumsSynced: number}>} Counts of stored records
  * @throws {Error} If any network or database operation fails
@@ -66,7 +69,7 @@ const computeMaxUpdatedAt = (records) => {
 const runInitialSync = async () => {
   const [songResponse, albums] = await Promise.all([
     getAllSongs(),
-    getAllAlbums(),
+    getAllAlbumsDetailed(),
   ]);
   const songs = songResponse.songs || songResponse;
 
@@ -86,6 +89,8 @@ const runInitialSync = async () => {
   // Marks the catalog as loaded so later starts take the delta path (with
   // deletion reconciliation) instead of downloading everything again.
   await syncMetaIdbService.set(LAST_FULL_SYNC, new Date().toISOString());
+
+  prefetchAlbumImages(albums);
 
   return { songsSynced: songs.length, albumsSynced: albums.length };
 };

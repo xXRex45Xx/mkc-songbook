@@ -29,6 +29,23 @@ export const getAllAlbums = async (namesOnly = false, searchQuery = null) => {
 };
 
 /**
+ * Fetches every album with its songs in one request
+ *
+ * Used by the first app start so the device stores complete albums. Each
+ * album has the shape of GET /api/album/:id (songs populated) plus
+ * `numOfSongs`.
+ *
+ * @returns {Promise<Array<Object>>} All albums with their songs populated
+ * @throws {Object} Error with message and status if request fails
+ */
+export const getAllAlbumsDetailed = async () => {
+	const response = await fetch(`${backendURL}/api/album?all=true`);
+	const data = await response.json();
+	if (!response.ok) throw { message: data.message, status: response.status };
+	return data;
+};
+
+/**
  * Creates or updates an album
  * @param {FormData} formData - Form data containing album details
  * @param {boolean} edit - If true, updates existing album; if false, creates new album

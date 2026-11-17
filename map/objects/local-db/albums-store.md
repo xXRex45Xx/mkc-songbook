@@ -3,7 +3,7 @@ type: object
 cluster: local-db
 universe: live
 status: verified
-verified: 2026-10-24 @ 9db0d0c
+verified: 2026-11-17 @ aa5e440
 entity: frontend/src/utils/db/indexed-db.util.js:51
 code-name: albums
 description: IndexedDB copy of Album records, keyed by _id.
@@ -21,6 +21,7 @@ fills it in the background.
 ## Shape
 
 - keyPath `_id`; indexes `updatedAt`, `name`. `frontend/src/utils/db/indexed-db.util.js:51`
+- After the first start every record is complete: `songs` populated, `numOfSongs` set (`GET /api/album?all=true`). A delta sync write replaces a changed album with the list shape (no `songs`); the album page refetches it. `frontend/src/utils/pwa/sync-service.util.js:69`
 - Access: `albumIdbService`. `frontend/src/utils/db/album-idb-service.util.js:17`
 
 ## Connected to

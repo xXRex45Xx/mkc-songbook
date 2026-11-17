@@ -133,7 +133,9 @@ export default defineConfig({
 						},
 					},
 					{
-						// Album cover images served from /static/albums/images
+						// Album cover images served from /static/albums/images.
+						// The cache name is shared with ALBUM_IMAGE_CACHE in
+						// src/utils/pwa/album-image-cache.util.js, which prefetches covers.
 						urlPattern: ({ url }) =>
 							url.pathname.startsWith("/static/albums/images"),
 						handler: "CacheFirst",
