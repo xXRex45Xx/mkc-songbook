@@ -5,7 +5,7 @@ universe: live
 status: verified
 owns: [frontend/src/utils/db/*.js, frontend/src/utils/pwa/*.js, frontend/src/utils/session.util.js, frontend/src/store/store.js, frontend/src/store/slices/*.js, frontend/src/hooks/*.js]
 description: "IndexedDB services, PWA runtime (sync, write queue, install), session state, Redux store."
-verified: 2026-11-15 @ b2fce7d
+verified: 2026-11-17 @ aa5e440
 ---
 
 # PWA and storage
@@ -19,7 +19,8 @@ Offline machinery and client state. The nouns are cards in [local-db](../../obje
 | `frontend/src/utils/db/indexed-db.util.js` | Opens `mkc-songbook-db`, `DB_VERSION` 4, declares `STORE_SCHEMAS` :33 | `getDB`, `resetDatabase` :221 |
 | `frontend/src/utils/db/{song,album,audio,playlist,sync-meta,user}-idb-service.util.js` | One service per store (`songIdbService`, `albumIdbService`, `audioIdbService`, `playlistIdbService` for `localPlaylists`, `syncMetaIdbService`, `userIdbService` with key `current`) | `getAll`, `getById`, `put`, `deleteById` |
 | `frontend/src/utils/pwa/pwa-register.util.js` | Service worker registration; triggers sync on start, `online` and foreground | `registerPwa` :239 |
-| `frontend/src/utils/pwa/sync-service.util.js` | Incremental songs and albums sync, deletion reconcile | `initializePwaData` :109, `syncSongs` :126, `syncAlbums` :159, `reconcileDeletions` :195, `syncAll` :246 |
+| `frontend/src/utils/pwa/sync-service.util.js` | Incremental songs and albums sync, deletion reconcile | `initializePwaData` :114, `syncSongs` :131, `syncAlbums` :164, `reconcileDeletions` :200, `syncAll` :251 |
+| `frontend/src/utils/pwa/album-image-cache.util.js` | Background cover prefetch into the Workbox `album-images` cache after the first sync | `prefetchAlbumImages` :48, `ALBUM_IMAGE_CACHE` :14 |
 | `frontend/src/utils/pwa/write-queue.util.js` | Offline mutation queue and replay with `X-Base-Updated-At` | `sendMutation` :438, `flushPendingWrites` :317, `clearFailedWrites` :275 |
 | `frontend/src/utils/pwa/optimistic-write.util.js` | Patches local caches after a queued write | `applyOptimisticWrite` :176 |
 | `frontend/src/utils/pwa/install.util.js` | Install prompt capture | `promptInstall` :53, `setupInstallListeners` :92 |

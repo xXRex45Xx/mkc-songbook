@@ -113,7 +113,8 @@ Each store gets a thin service module exposing CRUD helpers. They all follow the
   - `getSongsSince(timestamp)` → `GET /api/song?all=true&syncSince=<iso>`
 - **`album-api.util.js`**
   - `getAlbumsSince(timestamp)` → `GET /api/album?syncSince=<iso>`
-  - (Note: `initializePwaData` reuses the pre-existing `getAllAlbums()` rather than a new `getAllAlbumsSince` for the initial full fetch.)
+  - `getAllAlbumsDetailed()` → `GET /api/album?all=true` (initial full fetch: every album with its songs populated, plus `numOfSongs`)
+  - (Note: `getAllAlbums()` stays for the albums list page and search, which need only the list shape.)
 
 All return the parsed JSON body, throwing `{ message, status }` on a non-OK response.
 
@@ -168,7 +169,7 @@ This is the heart of the data-sync logic. It coordinates the API fetchers, the I
 ### 6.1 `initializePwaData()` — first run
 
 ```js
-const [songResponse, albums] = await Promise.all([getAllSongs(), getAllAlbums()]);
+const [songResponse, albums] = await Promise.all([getAllSongs(), getAllAlbumsDetailed()]);
 const songs = songResponse.songs || songResponse;   // normalize either {songs:[]} or []
 await songIdbService.bulkPut(songs);
 await albumIdbService.bulkPut(albums);
@@ -176,6 +177,7 @@ const maxSongUpdatedAt = await songIdbService.getMaxUpdatedAt();
 const maxAlbumUpdatedAt = await albumIdbService.getMaxUpdatedAt();
 if (maxSongUpdatedAt) await syncMetaIdbService.set("lastSongSync", maxSongUpdatedAt);
 if (maxAlbumUpdatedAt) await syncMetaIdbService.set("lastAlbumSync", maxAlbumUpdatedAt);
+prefetchAlbumImages(albums);   // not awaited: covers go into the `album-images` cache in the background
 ```
 Fetches the full catalog in parallel, bulk-upserts it, and seeds both sync cursors from the max `updatedAt` of the stored data. The `songResponse.songs || songResponse` guard handles the song endpoint returning `{ songs, totalPages }` while the album endpoint returns a bare array.
 

@@ -1,7 +1,7 @@
 ---
 type: process
 status: verified
-verified: 2026-10-31 @ 53dd641
+verified: 2026-11-17 @ 80beb7e
 description: Admin uploads a song (with audio) or an album (with cover); both sides of the link are written.
 consumes: [../objects/data-model/user.md]
 produces: [../objects/data-model/song.md, ../objects/data-model/album.md]
@@ -42,7 +42,7 @@ Song (`backend/routes/song.route.js:109`):
 Album (`backend/routes/album.route.js:91`): same guard; `albumImageUpload.single("cover")`
 (30 MB, `backend/config/multer.config.js:75`); `checkAlbumExists`, `checkSongExists`; `addAlbum`
 sets `photoLink` under `/static/albums/images/` and pushes the album id onto each song
-(`backend/controllers/album.controller.js:111`).
+(`backend/controllers/album.controller.js:157`).
 
 Frontend: `frontend/src/pages/upload-song.page.jsx`, `upload-album.page.jsx`, through
 `addOrEditSong` / `addOrEditAlbum`, which may [queue offline](offline-writes.md).

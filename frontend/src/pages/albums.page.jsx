@@ -51,7 +51,9 @@ const AlbumsPage = () => {
 										number={album._id}
 										title={album.name}
 										imgSrc={backendURL + album.photoLink}
-										numOfSongs={album.numOfSongs}
+										numOfSongs={
+											album.numOfSongs ?? album.songs?.length ?? 0
+										}
 										year={album.createdAt}
 									/>
 								))}

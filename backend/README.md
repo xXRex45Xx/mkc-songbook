@@ -108,7 +108,8 @@ State-changing requests that carry a session cookie must also send `X-Requested-
 ### Albums
 
 - `GET /api/album` - Get all albums or search albums
-  - Query params: `q`, `names`
+  - Query params: `q`, `names`, `all`, `syncSince`, `idsOnly`
+  - `all=true` returns every album with its songs populated (the `GET /api/album/:id` shape plus `numOfSongs`); it ignores `q` and `names`
 - `POST /api/album` - Create new album (admin only)
   - Requires: JWT authentication, admin/super-admin role
   - Body: `id`, `title`, `songs`, `createdAt` (optional)

@@ -251,7 +251,7 @@ Detailed API documentation is available in the [backend README](backend/README.m
 -   `DELETE /api/song/:id` - Delete song (admin)
 
 #### Albums
--   `GET /api/album` - Get/search albums
+-   `GET /api/album` - Get/search albums (`?all=true` returns every album with its songs)
 -   `GET /api/album/:id` - Get album by ID
 -   `POST /api/album` - Create album (admin)
 -   `PUT /api/album/:id` - Update album (admin)

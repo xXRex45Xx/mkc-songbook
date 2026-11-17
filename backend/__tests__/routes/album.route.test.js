@@ -43,6 +43,53 @@ describe("album routes", () => {
       expect(response.body[0].photoPath).toBeUndefined();
     });
 
+    it("should return every album with populated songs when all=true", async () => {
+      await createSong({ _id: "song-001", title: "Song One", songFilePath: "/audio/one.mp3", albums: ["album-001"] });
+      await createSong({ _id: "song-002", title: "Song Two", albums: ["album-001"] });
+      await createAlbum({
+        _id: "album-001",
+        name: "Classic Hymns",
+        photoPath: "/srv/images/a.jpg",
+        photoLink: "/static/albums/images/a.jpg",
+        songs: ["song-001", "song-002"],
+      });
+      await createAlbum({ _id: "album-002", name: "Worship Songs", songs: [] });
+
+      const response = await request(app).get("/api/album?all=true");
+
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveLength(2);
+      const hymns = response.body.find((album) => album._id === "album-001");
+      expect(hymns.numOfSongs).toBe(2);
+      expect(hymns.photoLink).toBe("/static/albums/images/a.jpg");
+      expect(hymns.photoPath).toBeUndefined();
+      expect(hymns.songs).toHaveLength(2);
+      expect(hymns.songs[0]).toMatchObject({
+        _id: "song-001",
+        title: "Song One",
+        hasAudio: true,
+        albums: [{ _id: "album-001", name: "Classic Hymns" }],
+      });
+      expect(hymns.songs[0].songFilePath).toBeUndefined();
+      expect(hymns.songs[1].hasAudio).toBe(false);
+      const worship = response.body.find((album) => album._id === "album-002");
+      expect(worship.songs).toEqual([]);
+      expect(worship.numOfSongs).toBe(0);
+    });
+
+    it("should return an empty array when all=true and there are no albums", async () => {
+      const response = await request(app).get("/api/album?all=true");
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual([]);
+    });
+
+    it("should reject an invalid all query", async () => {
+      const response = await request(app).get("/api/album?all=notabool");
+
+      expect(response.status).toBe(400);
+    });
+
     it("should return album names only when names=true", async () => {
       await createAlbum({ _id: "album-001", name: "Classic Hymns" });
 

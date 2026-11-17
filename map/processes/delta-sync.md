@@ -1,7 +1,7 @@
 ---
 type: process
 status: verified
-verified: 2026-10-25 @ aacc93d
+verified: 2026-11-17 @ aa5e440
 description: Pull songs and albums into IndexedDB, then only records changed since the last marker.
 consumes: [../objects/data-model/song.md, ../objects/data-model/album.md, ../objects/local-db/sync-meta-store.md]
 produces: [../objects/local-db/songs-store.md, ../objects/local-db/albums-store.md, ../objects/local-db/sync-meta-store.md, ../objects/app-state/pwa-slice.md]
@@ -34,16 +34,21 @@ cannot see deletions, so a separate pass compares id lists.
 2. `performSync`: flush the [write queue](offline-writes.md) first, then
    [upload local playlists](local-playlist-upload.md), then sync data
    (`frontend/src/utils/pwa/pwa-register.util.js:80`).
-3. No `lastFullSync` → `initializePwaData`: `GET /api/song?all=true` and `GET /api/album`,
-   `bulkPut` both, set `lastSongSync` / `lastAlbumSync`, and write `lastFullSync` = now so the
-   next start takes step 4 (`frontend/src/utils/pwa/sync-service.util.js:66`).
+3. No `lastFullSync` → `initializePwaData`: `GET /api/song?all=true` and `GET /api/album?all=true`
+   (every album with its songs populated), `bulkPut` both, set `lastSongSync` / `lastAlbumSync`, and
+   write `lastFullSync` = now so the next start takes step 4
+   (`frontend/src/utils/pwa/sync-service.util.js:69`). Then it starts, without waiting,
+   `prefetchAlbumImages`, which downloads each album cover into the `album-images` cache
+   (`frontend/src/utils/pwa/album-image-cache.util.js:48`); a failed cover is skipped. Delta sync
+   (step 4) still returns albums without `songs`, so a changed album loses its local `songs` until
+   its page is opened online.
 4. Otherwise `syncAll`: `syncSongs` and `syncAlbums` in parallel, each
-   `GET ...?syncSince=<marker>`, `bulkPut`, move the marker (`sync-service.util.js:246`).
+   `GET ...?syncSince=<marker>`, `bulkPut`, move the marker (`sync-service.util.js:251`).
    Server side: `updatedAt >= syncSince` (`backend/controllers/song.controller.js:95`,
-   `backend/controllers/album.controller.js:54`).
+   `backend/controllers/album.controller.js:86`).
 5. If both succeeded: `reconcileDeletions` fetches all ids (`?idsOnly`) and deletes local songs,
-   their saved audio, and albums the server no longer has (`sync-service.util.js:195`).
-6. Write `lastFullSync` = now (`sync-service.util.js:288`).
+   their saved audio, and albums the server no longer has (`sync-service.util.js:200`).
+6. Write `lastFullSync` = now (`sync-service.util.js:293`).
 
 There is no manual "sync now" control: the status bar that held it was removed from
 `frontend/src/components/pwa-status.component.jsx`. A user who wants fresh data reloads the app
