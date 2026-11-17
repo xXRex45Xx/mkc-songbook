@@ -4,32 +4,92 @@ import jwt from "jsonwebtoken";
 import {
   getAllOrSearchUsers,
   googleOAuthLogin,
+  registerOTP,
   updateFavorites,
   verifyOTP,
 } from "../../controllers/user.controller.js";
+import OTPLimitModel from "../../models/otp-limit.model.js";
 import OTPModel from "../../models/otp.model.js";
+import RefreshTokenModel from "../../models/refresh-token.model.js";
 import UserModel from "../../models/user.model.js";
-import { ClientFaultError } from "../../utils/error.util.js";
+import { ClientFaultError, UnauthorizedError } from "../../utils/error.util.js";
+
+const mockGoogle = ({ aud = process.env.GOOGLE_CLIENT_ID, profile = {} } = {}) => {
+  global.fetch.mockImplementation(async (url) => ({
+    ok: true,
+    json: async () =>
+      String(url).includes("tokeninfo")
+        ? { aud }
+        : {
+            email: "google@example.com",
+            email_verified: true,
+            name: "Google User",
+            picture: "https://example.com/google.jpg",
+            ...profile,
+          },
+  }));
+};
 
 describe("user controller", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     global.fetch = jest.fn();
+    RefreshTokenModel.create = jest.fn().mockResolvedValue({});
   });
 
-  it("should coerce string OTP values before verification", async () => {
+  it("should not report success when re-sending a code fails to email", async () => {
+    const save = jest.fn().mockRejectedValue(new Error("SMTP down"));
+    OTPLimitModel.claimRequest = jest.fn().mockResolvedValue(true);
+    OTPModel.findOne = jest.fn().mockResolvedValue({ save });
     const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
-    OTPModel.findOne = jest.fn().mockResolvedValue({ _id: "otp-001" });
+
+    await expect(registerOTP({ body: { email: "a@example.com" } }, res)).rejects.toThrow("SMTP down");
+
+    expect(res.json).not.toHaveBeenCalled();
+  });
+
+  it("should keep the failed attempts when re-sending a code", async () => {
+    const current = { attempts: 4, save: jest.fn().mockResolvedValue() };
+    OTPLimitModel.claimRequest = jest.fn().mockResolvedValue(true);
+    OTPModel.findOne = jest.fn().mockResolvedValue(current);
+    const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+
+    await registerOTP({ body: { email: "a@example.com" } }, res);
+
+    expect(current.attempts).toBe(4);
+    expect(current.save).toHaveBeenCalled();
+    expect(res.status).toHaveBeenCalledWith(200);
+  });
+
+  it("should refuse a code request when the email is over its limit", async () => {
+    OTPLimitModel.claimRequest = jest.fn().mockResolvedValue(false);
+    OTPModel.findOne = jest.fn();
+    OTPModel.create = jest.fn();
+    const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+
+    await expect(
+      registerOTP({ body: { email: "a@example.com" } }, res)
+    ).rejects.toMatchObject({ statusCode: 429 });
+
+    expect(OTPLimitModel.claimRequest).toHaveBeenCalledWith("a@example.com");
+    expect(OTPModel.findOne).not.toHaveBeenCalled();
+    expect(OTPModel.create).not.toHaveBeenCalled();
+    expect(res.json).not.toHaveBeenCalled();
+  });
+
+  it("should pass the submitted code to OTP verification", async () => {
+    const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+    OTPModel.verifyCode = jest.fn().mockResolvedValue(true);
 
     await verifyOTP({ body: { email: "verify@example.com", otp: "123456" } }, res);
 
-    expect(OTPModel.findOne).toHaveBeenCalledWith({ email: "verify@example.com", otp: 123456 });
+    expect(OTPModel.verifyCode).toHaveBeenCalledWith("verify@example.com", "123456");
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({ success: true });
   });
 
   it("should throw for invalid OTP pairs", async () => {
-    OTPModel.findOne = jest.fn().mockResolvedValue(null);
+    OTPModel.verifyCode = jest.fn().mockResolvedValue(false);
 
     await expect(
       verifyOTP({ body: { email: "verify@example.com", otp: 123456 } }, {}),
@@ -102,7 +162,7 @@ describe("user controller", () => {
   });
 
   it("should create a new Google user when one does not exist", async () => {
-    const res = { json: jest.fn() };
+    const res = { json: jest.fn(), cookie: jest.fn() };
     const createdUser = {
       _id: "user-001",
       email: "google@example.com",
@@ -110,14 +170,7 @@ describe("user controller", () => {
       role: "public",
       favorites: [],
     };
-    global.fetch.mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        email: "google@example.com",
-        name: "Google User",
-        picture: "https://example.com/google.jpg",
-      }),
-    });
+    mockGoogle();
     UserModel.findOne = jest.fn().mockResolvedValue(null);
     UserModel.create = jest.fn().mockResolvedValue(createdUser);
     jest.spyOn(jwt, "sign").mockReturnValue("jwt-token");
@@ -130,7 +183,6 @@ describe("user controller", () => {
       photo: "https://example.com/google.jpg",
     });
     expect(res.json).toHaveBeenCalledWith({
-      token: "jwt-token",
       user: {
         id: "user-001",
         name: "Google User",
@@ -139,10 +191,33 @@ describe("user controller", () => {
         favorites: [],
       },
     });
+    expect(res.cookie).toHaveBeenCalledWith("mkc_at", "jwt-token", expect.objectContaining({ httpOnly: true }));
+    expect(res.cookie).toHaveBeenCalledWith("mkc_rt", expect.any(String), expect.objectContaining({ httpOnly: true }));
+    expect(RefreshTokenModel.create).toHaveBeenCalledWith(expect.objectContaining({ user: "user-001" }));
+  });
+
+  it("should reject a Google token issued to another app", async () => {
+    mockGoogle({ aud: "some-other-app" });
+    UserModel.create = jest.fn();
+
+    await expect(
+      googleOAuthLogin({ body: { accessToken: "token-123" } }, { json: jest.fn() }),
+    ).rejects.toThrow(UnauthorizedError);
+    expect(UserModel.create).not.toHaveBeenCalled();
+  });
+
+  it("should reject a Google account with an unverified email", async () => {
+    mockGoogle({ profile: { email_verified: false } });
+    UserModel.create = jest.fn();
+
+    await expect(
+      googleOAuthLogin({ body: { accessToken: "token-123" } }, { json: jest.fn() }),
+    ).rejects.toThrow(UnauthorizedError);
+    expect(UserModel.create).not.toHaveBeenCalled();
   });
 
   it("should reuse an existing Google user without creating a duplicate", async () => {
-    const res = { json: jest.fn() };
+    const res = { json: jest.fn(), cookie: jest.fn() };
     const existingUser = {
       _id: "user-001",
       email: "google@example.com",
@@ -150,14 +225,7 @@ describe("user controller", () => {
       role: "member",
       favorites: ["song-001"],
     };
-    global.fetch.mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        email: "google@example.com",
-        name: "Google User",
-        picture: "https://example.com/google.jpg",
-      }),
-    });
+    mockGoogle();
     UserModel.findOne = jest.fn().mockResolvedValue(existingUser);
     UserModel.create = jest.fn();
     jest.spyOn(jwt, "sign").mockReturnValue("jwt-token");
@@ -166,7 +234,6 @@ describe("user controller", () => {
 
     expect(UserModel.create).not.toHaveBeenCalled();
     expect(res.json).toHaveBeenCalledWith({
-      token: "jwt-token",
       user: {
         id: "user-001",
         name: "Existing User",

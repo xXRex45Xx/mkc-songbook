@@ -82,7 +82,6 @@ const PlaylistViewer = ({ playlist }) => {
 
 	const isLocalPlaylist = !playlist._id || playlist._id.startsWith("local_");
 	const synced = playlist.synced !== false;
-	const token = localStorage.getItem("_s");
 
 	const handleShare = async () => {
 		if (playlist.visibility === "private") return setOpenPreShareModal(true);
@@ -198,7 +197,7 @@ const PlaylistViewer = ({ playlist }) => {
 	const handleUploadToServer = async () => {
 		if (!user) return;
 		try {
-			const result = await syncPlaylistToServer(playlist.id, token);
+			const result = await syncPlaylistToServer(playlist.id);
 			dispatch(markAsSynced({ id: playlist.id, remoteId: result.insertedId }));
 			navigate(`/playlists/${result.insertedId}`);
 		} catch (error) {
@@ -305,7 +304,7 @@ const PlaylistViewer = ({ playlist }) => {
 				<Modal.Header>Change Visibility</Modal.Header>
 				<Modal.Body>
 					<p className="text-baseblack">
-						This playlist is private and can't be accessed by other users.
+						This playlist is private and can&apos;t be accessed by other users.
 						Please change the visibility first.
 					</p>
 					{preShareModalError && (

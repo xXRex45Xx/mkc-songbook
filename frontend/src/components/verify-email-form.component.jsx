@@ -56,7 +56,7 @@ const VerifyEmailForm = () => {
 
     useEffect(() => {
         if (!email && !forgotEmail) navigate("/auth/signup");
-    }, [email, forgotEmail]);
+    }, [email, forgotEmail, navigate]);
 
     /**
      * Handles keypress events for OTP input fields
@@ -117,7 +117,7 @@ const VerifyEmailForm = () => {
                     Verify {forgotEmail ? "It's You" : "Email"}
                 </h3>
             </div>
-            <div className="flex gap-2.5 self-center">
+            <div className="flex gap-2 sm:gap-2.5 w-full justify-center">
                 <TextInput
                     autoFocus={true}
                     theme={numberInputTheme}
@@ -173,7 +173,7 @@ const VerifyEmailForm = () => {
                 verify your account.
                 <br />
                 <br />
-                Didn't get it?{" "}
+                Didn&apos;t get it?{" "}
                 <button
                     onClick={handleResend}
                     className="text-secondary font-semibold"

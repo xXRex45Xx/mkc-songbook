@@ -7,8 +7,13 @@ import { Await, Outlet, defer, useLoaderData } from "react-router-dom";
 import "./App.css";
 import Header from "./components/header.component";
 import AudioPlayer from "./components/audio-player.component";
+import PwaStatus from "./components/pwa-status.component";
 import store from "./store/store";
-import { getCurrentLoggedInUser } from "./utils/api/user-api.util";
+import {
+	getCurrentLoggedInUser,
+	migrateLegacyToken,
+} from "./utils/api/user-api.util";
+import { isSignedIn, startSession } from "./utils/session.util";
 import { setAdminType, setCurrentUser } from "./store/slices/user.slice";
 import { setLocalPlaylists } from "./store/slices/local-playlists.slice";
 import { getAllLocalPlaylists } from "./utils/api/local-playlist-api.util";
@@ -16,6 +21,7 @@ import { Suspense } from "react";
 import CustomTailSpin from "./components/custom-tail-spin.component";
 import { useSelector } from "react-redux";
 import "./components/audio-player.styles.css";
+import { userIdbService } from "./utils/db/user-idb-service.util";
 
 /**
  * Root application component that manages the main layout structure.
@@ -37,6 +43,7 @@ function App() {
 		<Suspense fallback={<CustomTailSpin />}>
 			<Await resolve={data?.user}>
 				{!hiddenHeader && <Header />}
+				<PwaStatus />
 				<Outlet />
 				{!["admin", "super-admin"].includes(user?.role) &&
 					queue &&
@@ -50,15 +57,17 @@ export default App;
 
 /**
  * Route loader for the root application that handles user authentication
- * and session management. Checks for valid tokens and dispatches
- * user data to Redux store.
+ * and session management. When this browser holds a session (the signed-in hint), asks the
+ * server for the user and dispatches it to the Redux store. The API client renews an
+ * expired access cookie on its own. On network failure, falls back to the cached user
+ * from IndexedDB to keep the app working offline.
  *
  * @param {Object} _ - Route params object (unused)
  * @returns {Promise<Object|null>} Deferred user data or null if not authenticated
- * @throws {Error} If an unexpected error occurs during authentication
+ * @throws {Error} If an unexpected error occurs during authentication (not 401)
  */
 export const loader = async () => {
-	const token = localStorage.getItem("_s");
+	await migrateLegacyToken();
 
 	const loadLocalPlaylists = async () => {
 		try {
@@ -69,29 +78,48 @@ export const loader = async () => {
 		}
 	};
 
-	if (!token || store.getState().user.currentUser) {
+	if (!isSignedIn() || store.getState().user.currentUser) {
 		await loadLocalPlaylists();
 		return null;
 	}
 
 	const getUser = async () => {
 		try {
-			const data = await getCurrentLoggedInUser(token);
-			store.dispatch(setCurrentUser(data.user));
-			if (["admin", "super-admin"].includes(data.user.role)) {
-				store.dispatch(setAdminType(data.user.role));
-			} else {
-				store.dispatch(setAdminType(null));
-			}
+			const data = await getCurrentLoggedInUser();
+			await startSession(data.user);
 			await loadLocalPlaylists();
 			return null;
 		} catch (error) {
 			if (error.status === 401) {
-				localStorage.removeItem("_s");
+				// The API client already ended the session if the server refused the
+				// refresh; otherwise the hint stays and the next load tries again.
 				await loadLocalPlaylists();
 				return null;
 			}
-			throw error;
+			
+			// For other network errors, try to use cached user data
+			console.warn("Network error fetching user data, trying cache:", error.message);
+			try {
+				const cachedUser = await userIdbService.get();
+				if (cachedUser) {
+					store.dispatch(setCurrentUser(cachedUser));
+					if (["admin", "super-admin"].includes(cachedUser.role)) {
+						store.dispatch(setAdminType(cachedUser.role));
+					} else {
+						store.dispatch(setAdminType(null));
+					}
+					console.info("Using cached user data due to network error");
+					await loadLocalPlaylists();
+					return null;
+				}
+			} catch (cacheError) {
+				console.error("Failed to load cached user:", cacheError);
+			}
+			
+			// No cached copy: continue signed-out so an offline reload never lands on
+			// the error page. The next online load refetches the user record.
+			await loadLocalPlaylists();
+			return null;
 		}
 	};
 	return defer({ user: getUser() });

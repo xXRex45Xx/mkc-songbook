@@ -12,8 +12,11 @@
 import AlbumModel from "../models/album.model.js";
 import SongModel from "../models/song.model.js";
 import { regexBuilder } from "../utils/amharic-map.util.js";
-import { NotFoundError } from "../utils/error.util.js";
+import { ClientFaultError, NotFoundError } from "../utils/error.util.js";
 import fs from "fs";
+
+/** Server-side time limit, in milliseconds, for album search queries. */
+const SEARCH_MAX_TIME_MS = 5000;
 
 /**
  * Get all albums or search albums with pagination
@@ -37,13 +40,35 @@ import fs from "fs";
  * This example retrieves album names matching "Amazing" with pagination.
  */
 export const getAllOrSearchAlbums = async (req, res) => {
-	const { names, q } = req.query;
+	const { names, q, syncSince, idsOnly } = req.query;
 	let regex;
 	if (q) regex = new RegExp(regexBuilder(q), "i");
-	let albums = await AlbumModel.find(
-		q ? { name: { $regex: regex } } : {},
+	const filter = {};
+	if (q) filter.name = { $regex: regex };
+	if (syncSince) {
+		const parsedDate = new Date(syncSince);
+		if (isNaN(parsedDate.getTime()))
+			throw new ClientFaultError(
+				"Invalid syncSince date. Expected ISO 8601 date string."
+			);
+		filter.updatedAt = { $gte: parsedDate };
+	}
+	// ID-only response used by clients to reconcile local deletions, which a
+	// delta sync cannot detect on its own.
+	if (idsOnly) {
+		let idsQuery = AlbumModel.find(filter, "_id");
+		if (q) idsQuery = idsQuery.maxTimeMS(SEARCH_MAX_TIME_MS);
+		const albumsWithIds = await idsQuery.lean();
+		return res.status(200).json({
+			albumIds: albumsWithIds.map((album) => album._id),
+		});
+	}
+	let albumsQuery = AlbumModel.find(
+		filter,
 		names ? { name: true } : null
 	);
+	if (q) albumsQuery = albumsQuery.maxTimeMS(SEARCH_MAX_TIME_MS);
+	let albums = await albumsQuery;
 	if (!names)
 		albums = albums.map((album) => ({
 			...album._doc,
@@ -99,6 +124,7 @@ export const addAlbum = async (req, res) => {
 
 	for (const song of album.songs) {
 		song.albums.push(insertedAlbum._id);
+		song.updatedAt = new Date();
 		await song.save();
 	}
 
@@ -198,6 +224,7 @@ export const updateAlbum = async (req, res) => {
 	albumInDb.name = album.title;
 	albumInDb.songs = album.songs;
 	albumInDb.createdAt = album.createdAt ?? albumInDb.createdAt;
+	albumInDb.updatedAt = new Date();
 
 	if (id != album.id) {
 		await AlbumModel.findByIdAndDelete(albumInDb._id);
@@ -211,6 +238,7 @@ export const updateAlbum = async (req, res) => {
 				: albumInDb.photoLink,
 			songs: album.songs,
 			createdAt: albumInDb.createdAt,
+			updatedAt: new Date(),
 		});
 	} else await albumInDb.save();
 
@@ -218,11 +246,11 @@ export const updateAlbum = async (req, res) => {
 		const songUpdatePromises = [
 			SongModel.updateMany(
 				{ _id: { $in: removedSongIds } },
-				{ $pull: { albums: id } }
+				{ $pull: { albums: id }, $set: { updatedAt: new Date() } }
 			),
 			SongModel.updateMany(
 				{ _id: { $in: addedSongIds } },
-				{ $push: { albums: album.id } }
+				{ $push: { albums: album.id }, $set: { updatedAt: new Date() } }
 			),
 		];
 
@@ -236,11 +264,11 @@ export const updateAlbum = async (req, res) => {
 
 		await SongModel.updateMany(
 			{ _id: { $in: remainingSongIds } },
-			{ $pull: { albums: id } }
+			{ $pull: { albums: id }, $set: { updatedAt: new Date() } }
 		);
 		await SongModel.updateMany(
 			{ _id: { $in: remainingSongIds } },
-			{ $push: { albums: album.id } }
+			{ $push: { albums: album.id }, $set: { updatedAt: new Date() } }
 		);
 	}
 
@@ -274,7 +302,7 @@ export const deleteAlbum = async (req, res) => {
 
 	await SongModel.updateMany(
 		{ _id: { $in: album.songs } },
-		{ $pull: { albums: id } }
+		{ $pull: { albums: id }, $set: { updatedAt: new Date() } }
 	);
 	await AlbumModel.findByIdAndDelete(id);
 	if (album.photoPath && fs.existsSync(album.photoPath))

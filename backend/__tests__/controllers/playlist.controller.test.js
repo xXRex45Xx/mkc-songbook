@@ -121,4 +121,67 @@ describe("playlist controller", () => {
     expect(playlistInDb.save).toHaveBeenCalledTimes(1);
     expect(res.json).toHaveBeenCalledWith({ updated: true });
   });
+
+  describe("search time limit", () => {
+    // A query that accepts any chain order and resolves to `result` when awaited.
+    const chainable = (result, limits) => {
+      const query = {
+        maxTimeMS: jest.fn((ms) => {
+          limits.push(ms);
+          return query;
+        }),
+        skip: jest.fn(() => query),
+        limit: jest.fn(() => query),
+        countDocuments: jest.fn(() => query),
+        then: (resolve, reject) => Promise.resolve(result).then(resolve, reject),
+      };
+      return query;
+    };
+
+    it("should limit the page query and the count query of a search to 5 seconds", async () => {
+      const limits = [];
+      const playlists = [{ _doc: { _id: "playlist-001", name: "Practice" }, songs: ["song-001"] }];
+      PlaylistModel.find = jest.fn((selection, projection) =>
+        chainable(projection ? playlists : 1, limits),
+      );
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+
+      await getAllOrSearchPlaylists({ query: { q: "Practice" } }, res);
+
+      expect(limits).toEqual([5000, 5000]);
+      expect(res.json).toHaveBeenCalledWith({
+        playlists: [{ _id: "playlist-001", name: "Practice", numOfSongs: 1, songs: undefined }],
+        totalPages: 1,
+      });
+    });
+
+    it("should not limit the queries of a request without a search text", async () => {
+      const limits = [];
+      PlaylistModel.find = jest.fn((selection, projection) => chainable(projection ? [] : 0, limits));
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+
+      await getAllOrSearchPlaylists({ query: {} }, res);
+
+      expect(limits).toEqual([]);
+    });
+
+    it("should keep the visibility filter next to the name match for a member's search", async () => {
+      const limits = [];
+      PlaylistModel.find = jest.fn((selection, projection) => chainable(projection ? [] : 0, limits));
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+
+      await getAllOrSearchPlaylists(
+        { query: { q: "a.b" }, user: { _id: "user-001", role: "member" } },
+        res,
+      );
+
+      const [selection] = PlaylistModel.find.mock.calls[0];
+      expect(selection.$or).toEqual([
+        { visibility: { $in: ["members", "public"] } },
+        { visibility: "private", creator: "user-001" },
+      ]);
+      expect(selection.name.$regex.test("a.b")).toBe(true);
+      expect(selection.name.$regex.test("axb")).toBe(false);
+    });
+  });
 });

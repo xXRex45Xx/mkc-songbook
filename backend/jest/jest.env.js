@@ -7,3 +7,4 @@ process.env.DEFAULT_ADMIN_EMAIL ??= "admin@mkc.com";
 process.env.DEFAULT_ADMIN_NAME ??= "Admin User";
 process.env.DEFAULT_ADMIN_PHOTO_LINK ??= "https://example.com/admin.jpg";
 process.env.PORT ??= "3001";
+process.env.GOOGLE_CLIENT_ID ??= "test-google-client-id";

@@ -4,9 +4,9 @@
  */
 
 import { TextInput, Label, FileInput, Button } from "flowbite-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import CustomTailSpin from "./custom-tail-spin.component";
-import { addOrEditSong, patchSong } from "../utils/api/songs-api.util";
+import { patchSong } from "../utils/api/songs-api.util";
 
 /**
  * Component for adding or editing a song in an album
@@ -97,7 +97,9 @@ const NewAlbumSong = ({
 				formData.set("video-link", videoLink.trim());
 				if (audioFile) formData.set("audio-file", audioFile);
 				const data = await patchSong(formData, song._id);
-				if (!data || !data.updated)
+				// Queued while offline: the change is stored and will replay,
+				// so it is not an error.
+				if (!data?.queued && (!data || !data.updated))
 					throw { status: 500, message: "An unexpected error occurred." };
 			}
 			onSave(song);

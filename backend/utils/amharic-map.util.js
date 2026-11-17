@@ -93,20 +93,26 @@ export const similarRegexMap = {
 /**
  * Builds a regex pattern string that matches similar Amharic characters.
  * For each character in the input string, if it exists in the similarRegexMap,
- * replaces it with its corresponding regex pattern. Otherwise, keeps the original character.
+ * replaces it with its corresponding regex pattern. Otherwise, keeps the original character,
+ * with regex metacharacters escaped so user input is always matched literally. Only the
+ * generated character classes are regex syntax; this keeps user-supplied text from injecting
+ * a pattern (ReDoS, or a SyntaxError from a malformed pattern).
  *
  * @param {string} s - Input string containing Amharic characters
  * @returns {string} A regex pattern string that matches similar characters
  * @example
  * // Returns '[ሀሃሐሓኀኃኻ][ኡዑ]' for input 'ሀዑ'
  * regexBuilder('ሀዑ')
+ * @example
+ * // Returns 'a\\.b' (the pattern a\.b), so the dot matches only a literal dot
+ * regexBuilder('a.b')
  */
 export const regexBuilder = (s) => {
     let str = "";
     for (let i = 0; i < s.length; i++) {
         const mappedChar = similarRegexMap[s.charAt(i)];
         if (mappedChar) str += mappedChar;
-        else str += s.charAt(i);
+        else str += s.charAt(i).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     }
 
     return str;

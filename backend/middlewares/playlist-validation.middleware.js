@@ -94,6 +94,46 @@ export const validatePatchPlaylist = async (req, _res, next) => {
 };
 
 /**
+ * Build a middleware that checks the caller may write to the playlist named by `req.params.id`.
+ *
+ * It must run before `checkBaseVersion`, which answers 409 from the stored `updatedAt` and so
+ * would tell any caller whether a playlist exists and when it last changed. A playlist the caller
+ * cannot read through `getPlaylist` (private to someone else, or members-only for a public-role
+ * user) is answered exactly like a missing one: 404 with the same body, so the two cannot be told
+ * apart. Any other non-owner gets 403, as the playlist is readable anyway. An id that is not a
+ * valid ObjectId cannot name a playlist, so it passes unchanged and the rest of the chain answers
+ * as before.
+ *
+ * @param {"update"|"delete"} action - Verb used in the 403 message
+ * @returns {Function} Express middleware; sets `req.playlist` to the loaded playlist on success
+ * @throws {NotFoundError} If the playlist does not exist or is hidden from the caller
+ * @throws {ForbiddenError} If the caller can read the playlist but does not own it
+ * @example
+ * router.put("/:id", passport.authenticate("jwt", { session: false }), wrapAsync(checkPlaylistWriteAccess("update")));
+ */
+export const checkPlaylistWriteAccess = (action) => async (req, _res, next) => {
+	let playlist;
+	try {
+		playlist = await PlaylistModel.findById(req.params.id);
+	} catch (error) {
+		if (error.name === "CastError") return next();
+		throw error;
+	}
+	if (!playlist) throw new NotFoundError("Playlist not found");
+
+	if (playlist.creator.toString() !== req.user._id.toString()) {
+		const hidden =
+			playlist.visibility === "private" ||
+			(playlist.visibility === "members" && req.user.role === "public");
+		if (hidden) throw new NotFoundError("Playlist not found");
+		throw new ForbiddenError(`You are not authorized to ${action} this playlist`);
+	}
+
+	req.playlist = playlist;
+	next();
+};
+
+/**
  * Validates query parameters for getting all playlists.
  *
  * This middleware validates query parameters for playlist listing requests against

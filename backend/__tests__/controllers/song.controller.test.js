@@ -28,7 +28,10 @@ import {
 } from "../../controllers/song.controller.js";
 import AlbumModel from "../../models/album.model.js";
 import fs from "fs";
+import LogBookModel from "../../models/service-logbook.model.js";
+import PlaylistModel from "../../models/playlist.model.js";
 import SongModel from "../../models/song.model.js";
+import UserModel from "../../models/user.model.js";
 import { NotFoundError, ServerFaultError } from "../../utils/error.util.js";
 
 describe("song controller", () => {
@@ -38,6 +41,8 @@ describe("song controller", () => {
     SongModel.findByIdAndDelete = mockSongFindByIdAndDelete;
     SongModel.create = mockSongCreate;
     AlbumModel.findById = mockAlbumFindById;
+    for (const model of [AlbumModel, PlaylistModel, LogBookModel, UserModel])
+      model.updateMany = jest.fn().mockResolvedValue({ acknowledged: true });
     fs.existsSync = mockExistsSync;
     fs.unlink = mockUnlink;
     fs.statSync = mockStatSync;
@@ -64,6 +69,7 @@ describe("song controller", () => {
     await addSong(req, res);
 
     expect(album.songs).toEqual([{ _id: "song-001" }]);
+    expect(album.updatedAt).toBeInstanceOf(Date);
     expect(saveAlbum).toHaveBeenCalledTimes(1);
     expect(res.status).toHaveBeenCalledWith(201);
   });
@@ -102,23 +108,28 @@ describe("song controller", () => {
     expect(mockUnlink).toHaveBeenCalledWith("/tmp/old.mp3", expect.any(Function));
     expect(oldAlbum.songs).toEqual([]);
     expect(newAlbum.songs).toEqual(["song-001"]);
+    expect(oldAlbum.updatedAt).toBeInstanceOf(Date);
+    expect(newAlbum.updatedAt).toBeInstanceOf(Date);
     expect(songInDb.songFilePath).toBe("/tmp/new.mp3");
     expect(songInDb.save).toHaveBeenCalledTimes(1);
   });
 
-  it("should recreate the song when the id changes during update", async () => {
+  it("should create the renamed song before deleting the old one and keep its audio and link", async () => {
+    const order = [];
     const songInDb = {
       _id: "song-001",
-      songFilePath: null,
+      songFilePath: "/tmp/keep.mp3",
+      youtubeLink: "https://youtu.be/old",
       albums: [],
       createdAt: "2024",
       lyrics: "lyrics",
-      mediaFiles: [],
       musicElements: { chord: "C", tempo: 120, rythm: "4/4" },
       title: "Old",
       save: jest.fn(),
     };
     mockSongFindById.mockReturnValue({ populate: jest.fn().mockResolvedValue(songInDb) });
+    mockSongCreate.mockImplementation(async () => order.push("create"));
+    mockSongFindByIdAndDelete.mockImplementation(async () => order.push("delete"));
     const req = {
       params: { id: "song-001" },
       body: {
@@ -128,17 +139,31 @@ describe("song controller", () => {
         chord: "G",
         tempo: 100,
         rythm: "3/4",
+        "video-link": "https://youtu.be/keep",
       },
     };
     const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
 
     await updateSong(req, res);
 
+    expect(order).toEqual(["create", "delete"]);
     expect(mockSongFindByIdAndDelete).toHaveBeenCalledWith("song-001");
-    expect(mockSongCreate).toHaveBeenCalledWith(
-      expect.objectContaining({ _id: "song-002", title: "Updated" }),
+    const created = mockSongCreate.mock.calls[0][0];
+    expect(created).toEqual(
+      expect.objectContaining({
+        _id: "song-002",
+        title: "Updated",
+        songFilePath: "/tmp/keep.mp3",
+        youtubeLink: "https://youtu.be/keep",
+      }),
     );
+    expect(created).not.toHaveProperty("mediaFiles");
     expect(songInDb.save).not.toHaveBeenCalled();
+    expect(PlaylistModel.updateMany).toHaveBeenCalledWith(
+      { songs: "song-001" },
+      { $set: { "songs.$[e]": "song-002", updatedAt: expect.any(Date) } },
+      { arrayFilters: [{ e: "song-001" }] },
+    );
   });
 
   it("should update the audio file when patching a song", async () => {
@@ -164,18 +189,33 @@ describe("song controller", () => {
     expect(songInDb.save).toHaveBeenCalledTimes(1);
   });
 
-  it("should remove a deleted song from all albums", async () => {
-    const album = { songs: ["song-001", "song-002"], save: jest.fn() };
-    mockSongFindById.mockResolvedValue({ albums: ["album-001"] });
-    mockAlbumFindById.mockResolvedValue(album);
+  it("should remove a deleted song from every collection and delete its audio file", async () => {
+    mockSongFindById.mockResolvedValue({ albums: ["album-001"], songFilePath: "/tmp/a.mp3" });
+    mockExistsSync.mockReturnValue(true);
+    mockUnlink.mockImplementation((_path, callback) => callback(null));
     const req = { params: { id: "song-001" } };
     const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
 
     await deleteSong(req, res);
 
-    expect(album.songs).toEqual(["song-002"]);
-    expect(album.save).toHaveBeenCalledTimes(1);
+    expect(AlbumModel.updateMany).toHaveBeenCalledWith(
+      { songs: "song-001" },
+      { $pull: { songs: "song-001" }, $set: { updatedAt: expect.any(Date) } },
+    );
+    expect(PlaylistModel.updateMany).toHaveBeenCalledWith(
+      { songs: "song-001" },
+      { $pull: { songs: "song-001" }, $set: { updatedAt: expect.any(Date) } },
+    );
+    expect(LogBookModel.updateMany).toHaveBeenCalledWith(
+      { songList: "song-001" },
+      { $pull: { songList: "song-001" }, $set: { updatedAt: expect.any(Date) } },
+    );
+    expect(UserModel.updateMany).toHaveBeenCalledWith(
+      { favorites: "song-001" },
+      { $pull: { favorites: "song-001" } },
+    );
     expect(mockSongFindByIdAndDelete).toHaveBeenCalledWith("song-001");
+    expect(mockUnlink).toHaveBeenCalledWith("/tmp/a.mp3", expect.any(Function));
   });
 
   it("should throw when trying to delete a missing song", async () => {
@@ -209,25 +249,27 @@ describe("song controller", () => {
   });
 
   it("should return all songs when the all flag is provided", async () => {
-    SongModel.find = jest.fn().mockResolvedValue([
-      { _doc: { _id: "song-001", title: "Song 1", songFilePath: "/tmp/a.mp3" }, songFilePath: "/tmp/a.mp3" },
-      { _doc: { _id: "song-002", title: "Song 2", songFilePath: null }, songFilePath: null },
-    ]);
+    SongModel.find = jest.fn().mockReturnValue({
+      populate: jest.fn().mockResolvedValue([
+        { _doc: { _id: "song-001", title: "Song 1", songFilePath: "/tmp/a.mp3", albums: [] }, songFilePath: "/tmp/a.mp3", albums: [] },
+        { _doc: { _id: "song-002", title: "Song 2", songFilePath: null, albums: [] }, songFilePath: null, albums: [] },
+      ]),
+    });
     const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
 
     await getAllOrSearchSongs({ query: { all: true } }, res);
 
-    expect(SongModel.find).toHaveBeenCalledWith();
+    expect(SongModel.find).toHaveBeenCalledWith({});
     expect(res.json).toHaveBeenCalledWith({
       songs: [
-        { _id: "song-001", title: "Song 1", hasAudio: true, songFilePath: undefined },
-        { _id: "song-002", title: "Song 2", hasAudio: false, songFilePath: undefined },
+        { _id: "song-001", title: "Song 1", albums: [], hasAudio: true, songFilePath: undefined },
+        { _id: "song-002", title: "Song 2", albums: [], hasAudio: false, songFilePath: undefined },
       ],
       totalPages: undefined,
     });
   });
 
-  it("should stream the first audio chunk when no range header is present", async () => {
+  it("should stream the whole file with 200 when no range header is present", async () => {
     const pipe = jest.fn();
     mockSongFindById.mockResolvedValue({ songFilePath: "/tmp/song.mp3" });
     mockExistsSync.mockReturnValue(true);
@@ -237,13 +279,13 @@ describe("song controller", () => {
 
     await streamSongAudio({ params: { id: "song-001" }, headers: {} }, res);
 
-    expect(res.writeHead).toHaveBeenCalledWith(206, {
-      "Content-Range": "bytes 0-999/1000",
+    expect(res.writeHead).toHaveBeenCalledWith(200, {
       "Accept-Ranges": "bytes",
       "Content-Length": 1000,
       "Content-Type": "audio/mpeg",
+      "Cache-Control": "no-store",
     });
-    expect(mockCreateReadStream).toHaveBeenCalledWith("/tmp/song.mp3", { start: 0, end: 999 });
+    expect(mockCreateReadStream).toHaveBeenCalledWith("/tmp/song.mp3");
     expect(pipe).toHaveBeenCalledWith(res);
   });
 
@@ -262,6 +304,7 @@ describe("song controller", () => {
       "Accept-Ranges": "bytes",
       "Content-Length": 100,
       "Content-Type": "audio/mpeg",
+      "Cache-Control": "no-store",
     });
     expect(mockCreateReadStream).toHaveBeenCalledWith("/tmp/song.mp3", { start: 100, end: 199 });
     expect(pipe).toHaveBeenCalledWith(res);
@@ -286,5 +329,200 @@ describe("song controller", () => {
 
     expect(req.error.fileDeleteError).toBeInstanceOf(Error);
     expect(songInDb.save).toHaveBeenCalledTimes(1);
+  });
+
+  describe("getAllOrSearchSongs with syncSince", () => {
+    it("should return all songs when syncSince is absent and all=true", async () => {
+      SongModel.find = jest.fn().mockReturnValue({
+        populate: jest.fn().mockResolvedValue([
+          { _doc: { _id: "song-001", title: "Song 1", songFilePath: "/tmp/a.mp3", albums: [] }, songFilePath: "/tmp/a.mp3", albums: [] },
+          { _doc: { _id: "song-002", title: "Song 2", songFilePath: null, albums: [] }, songFilePath: null, albums: [] },
+        ]),
+      });
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+
+      await getAllOrSearchSongs({ query: { all: true } }, res);
+
+      expect(SongModel.find).toHaveBeenCalledWith({});
+      expect(res.json).toHaveBeenCalledWith({
+        songs: [
+          { _id: "song-001", title: "Song 1", albums: [], hasAudio: true, songFilePath: undefined },
+          { _id: "song-002", title: "Song 2", albums: [], hasAudio: false, songFilePath: undefined },
+        ],
+        totalPages: undefined,
+      });
+    });
+
+    it("should filter songs by syncSince when all=true and syncSince is provided", async () => {
+      SongModel.find = jest.fn().mockReturnValue({
+        populate: jest.fn().mockResolvedValue([
+          { _doc: { _id: "song-001", title: "Updated Song", songFilePath: "/tmp/a.mp3", albums: [] }, songFilePath: "/tmp/a.mp3", albums: [] },
+        ]),
+      });
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+      const syncDate = "2025-01-01T00:00:00.000Z";
+
+      await getAllOrSearchSongs({ query: { all: true, syncSince: syncDate } }, res);
+
+      expect(SongModel.find).toHaveBeenCalledWith(
+        { updatedAt: { $gte: expect.any(Date) } }
+      );
+    });
+
+    it("should return empty array when syncSince is in the future", async () => {
+      SongModel.find = jest.fn().mockReturnValue({
+        populate: jest.fn().mockResolvedValue([]),
+      });
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+      const futureDate = new Date(Date.now() + 86400000 * 365).toISOString();
+
+      await getAllOrSearchSongs({ query: { all: true, syncSince: futureDate } }, res);
+
+      expect(SongModel.find).toHaveBeenCalledWith(
+        { updatedAt: { $gte: expect.any(Date) } }
+      );
+      expect(res.json).toHaveBeenCalledWith({ songs: [], totalPages: undefined });
+    });
+
+    it("should throw ClientFaultError for invalid syncSince date", async () => {
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+
+      await expect(
+        getAllOrSearchSongs({ query: { all: true, syncSince: "invalid-date" } }, res)
+      ).rejects.toThrow("Invalid syncSince date");
+    });
+  });
+
+  describe("getAllOrSearchSongs text search", () => {
+    const buildSearchChain = (result = []) => ({
+      maxTimeMS: jest.fn().mockReturnThis(),
+      sort: jest.fn().mockReturnThis(),
+      collation: jest.fn().mockReturnThis(),
+      populate: jest.fn().mockReturnThis(),
+      skip: jest.fn().mockReturnThis(),
+      limit: jest.fn().mockResolvedValue(result),
+      countDocuments: jest.fn().mockResolvedValue(result.length),
+    });
+
+    it("should match regex metacharacters in q literally", async () => {
+      SongModel.find = jest.fn().mockImplementation(() => buildSearchChain());
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+
+      await getAllOrSearchSongs({ query: { q: "(a+)+$.", type: "title" } }, res);
+
+      const [filter] = SongModel.find.mock.calls[0];
+      const regex = filter.title.$regex;
+      expect(regex).toBeInstanceOf(RegExp);
+      expect(regex.test("(a+)+$.")).toBe(true);
+      expect(regex.test("aaaa!")).toBe(false);
+      expect(res.status).toHaveBeenCalledWith(200);
+    });
+
+    it("should not throw on a malformed pattern in q", async () => {
+      SongModel.find = jest.fn().mockImplementation(() => buildSearchChain());
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+
+      await expect(
+        getAllOrSearchSongs({ query: { q: "(", type: "title" } }, res)
+      ).resolves.not.toThrow();
+      expect(res.status).toHaveBeenCalledWith(200);
+    });
+
+    it("should still map Amharic variants in q", async () => {
+      SongModel.find = jest.fn().mockImplementation(() => buildSearchChain());
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+
+      await getAllOrSearchSongs({ query: { q: "ሀ", type: "lyrics" } }, res);
+
+      const [filter] = SongModel.find.mock.calls[0];
+      expect(filter.lyrics.$regex.test("ሐ")).toBe(true);
+    });
+
+    it("should set maxTimeMS on every query of a title and lyrics search", async () => {
+      const chains = [];
+      SongModel.find = jest.fn().mockImplementation(() => {
+        const chain = buildSearchChain();
+        chains.push(chain);
+        return chain;
+      });
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+
+      await getAllOrSearchSongs({ query: { q: "grace" } }, res);
+
+      expect(chains).toHaveLength(4);
+      for (const chain of chains) {
+        expect(chain.maxTimeMS).toHaveBeenCalledTimes(1);
+        expect(chain.maxTimeMS).toHaveBeenCalledWith(expect.any(Number));
+        expect(chain.maxTimeMS.mock.calls[0][0]).toBeGreaterThan(0);
+      }
+    });
+
+    it("should set maxTimeMS on a typed title search", async () => {
+      const chains = [];
+      SongModel.find = jest.fn().mockImplementation(() => {
+        const chain = buildSearchChain();
+        chains.push(chain);
+        return chain;
+      });
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+
+      await getAllOrSearchSongs({ query: { q: "grace", type: "title" } }, res);
+
+      expect(chains).toHaveLength(2);
+      for (const chain of chains)
+        expect(chain.maxTimeMS).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("getAllOrSearchSongs with idsOnly", () => {
+    it("should return only song ids when all and idsOnly are set", async () => {
+      const lean = jest.fn().mockResolvedValue([
+        { _id: "song-001" },
+        { _id: "song-002" },
+      ]);
+      SongModel.find = jest.fn().mockReturnValue({ lean });
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+
+      await getAllOrSearchSongs({ query: { all: true, idsOnly: true } }, res);
+
+      expect(SongModel.find).toHaveBeenCalledWith({}, "_id");
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        songIds: ["song-001", "song-002"],
+      });
+    });
+
+    it("should apply the syncSince filter when idsOnly is combined with syncSince", async () => {
+      const lean = jest.fn().mockResolvedValue([{ _id: "song-001" }]);
+      SongModel.find = jest.fn().mockReturnValue({ lean });
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+
+      await getAllOrSearchSongs(
+        { query: { all: true, idsOnly: true, syncSince: "2025-01-01T00:00:00.000Z" } },
+        res
+      );
+
+      expect(SongModel.find).toHaveBeenCalledWith(
+        { updatedAt: { $gte: expect.any(Date) } },
+        "_id"
+      );
+      expect(res.json).toHaveBeenCalledWith({ songIds: ["song-001"] });
+    });
+
+    it("should ignore idsOnly when all is absent", async () => {
+      SongModel.find = jest.fn().mockReturnValue({
+        sort: jest.fn().mockReturnThis(),
+        collation: jest.fn().mockReturnThis(),
+        populate: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockResolvedValue([]),
+        countDocuments: jest.fn().mockResolvedValue(0),
+      });
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+
+      await getAllOrSearchSongs({ query: { idsOnly: true } }, res);
+
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ totalPages: 1 }));
+    });
   });
 });

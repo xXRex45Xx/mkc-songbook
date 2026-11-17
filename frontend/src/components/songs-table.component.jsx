@@ -14,6 +14,7 @@ import useWindowSize from "../hooks/useWindowSize.hook";
 import CustomTable from "./custom-table.component";
 import SongsTableRow from "./custom-row.component";
 import CustomTailSpin from "./custom-tail-spin.component";
+import NoResults from "./no-results.component";
 import {
 	DndContext,
 	useSensors,
@@ -48,6 +49,7 @@ import { setCurrentSongIdx, setPlaylist } from "../store/slices/playlist.slice";
  * @param {boolean} [props.showPlayButton] - Whether to show play button
  * @param {boolean} [props.singleSongQueue] - Whether queue contains single song
  * @param {boolean} [props.queueTools] - Whether to show queue management tools
+ * @param {boolean} [props.showNoResults] - Whether an empty list renders the "No Results Found" state
  */
 const SongsTable = ({
 	songs,
@@ -60,6 +62,7 @@ const SongsTable = ({
 	showPlayButton,
 	singleSongQueue,
 	queueTools,
+	showNoResults,
 }) => {
 	/**
 	 * Refs for table scroll behavior
@@ -111,14 +114,23 @@ const SongsTable = ({
 			)
 		);
 	};
+	const isAllView = searchParams.get("type") === "all";
+	const isEmpty =
+		showNoResults &&
+		(isAllView
+			? songs.titleMatch.length === 0 && songs.lyricsMatch.length === 0
+			: songs.length === 0);
+	const isLoading = navState === "loading" || revalidateState === "loading";
+
 	return (
 		<>
-			{(navState === "loading" || revalidateState === "loading") && (
-				<CustomTailSpin />
+			{isLoading && <CustomTailSpin />}
+			{!isLoading && isEmpty && (
+				<NoResults description="No songs found." />
 			)}
-			{navState !== "loading" &&
-				revalidateState !== "loading" &&
-				searchParams.get("type") !== "all" && (
+			{!isLoading &&
+				!isEmpty &&
+				!isAllView && (
 					<CustomTable
 						headers={tableHeaders}
 						overflowAuto={showOverflow ? false : true}
@@ -175,9 +187,9 @@ const SongsTable = ({
 					</CustomTable>
 				)}
 
-			{navState !== "loading" &&
-				revalidateState !== "loading" &&
-				searchParams.get("type") === "all" && (
+			{!isLoading &&
+				!isEmpty &&
+				isAllView && (
 					<>
 						{songs.titleMatch.length !== 0 && (
 							<CustomTable

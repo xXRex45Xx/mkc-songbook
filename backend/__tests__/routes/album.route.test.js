@@ -101,7 +101,7 @@ describe("album routes", () => {
 
       const response = await request(app)
         .post("/api/album")
-        .set(authHeader(loginResponse.body.token))
+        .set(authHeader(loginResponse))
         .send({ id: "album-001", title: "Classic Hymns", songs: ["song-001"] });
 
       expect(response.status).toBe(201);
@@ -117,7 +117,7 @@ describe("album routes", () => {
 
       const response = await request(app)
         .post("/api/album")
-        .set(authHeader(loginResponse.body.token))
+        .set(authHeader(loginResponse))
         .send({ id: "album-001", title: "Classic Hymns", songs: ["song-001"] });
 
       expect(response.status).toBe(403);
@@ -139,7 +139,7 @@ describe("album routes", () => {
 
       const response = await request(app)
         .post("/api/album")
-        .set(authHeader(loginResponse.body.token))
+        .set(authHeader(loginResponse))
         .send({ id: "album-001", title: "Classic Hymns", songs: ["song-001"] });
 
       expect(response.status).toBe(400);
@@ -152,7 +152,7 @@ describe("album routes", () => {
 
       const response = await request(app)
         .post("/api/album")
-        .set(authHeader(loginResponse.body.token))
+        .set(authHeader(loginResponse))
         .send({ id: "album-001", title: "Classic Hymns", songs: ["song-404"] });
 
       expect(response.status).toBe(400);
@@ -170,7 +170,7 @@ describe("album routes", () => {
 
       const response = await request(app)
         .put("/api/album/album-001")
-        .set(authHeader(loginResponse.body.token))
+        .set(authHeader(loginResponse))
         .send({ id: "album-001", title: "Updated Hymns", songs: ["song-002"] });
 
       expect(response.status).toBe(200);
@@ -187,7 +187,7 @@ describe("album routes", () => {
 
       const response = await request(app)
         .put("/api/album/missing-album")
-        .set(authHeader(loginResponse.body.token))
+        .set(authHeader(loginResponse))
         .send({ id: "missing-album", title: "Updated Hymns", songs: ["song-001"] });
 
       expect(response.status).toBe(404);
@@ -202,7 +202,7 @@ describe("album routes", () => {
 
       const response = await request(app)
         .put("/api/album/album-001")
-        .set(authHeader(loginResponse.body.token))
+        .set(authHeader(loginResponse))
         .send({ id: "album-002", title: "Updated Hymns", songs: ["song-001"] });
 
       expect(response.status).toBe(200);
@@ -220,7 +220,7 @@ describe("album routes", () => {
 
       const response = await request(app)
         .put("/api/album/album-001")
-        .set(authHeader(loginResponse.body.token))
+        .set(authHeader(loginResponse))
         .send({ id: "album-002", title: "Updated Hymns", songs: ["song-001"] });
 
       expect(response.status).toBe(400);
@@ -237,7 +237,7 @@ describe("album routes", () => {
 
       const response = await request(app)
         .delete("/api/album/album-001")
-        .set(authHeader(loginResponse.body.token));
+        .set(authHeader(loginResponse));
 
       expect(response.status).toBe(200);
       expect(response.body).toEqual({ deleted: true });
@@ -251,7 +251,7 @@ describe("album routes", () => {
 
       const response = await request(app)
         .delete("/api/album/missing-album")
-        .set(authHeader(loginResponse.body.token));
+        .set(authHeader(loginResponse));
 
       expect(response.status).toBe(404);
       expect(response.body.message).toBe("Album doesn't exist.");

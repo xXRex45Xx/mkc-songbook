@@ -1,0 +1,88 @@
+---
+type: process
+status: verified
+verified: 2026-11-15 @ c52152d
+description: Save a recording to IndexedDB on request; the player prefers the saved copy over the stream.
+consumes: [../objects/data-model/song.md, ../objects/local-db/songs-store.md]
+produces: [../objects/local-db/audio-files-store.md]
+---
+
+# offline-audio
+
+How a song's recording is saved for offline play, and how the player picks its source.
+
+## Input → Movement → Output
+
+The user presses "Save offline". The app fetches `GET /api/song/:id/audio`, stores the blob in
+the [audioFiles store](../objects/local-db/audio-files-store.md) stamped with the song's
+`updatedAt`. Nothing is written to the device's files, so no save dialog opens. At play time
+the player uses the saved blob unless it is stale, else streams from the server.
+
+## Why this shape
+
+Audio is too large to sync for every song, so it is saved per song on request. The service
+worker never caches it (`frontend/vite.config.js:104`); the app owns the copy, so it can show
+what is saved and check staleness.
+
+## Steps
+
+Save (`saveAudioOffline`, `frontend/src/utils/api/audio-download.util.js:137`):
+
+1. `fetchAudioBlob`: plain `fetch` of `/api/song/:id/audio`, no `Range` header (`:89`). The
+   backend answers `200` with the whole file, read as a stream so progress can be reported
+   against `Content-Length` (`readBodyWithProgress`, `:62`). A `206` is never taken as complete: the client
+   fetches the remaining ranges from `Content-Range` and fails if the total size is not reached
+   (`collectRemainingParts`, `:33`).
+2. Read the song's `updatedAt` from the [songs store](../objects/local-db/songs-store.md) (`:111`).
+3. `audioIdbService.store` with `{ _id, songId, blob, updatedAt, size, mimeType }` (`:141`).
+
+While the fetch runs, `download-audio.component.jsx` writes whole-percent progress into the
+[pwa slice](../objects/app-state/pwa-slice.md) (`audioDownloads`). The song table row
+(`frontend/src/components/custom-row.component.jsx`) dims and shows a progress bar under itself
+until the save ends.
+
+The button and saved state live in `frontend/src/components/download-audio.component.jsx:33`.
+Once a song is saved the button is disabled and shows a check icon; there is no re-save from the
+button. A saved copy is removed only when the song is deleted on the server (delta-sync
+reconcile) or site data is cleared, so a stale copy is streamed past, not refreshed.
+
+Play (`frontend/src/components/audio-player.component.jsx:76`):
+
+1. Saved blob exists and `isAudioStale` is false → play `URL.createObjectURL(blob)`.
+2. Otherwise → stream `/api/song/:id/audio`; a request with a `Range`
+   header (the audio element always sends one) gets a `206` of at most 500 KB
+   (`backend/controllers/song.controller.js:443`); a request without one gets the whole file
+   with `200` (`:460`). A `Range` with an unreadable start or a non-numeric end gets `416`
+   (`:479`), before any `206` header is sent.
+3. Stream error → fall back to a saved blob, or show "unavailable" (`audio-player.component.jsx:105`).
+
+Stale means the songs store has a newer `updatedAt` than the saved copy
+(`frontend/src/utils/api/audio-download.util.js:180`).
+
+## Known defects
+
+None known.
+
+## If you change this
+
+- **Hits:** [audioFiles store](../objects/local-db/audio-files-store.md),
+  `frontend/src/utils/api/audio-download.util.js`,
+  `frontend/src/components/download-audio.component.jsx`,
+  `frontend/src/components/audio-player.component.jsx`, `streamSongAudio` in
+  `backend/controllers/song.controller.js`, [delta-sync](delta-sync.md) (reconcile deletes
+  saved audio).
+- **Does not hit:** the [playlist slice](../objects/app-state/playlist-slice.md) shape — the
+  player reads only song ids from the queue.
+
+## Surfaces
+
+| Surface | Role |
+|---|---|
+| "Save offline" button | starts the save |
+| Audio player | picks the source |
+
+## See
+
+- Objects: [audioFiles store](../objects/local-db/audio-files-store.md),
+  [Song](../objects/data-model/song.md)
+- Source: `frontend/src/utils/api/audio-download.util.js`

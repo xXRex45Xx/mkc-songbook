@@ -1,4 +1,5 @@
 import backendURL from "../../config/backend-url.config";
+import { apiFetch } from "./api-client.util";
 
 /**
  * @fileoverview Logbook API utility functions
@@ -9,17 +10,11 @@ import backendURL from "../../config/backend-url.config";
  * Fetches all logbook entries with pagination
  * Marks recently added/changed entries based on timestamps
  * @param {number} page - Page number for pagination
- * @param {string} token - Authentication token (defaults to token in localStorage)
  * @returns {Promise<Object>} Logbook data with enhanced timestamp info
  * @throws {Object} Error with message and status if request fails
  */
-export const getAllOrSearchLogBook = async (
-	page = 1,
-	token = localStorage.getItem("_s")
-) => {
-	const response = await fetch(`${backendURL}/api/logbook?page=${page}`, {
-		headers: { Authorization: `Bearer ${token}` },
-	});
+export const getAllOrSearchLogBook = async (page = 1) => {
+	const response = await apiFetch(`${backendURL}/api/logbook?page=${page}`);
 	const data = await response.json();
 
 	if (!response.ok) throw { message: data.message, status: response.status };

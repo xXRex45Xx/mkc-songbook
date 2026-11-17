@@ -11,11 +11,16 @@
  * @property {string} _id - Unique identifier for OTP entry with explanation of automatic generation and UUID format
  * @property {string} email - User's email address (required, unique, lowercase) with detailed explanation of validation rules and constraints
  * @property {number} otp - Generated OTP number (required, typically 6 digits) with description of security considerations and generation process
+ * @property {number} attempts - Failed verification attempts so far; the entry is deleted on the fifth
  * @property {Date} createdAt - Timestamp when OTP was created (expires after 5 minutes) with detailed explanation of time-based expiration handling
  * @property {Date} updatedAt - Timestamp when last updated with explanation of modification tracking and update behavior
  */
 import { Schema, model } from "mongoose";
 import sendEmail from "../config/nodemailer.config.js";
+import OTPLimitModel from "./otp-limit.model.js";
+
+/** Failed verification attempts allowed per code before the entry is deleted. */
+export const MAX_OTP_ATTEMPTS = 5;
 
 /**
  * OTP schema definition.
@@ -36,11 +41,16 @@ const otpSchema = new Schema({
 		required: true,
 		unique: true,
 		trim: true,
+		lowercase: true,
 		match: /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
 	},
 	otp: {
 		type: Number,
 		required: true,
+	},
+	attempts: {
+		type: Number,
+		default: 0,
 	},
 	createdAt: {
 		type: Date,
@@ -48,6 +58,47 @@ const otpSchema = new Schema({
 		expires: 60 * 5,
 	},
 });
+
+/**
+ * Checks a submitted code and counts a wrong guess against the entry. An entry created
+ * before `attempts` existed has no such field and counts as zero attempts.
+ *
+ * A wrong guess is counted with one atomic update, so parallel guesses cannot
+ * exceed the limit. The entry is deleted when the fifth wrong guess lands, and a
+ * locked entry never matches again. Each wrong guess also counts against the email in
+ * `OTPLimitModel`, which outlives the entry: the entry is deleted too once the email has
+ * `MAX_OTP_FAILURES` wrong guesses, and no new code is issued until that window ends.
+ *
+ * @param {string} email - Email the code was issued to
+ * @param {number|string} code - Submitted code
+ * @returns {Promise<boolean>} True only when the code matches and attempts remain
+ * @example
+ * if (!(await OTPModel.verifyCode("user@example.com", "123456"))) throw new ClientFaultError("Invalid code");
+ */
+otpSchema.statics.verifyCode = async function (email, code) {
+	const guess = typeof code === "string" ? parseInt(code, 10) : code;
+	if (!Number.isInteger(guess)) return false;
+
+	const wrong = await this.findOneAndUpdate(
+		{ email, otp: { $ne: guess }, attempts: { $not: { $gte: MAX_OTP_ATTEMPTS } } },
+		{ $inc: { attempts: 1 } },
+		{ new: true }
+	);
+	if (wrong) {
+		const locked = await OTPLimitModel.recordFailure(email);
+		if (wrong.attempts >= MAX_OTP_ATTEMPTS || locked)
+			await this.deleteOne({ _id: wrong._id });
+		return false;
+	}
+
+	return Boolean(
+		await this.exists({
+			email,
+			otp: guess,
+			attempts: { $not: { $gte: MAX_OTP_ATTEMPTS } },
+		})
+	);
+};
 
 /**
  * Mongoose pre-save middleware for OTP schema.

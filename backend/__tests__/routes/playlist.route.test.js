@@ -50,7 +50,7 @@ describe("playlist routes", () => {
 
       const response = await request(app)
         .get("/api/playlist")
-        .set(authHeader(loginResponse.body.token));
+        .set(authHeader(loginResponse));
 
       expect(response.status).toBe(200);
       expect(response.body.playlists).toHaveLength(3);
@@ -71,7 +71,7 @@ describe("playlist routes", () => {
 
       const response = await request(app)
         .get("/api/playlist?myPlaylists=true")
-        .set(authHeader(loginResponse.body.token));
+        .set(authHeader(loginResponse));
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveLength(1);
@@ -119,7 +119,7 @@ describe("playlist routes", () => {
 
       const response = await request(app)
         .get(`/api/playlist/${playlist._id}`)
-        .set(authHeader(loginResponse.body.token));
+        .set(authHeader(loginResponse));
 
       expect(response.status).toBe(200);
       expect(response.body.name).toBe("Private Playlist");
@@ -136,7 +136,7 @@ describe("playlist routes", () => {
 
       const response = await request(app)
         .get(`/api/playlist/${playlist._id}`)
-        .set(authHeader(loginResponse.body.token));
+        .set(authHeader(loginResponse));
 
       expect(response.status).toBe(404);
       expect(response.body.message).toBe("Playlist not found");
@@ -153,7 +153,7 @@ describe("playlist routes", () => {
 
       const response = await request(app)
         .get(`/api/playlist/${playlist._id}`)
-        .set(authHeader(loginResponse.body.token));
+        .set(authHeader(loginResponse));
 
       expect(response.status).toBe(404);
       expect(response.body.message).toBe("Playlist not found");
@@ -189,7 +189,7 @@ describe("playlist routes", () => {
 
       const response = await request(app)
         .post("/api/playlist")
-        .set(authHeader(loginResponse.body.token))
+        .set(authHeader(loginResponse))
         .send({ name: "Practice Songs", visibility: "private", songs: ["song-001"] });
 
       expect(response.status).toBe(201);
@@ -211,7 +211,7 @@ describe("playlist routes", () => {
 
       const response = await request(app)
         .post("/api/playlist")
-        .set(authHeader(loginResponse.body.token))
+        .set(authHeader(loginResponse))
         .send({ name: "Practice Songs", visibility: "private", songs: ["song-404"] });
 
       expect(response.status).toBe(400);
@@ -225,7 +225,7 @@ describe("playlist routes", () => {
 
       const response = await request(app)
         .post("/api/playlist")
-        .set(authHeader(loginResponse.body.token))
+        .set(authHeader(loginResponse))
         .send({ name: "Members Playlist", visibility: "members", songs: ["song-001"] });
 
       expect(response.status).toBe(403);
@@ -241,7 +241,7 @@ describe("playlist routes", () => {
 
       const response = await request(app)
         .post("/api/playlist")
-        .set(authHeader(loginResponse.body.token))
+        .set(authHeader(loginResponse))
         .send({ name: "Practice Songs", songs: ["song-001"] });
 
       expect(response.status).toBe(201);
@@ -258,7 +258,7 @@ describe("playlist routes", () => {
 
       const response = await request(app)
         .put(`/api/playlist/${playlist._id}`)
-        .set(authHeader(loginResponse.body.token))
+        .set(authHeader(loginResponse))
         .send({ name: "Updated Playlist", visibility: "public", songs: ["song-001"] });
 
       expect(response.status).toBe(200);
@@ -268,12 +268,16 @@ describe("playlist routes", () => {
     it("should reject updates from non-owners", async () => {
       const { memberUser, publicUser } = await seedAuthUsers();
       await createSong({ _id: "song-001" });
-      const playlist = await createPlaylist({ creator: memberUser._id, songs: ["song-001"] });
+      const playlist = await createPlaylist({
+        creator: memberUser._id,
+        songs: ["song-001"],
+        visibility: "public",
+      });
       const loginResponse = await loginUser(publicUser.email, "public123");
 
       const response = await request(app)
         .put(`/api/playlist/${playlist._id}`)
-        .set(authHeader(loginResponse.body.token))
+        .set(authHeader(loginResponse))
         .send({ name: "Updated Playlist", visibility: "public", songs: ["song-001"] });
 
       expect(response.status).toBe(403);
@@ -295,7 +299,7 @@ describe("playlist routes", () => {
 
       const response = await request(app)
         .put("/api/playlist/507f1f77bcf86cd799439011")
-        .set(authHeader(loginResponse.body.token))
+        .set(authHeader(loginResponse))
         .send({ name: "Updated Playlist", visibility: "public", songs: ["song-001"] });
 
       expect(response.status).toBe(404);
@@ -313,7 +317,7 @@ describe("playlist routes", () => {
 
       const response = await request(app)
         .patch(`/api/playlist/${playlist._id}`)
-        .set(authHeader(loginResponse.body.token))
+        .set(authHeader(loginResponse))
         .send({ visibility: "public", addSongs: ["song-002"], removeSongs: ["song-001"] });
 
       expect(response.status).toBe(200);
@@ -325,12 +329,16 @@ describe("playlist routes", () => {
 
     it("should reject patch updates from non-owners", async () => {
       const { memberUser, publicUser } = await seedAuthUsers();
-      const playlist = await createPlaylist({ creator: memberUser._id, songs: [] });
+      const playlist = await createPlaylist({
+        creator: memberUser._id,
+        songs: [],
+        visibility: "public",
+      });
       const loginResponse = await loginUser(publicUser.email, "public123");
 
       const response = await request(app)
         .patch(`/api/playlist/${playlist._id}`)
-        .set(authHeader(loginResponse.body.token))
+        .set(authHeader(loginResponse))
         .send({ visibility: "public" });
 
       expect(response.status).toBe(403);
@@ -351,11 +359,11 @@ describe("playlist routes", () => {
 
       const response = await request(app)
         .patch("/api/playlist/507f1f77bcf86cd799439011")
-        .set(authHeader(loginResponse.body.token))
+        .set(authHeader(loginResponse))
         .send({ visibility: "public" });
 
       expect(response.status).toBe(404);
-      expect(response.body.message).toBe("Playlist not found.");
+      expect(response.body.message).toBe("Playlist not found");
     });
 
     it("should reject adding songs that do not exist", async () => {
@@ -365,7 +373,7 @@ describe("playlist routes", () => {
 
       const response = await request(app)
         .patch(`/api/playlist/${playlist._id}`)
-        .set(authHeader(loginResponse.body.token))
+        .set(authHeader(loginResponse))
         .send({ addSongs: ["song-404"] });
 
       expect(response.status).toBe(400);
@@ -381,7 +389,7 @@ describe("playlist routes", () => {
 
       const response = await request(app)
         .delete(`/api/playlist/${playlist._id}`)
-        .set(authHeader(loginResponse.body.token));
+        .set(authHeader(loginResponse));
 
       expect(response.status).toBe(200);
       expect(response.body).toEqual({ deleted: true });
@@ -390,12 +398,16 @@ describe("playlist routes", () => {
 
     it("should reject deletes from non-owners", async () => {
       const { memberUser, publicUser } = await seedAuthUsers();
-      const playlist = await createPlaylist({ creator: memberUser._id, songs: [] });
+      const playlist = await createPlaylist({
+        creator: memberUser._id,
+        songs: [],
+        visibility: "public",
+      });
       const loginResponse = await loginUser(publicUser.email, "public123");
 
       const response = await request(app)
         .delete(`/api/playlist/${playlist._id}`)
-        .set(authHeader(loginResponse.body.token));
+        .set(authHeader(loginResponse));
 
       expect(response.status).toBe(403);
       expect(response.body.message).toBe("You are not authorized to delete this playlist");
@@ -413,10 +425,86 @@ describe("playlist routes", () => {
 
       const response = await request(app)
         .delete("/api/playlist/507f1f77bcf86cd799439011")
-        .set(authHeader(loginResponse.body.token));
+        .set(authHeader(loginResponse));
 
       expect(response.status).toBe(404);
       expect(response.body.message).toBe("Playlist not found");
     });
+  });
+
+  describe("write access is checked before the base version", () => {
+    const STALE = "2020-01-01T00:00:00.000Z";
+    const MISSING_ID = "507f1f77bcf86cd799439011";
+    const writes = [
+      ["PUT", "put", { name: "Updated Playlist", visibility: "public", songs: ["song-001"] }],
+      ["PATCH", "patch", { removeSongs: ["song-001"] }],
+      ["DELETE", "delete", undefined],
+    ];
+
+    /** Sends one write with a stale base version and returns the response. */
+    const staleWrite = (method, id, body, loginResponse) => {
+      const req = request(app)[method](`/api/playlist/${id}`)
+        .set(authHeader(loginResponse))
+        .set("X-Base-Updated-At", STALE);
+      return body ? req.send(body) : req;
+    };
+
+    it.each(writes)(
+      "should answer %s on another user's private playlist exactly like a missing one",
+      async (_label, method, body) => {
+        const { memberUser, publicUser } = await seedAuthUsers();
+        await createSong({ _id: "song-001" });
+        const playlist = await createPlaylist({
+          creator: memberUser._id,
+          songs: ["song-001"],
+          visibility: "private",
+        });
+        const loginResponse = await loginUser(publicUser.email, "public123");
+
+        const hidden = await staleWrite(method, playlist._id, body, loginResponse);
+        const missing = await staleWrite(method, MISSING_ID, body, loginResponse);
+
+        expect(hidden.status).toBe(404);
+        expect(hidden.status).toBe(missing.status);
+        expect(hidden.body).toEqual(missing.body);
+        expect((await PlaylistModel.findById(playlist._id)).songs).toEqual(["song-001"]);
+      },
+    );
+
+    it.each(writes)(
+      "should answer %s with 403 on a readable playlist of another user, not 409",
+      async (_label, method, body) => {
+        const { memberUser, publicUser } = await seedAuthUsers();
+        await createSong({ _id: "song-001" });
+        const playlist = await createPlaylist({
+          creator: memberUser._id,
+          songs: ["song-001"],
+          visibility: "public",
+        });
+        const loginResponse = await loginUser(publicUser.email, "public123");
+
+        const response = await staleWrite(method, playlist._id, body, loginResponse);
+
+        expect(response.status).toBe(403);
+      },
+    );
+
+    it.each(writes)(
+      "should still answer %s with 409 for the owner's stale write",
+      async (_label, method, body) => {
+        const { memberUser } = await seedAuthUsers();
+        await createSong({ _id: "song-001" });
+        const playlist = await createPlaylist({
+          creator: memberUser._id,
+          songs: ["song-001"],
+        });
+        const loginResponse = await loginUser("member@mkc.com", "member123");
+
+        const response = await staleWrite(method, playlist._id, body, loginResponse);
+
+        expect(response.status).toBe(409);
+        expect(await PlaylistModel.findById(playlist._id)).not.toBeNull();
+      },
+    );
   });
 });

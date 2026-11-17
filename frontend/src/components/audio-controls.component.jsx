@@ -21,12 +21,27 @@ import { useMemo } from "react";
  * Provides playback control buttons for the audio player.
  * Features:
  * - Like/favorite button (always visible)
- * - Previous track button (desktop only)
+ * - Previous track button (desktop, or mobile when expanded)
  * - Play/pause button (always visible)
  * - Next track button (always visible)
- * - Repeat button (desktop only)
+ * - Repeat button (desktop, or mobile when expanded)
+ * - Natural left-to-right order and full-width spacing when expanded
  * - Responsive sizing for mobile and desktop layouts
  * - Hover and active state styling
+ *
+ * @component
+ * @param {Object} props - Component props
+ * @param {Function} props.onPlayPause - Play/pause handler
+ * @param {boolean} props.isPlaying - Whether audio is playing
+ * @param {Function} props.onNext - Next track handler
+ * @param {Function} props.onPrev - Previous track handler
+ * @param {Function} props.onToggleRepeat - Repeat mode handler
+ * @param {Function} props.onToggleFav - Favorite toggle handler
+ * @param {boolean} props.songInFav - Whether the current song is a favorite
+ * @param {boolean} props.toggleFavProcessing - Whether a favorite update is in flight
+ * @param {string} props.repeat - Repeat mode
+ * @param {boolean} [props.expanded=false] - Mobile expanded player: show every button
+ * @returns {JSX.Element} Playback control button group
  */
 const AudioControls = ({
 	onPlayPause,
@@ -38,6 +53,7 @@ const AudioControls = ({
 	songInFav,
 	toggleFavProcessing,
 	repeat,
+	expanded = false,
 }) => {
 	const favoriteIconStyle = useMemo(() => {
 		let style =
@@ -53,12 +69,15 @@ const AudioControls = ({
 		return "first:fill-secondary-600 hover:first:fill-secondary-400 active:first:fill-secondary-600";
 	}, [repeat]);
 	return (
-		<Button.Group className="self-center" theme={buttonGroupTheme}>
+		<Button.Group
+			className={expanded ? "w-full justify-between" : "self-center"}
+			theme={buttonGroupTheme}
+		>
 			{toggleFavProcessing ? (
 				<CustomTailSpin small />
 			) : (
 				<Button
-					className="order-2 md:order-none focus:ring-0"
+					className={`${expanded ? "" : "order-2"} md:order-none focus:ring-0`}
 					theme={buttonTheme}
 					positionInGroup="start"
 					size="xxs"
@@ -68,7 +87,7 @@ const AudioControls = ({
 				</Button>
 			)}
 			<Button
-				className="hidden md:flex focus:ring-0"
+				className={`${expanded ? "flex" : "hidden"} md:flex focus:ring-0`}
 				theme={buttonTheme}
 				positionInGroup="middle"
 				size="xxs"
@@ -77,7 +96,7 @@ const AudioControls = ({
 				<PreviousSvg className="first:fill-baseblack hover:first:fill-neutrals-1000 active:first:fill-baseblack" />
 			</Button>
 			<Button
-				className="order-1 md:order-none focus:ring-0"
+				className={`${expanded ? "" : "order-1"} md:order-none focus:ring-0`}
 				theme={buttonTheme}
 				positionInGroup="middle"
 				size="xxs"
@@ -90,7 +109,7 @@ const AudioControls = ({
 				)}
 			</Button>
 			<Button
-				className="order-3 md:order-none focus:ring-0"
+				className={`${expanded ? "" : "order-3"} md:order-none focus:ring-0`}
 				theme={buttonTheme}
 				positionInGroup="middle"
 				size="xxs"
@@ -99,7 +118,7 @@ const AudioControls = ({
 				<NextSvg className="w-5 h-5 md:w-6 md:h-6 first:fill-baseblack hover:first:fill-neutrals-1000 active:first:fill-baseblack" />
 			</Button>
 			<Button
-				className="hidden md:flex focus:ring-0"
+				className={`${expanded ? "flex" : "hidden"} md:flex focus:ring-0`}
 				theme={buttonTheme}
 				positionInGroup="end"
 				size="xxs"

@@ -42,6 +42,9 @@ export const action = async ({ request }) => {
 
 	try {
 		const data = await addOrEditAlbum(formData, false);
+		// Queued while offline: the id is only assigned by the server, so the
+		// detail page is not reachable yet. Land on the list instead.
+		if (data?.queued) return redirect("/albums");
 		if (!data || !data.insertedId)
 			throw { status: 500, message: "An unexpected error occurred." };
 		return redirect(`/albums/${data.insertedId}`);

@@ -60,7 +60,7 @@ const NewSchedule = () => {
 													name="service-time"
 												/>
 												<label
-													for={`$${val}-am-amh`}
+													htmlFor={`$${val}-am-amh`}
 													className="mr-1 inline-flex items-center justify-center py-2 px-3 text-xs font-medium text-center border rounded-lg cursor-pointer text-secondary border-secondary-400 peer-checked:border-secondary peer-checked:bg-secondary hover:text-white peer-checked:text-white hover:bg-secondary-600"
 												>
 													{`${val}:00 ጠዋት`}
@@ -75,7 +75,7 @@ const NewSchedule = () => {
 													name="service-time"
 												/>
 												<label
-													for={`$${val}-30-am-amh`}
+													htmlFor={`$${val}-30-am-amh`}
 													className="mr-1 inline-flex items-center justify-center py-2 px-3 text-xs font-medium text-center border rounded-lg cursor-pointer text-secondary border-secondary-400 peer-checked:border-secondary peer-checked:bg-secondary hover:text-white peer-checked:text-white hover:bg-secondary-600"
 												>
 													{`${val}:30 ጠዋት`}
@@ -99,7 +99,7 @@ const NewSchedule = () => {
 													name="service-time"
 												/>
 												<label
-													for={`$${val}-pm-amh`}
+													htmlFor={`$${val}-pm-amh`}
 													className="mr-1 inline-flex items-center justify-center py-2 px-3 text-xs font-medium text-center border rounded-lg cursor-pointer text-secondary border-secondary-400 peer-checked:border-secondary peer-checked:bg-secondary hover:text-white peer-checked:text-white hover:bg-secondary-600"
 												>
 													{`${val}:00 ከሰዓት`}
@@ -114,7 +114,7 @@ const NewSchedule = () => {
 													name="service-time"
 												/>
 												<label
-													for={`$${val}-30-pm-amh`}
+													htmlFor={`$${val}-30-pm-amh`}
 													className="mr-1 inline-flex items-center justify-center py-2 px-3 text-xs font-medium text-center border rounded-lg cursor-pointer text-secondary border-secondary-400 peer-checked:border-secondary peer-checked:bg-secondary hover:text-white peer-checked:text-white hover:bg-secondary-600"
 												>
 													{`${val}:30 ከሰዓት`}

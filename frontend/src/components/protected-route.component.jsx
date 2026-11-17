@@ -23,7 +23,7 @@ import { useLocation, useNavigate } from "react-router-dom";
  */
 const ProtectedRoute = ({ children, roles }) => {
 	const navigate = useNavigate();
-	const locaiton = useLocation();
+	const location = useLocation();
 	const user = useSelector((state) => state.user.currentUser);
 
 	/**
@@ -32,13 +32,13 @@ const ProtectedRoute = ({ children, roles }) => {
 	 * Throws error if user's role is not authorized
 	 */
 	useEffect(() => {
-		if (!user) return navigate(`/auth?redirect=${locaiton.pathname}`);
+		if (!user) return navigate(`/auth?redirect=${location.pathname}`);
 		if (!roles.includes(user?.role))
 			throw {
 				status: 403,
 				message: "You are not authorized to access this page.",
 			};
-	}, [user]);
+	}, [user, roles, navigate, location.pathname]);
 	return children;
 };
 

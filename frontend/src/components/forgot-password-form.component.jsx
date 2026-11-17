@@ -48,7 +48,7 @@ const ForgotPasswordForm = () => {
                 <span className="text-neutrals-800">Step 1 of 2</span>
                 <h3 className="text-2xl font-bold">Reset Password</h3>
                 <p className="text-sm text-neutrals-800">
-                    We'll send you a code to your email to reset your password.
+                    We&apos;ll send you a code to your email to reset your password.
                 </p>
             </div>
             <div className="flex flex-col pt-3.5 gap-5 items-stretch">

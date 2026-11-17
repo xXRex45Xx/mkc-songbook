@@ -8,6 +8,7 @@ import configsReducer from "./slices/configs.slice";
 import userReducer from "./slices/user.slice";
 import playlistReducer from "./slices/playlist.slice";
 import localPlaylistsReducer from "./slices/local-playlists.slice";
+import pwaReducer from "./slices/pwa.slice";
 
 /**
  * Main Redux store instance
@@ -36,5 +37,6 @@ export default configureStore({
 		 * Manages playlists stored in IndexedDB
 		 */
 		localPlaylists: localPlaylistsReducer,
+		pwa: pwaReducer,
 	},
 });

@@ -11,28 +11,38 @@
  */
 
 import OTPModel from "../models/otp.model.js";
+import OTPLimitModel from "../models/otp-limit.model.js";
 import generateOtp from "../utils/otp.util.js";
 import bcrypt from "bcrypt";
 import UserModel from "../models/user.model.js";
-import jwt from "jsonwebtoken";
 import {
 	ClientFaultError,
 	ForbiddenError,
 	NotFoundError,
 	UnauthorizedError,
 } from "../utils/error.util.js";
+import {
+	clearSessionCookies,
+	issueSession,
+	revokeAllSessions,
+	revokeRequestSession,
+	rotateSession,
+} from "../utils/session.util.js";
 
 /**
  * Generate and send OTP for user registration
  *
  * This function generates a new OTP code and sends it to the specified email address.
- * It is used during user registration to verify the user's email address.
+ * It is used during user registration to verify the user's email address. An email may
+ * request only a few codes per hour and is locked after too many wrong guesses; a new code
+ * does not reset the count of wrong guesses.
  *
  * @param {Object} req - Express request object containing request data
  * @param {Object} req.body - Request body with email address
  * @param {string} req.body.email - User's email address for verification with description of validation rules and constraints
  * @param {Object} res - Express response object for sending responses back to client
  * @returns {Promise<void>} Sends JSON response with success status explaining the complete process flow, success conditions, and potential outcomes
+ * @throws {ClientFaultError} With status 429 if the email asked for too many codes or is locked by wrong guesses
  * @throws {ServerFaultError} If database operation fails due to server-side issues like connection problems or constraint violations
  * @example
  * // Example usage:
@@ -44,12 +54,17 @@ import {
  */
 export const registerOTP = async (req, res) => {
 	const { email } = req.body;
+	if (!(await OTPLimitModel.claimRequest(email)))
+		throw new ClientFaultError(
+			"Too many verification code requests. Please, try again later.",
+			429
+		);
 	let otp = generateOtp();
 	const current = await OTPModel.findOne({ email });
 	if (current) {
 		current.otp = otp;
 		current.createdAt = Date.now();
-		current.save();
+		await current.save();
 	} else await OTPModel.create({ otp, email });
 	res.status(200).json({ success: true });
 };
@@ -78,10 +93,8 @@ export const registerOTP = async (req, res) => {
  * This example verifies the OTP code for user registration.
  */
 export const verifyOTP = async (req, res) => {
-	let { email, otp } = req.body;
-	if (typeof otp === "string") otp = parseInt(otp);
-	const storedOtp = await OTPModel.findOne({ email, otp });
-	if (!storedOtp)
+	const { email, otp } = req.body;
+	if (!(await OTPModel.verifyCode(email, otp)))
 		throw new ClientFaultError("The verification code is invalid");
 	return res.status(200).json({ success: true });
 };
@@ -90,7 +103,7 @@ export const verifyOTP = async (req, res) => {
  * Register a new user
  *
  * This function creates a new user in the database with provided information.
- * It handles password hashing and generates an authentication token for the new user.
+ * It handles password hashing and starts a cookie session for the new user.
  *
  * @param {Object} req - Express request object containing request data
  * @param {Object} req.body - Request body with user registration details
@@ -98,7 +111,8 @@ export const verifyOTP = async (req, res) => {
  * @param {string} req.body.email - User's email address with explanation of format requirements and validation rules
  * @param {string} req.body.password - User's password with description of complexity requirements and security considerations
  * @param {Object} res - Express response object for sending responses back to client
- * @returns {Promise<void>} Sends JSON response with user data and JWT token explaining the complete process flow, success conditions, and potential outcomes
+ * @returns {Promise<void>} Sends JSON response with user data; the session is set in cookies,
+ *   covering the complete process flow, success conditions, and potential outcomes
  * @throws {ClientFaultError} If client provides invalid data that doesn't meet validation requirements with clear explanation of what caused the validation failure
  * @throws {ServerFaultError} If database operation fails due to server-side issues like connection problems or constraint violations
  * @example
@@ -122,9 +136,7 @@ export const registerUser = async (req, res) => {
 		password: hashedPassword,
 	});
 
-	const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-		expiresIn: "30 days",
-	});
+	await issueSession(res, user);
 	res.status(201).json({
 		user: {
 			id: user._id,
@@ -133,7 +145,6 @@ export const registerUser = async (req, res) => {
 			role: user.role,
 			favorites: user.favorites,
 		},
-		token,
 	});
 	await OTPModel.deleteOne({ email });
 };
@@ -169,13 +180,14 @@ export const getCurrentUser = async (req, res) => {
  * Handle Google OAuth login/registration
  *
  * This function authenticates users through Google OAuth. If the user doesn't exist in the database,
- * it creates a new user account. It generates an authentication token for successful authentication.
+ * it creates a new user account. It starts a cookie session for successful authentication.
  *
  * @param {Object} req - Express request object containing request data
  * @param {Object} req.body - Request body with Google OAuth access token
  * @param {string} req.body.accessToken - Google OAuth access token for authentication with explanation of how it's used and validation requirements
  * @param {Object} res - Express response object for sending responses back to client
- * @returns {Promise<void>} Sends JSON response with user data and JWT token explaining the complete process flow, success conditions, and potential outcomes
+ * @returns {Promise<void>} Sends JSON response with user data; the session is set in cookies,
+ *   covering the complete process flow, success conditions, and potential outcomes
  * @throws {UnauthorizedError} If Google OAuth verification fails with clear explanation of authentication issues
  * @throws {ServerFaultError} If database operation fails due to server-side issues like connection problems or constraint violations
  * @example
@@ -189,20 +201,47 @@ export const getCurrentUser = async (req, res) => {
 export const googleOAuthLogin = async (req, res) => {
 	const { accessToken } = req.body;
 
-	const googleApiResponse = await fetch(
-		"https://www.googleapis.com/oauth2/v3/userinfo",
-		{
+	// A token issued to another Google app must not sign in here: check audience.
+	const [tokenInfoResponse, googleApiResponse] = await Promise.all([
+		fetch("https://oauth2.googleapis.com/tokeninfo", {
+			method: "POST",
+			headers: { "Content-Type": "application/x-www-form-urlencoded" },
+			body: new URLSearchParams({ access_token: accessToken }),
+			signal: AbortSignal.timeout(5000),
+		}),
+		fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
 			headers: { Authorization: `Bearer ${accessToken}` },
-		}
-	);
+			signal: AbortSignal.timeout(5000),
+		}),
+	]);
 
-	if (!googleApiResponse.ok) {
+	if (!tokenInfoResponse.ok || !googleApiResponse.ok) {
+		throw new UnauthorizedError(
+			"Failed to sign up or login with google. Please, try again."
+		);
+	}
+
+	const tokenInfo = await tokenInfoResponse.json();
+	if (
+		!process.env.GOOGLE_CLIENT_ID ||
+		tokenInfo.aud !== process.env.GOOGLE_CLIENT_ID
+	) {
 		throw new UnauthorizedError(
 			"Failed to sign up or login with google. Please, try again."
 		);
 	}
 
 	const googleApiData = await googleApiResponse.json();
+	if (
+		!googleApiData.email ||
+		(googleApiData.email_verified !== true &&
+			googleApiData.email_verified !== "true")
+	) {
+		throw new UnauthorizedError(
+			"Your Google email is not verified. Please, verify it and try again."
+		);
+	}
+
 	let user = await UserModel.findOne({ email: googleApiData.email });
 
 	if (!user)
@@ -212,12 +251,9 @@ export const googleOAuthLogin = async (req, res) => {
 			photo: googleApiData.picture,
 		});
 
-	const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-		expiresIn: "30 days",
-	});
+	await issueSession(res, user);
 
 	res.json({
-		token,
 		user: {
 			id: user._id,
 			name: user.name,
@@ -255,9 +291,115 @@ export const googleOAuthLogin = async (req, res) => {
 export const resetPassword = async (req, res) => {
 	const { email, password } = req.body;
 	const hashedPassword = await bcrypt.hash(password, 10);
-	await UserModel.findOneAndUpdate({ email }, { password: hashedPassword });
+	const user = await UserModel.findOneAndUpdate(
+		{ email },
+		{ password: hashedPassword, passwordChangedAt: new Date() }
+	);
+	// A reset must end every session, including one an attacker may hold. Tokens issued
+	// before it, even legacy Bearer ones, stop passing the JWT strategy.
+	if (user) await revokeAllSessions(user._id);
 	res.status(200).json({ success: true });
 	await OTPModel.deleteOne({ email });
+};
+
+/**
+ * Exchange the refresh cookie for a new session pair
+ *
+ * Rotates the refresh token: the old one stops working, a new `mkc_rt` and `mkc_at` are set.
+ * Needs only the `mkc_rt` cookie, so it works after the access cookie has expired.
+ *
+ * @param {Object} req - Express request object carrying the `mkc_rt` cookie
+ * @param {Object} res - Express response object for sending responses back to client
+ * @returns {Promise<void>} Sends `{ success: true }` and sets the cookies
+ * @throws {UnauthorizedError} If the refresh token is missing, unknown, expired, or replayed
+ * @throws {ServerFaultError} If a database operation fails unexpectedly
+ * @example
+ * // Example usage:
+ * POST /api/user/session/refresh
+ * This example renews the session from the refresh cookie.
+ */
+export const refreshSession = async (req, res) => {
+	await rotateSession(req, res);
+	res.status(200).json({ success: true });
+};
+
+/**
+ * Sign out of this browser
+ *
+ * Deletes the refresh-token family named by the `mkc_rt` cookie and clears both cookies.
+ * Safe to call with no session: it still clears the cookies.
+ *
+ * @param {Object} req - Express request object carrying the `mkc_rt` cookie
+ * @param {Object} res - Express response object for sending responses back to client
+ * @returns {Promise<void>} Sends `{ success: true }`
+ * @throws {ServerFaultError} If a database operation fails unexpectedly
+ * @example
+ * // Example usage:
+ * POST /api/user/session/logout
+ * This example ends the session in this browser.
+ */
+export const logout = async (req, res) => {
+	await revokeRequestSession(req);
+	clearSessionCookies(res);
+	res.status(200).json({ success: true });
+};
+
+/**
+ * Sign out of every browser
+ *
+ * Deletes all of the authenticated user's refresh tokens and clears this browser's cookies.
+ * Other browsers lose access when their access token expires.
+ *
+ * @param {Object} req - Express request object with the authenticated user
+ * @param {Object} res - Express response object for sending responses back to client
+ * @returns {Promise<void>} Sends `{ success: true }`
+ * @throws {UnauthorizedError} If the request is not authenticated
+ * @throws {ServerFaultError} If a database operation fails unexpectedly
+ * @example
+ * // Example usage:
+ * POST /api/user/session/logout-all
+ * This example ends every session of the current user.
+ */
+export const logoutAll = async (req, res) => {
+	await revokeAllSessions(req.user._id);
+	clearSessionCookies(res);
+	res.status(200).json({ success: true });
+};
+
+/**
+ * Trade a legacy Bearer token for a cookie session
+ *
+ * Transition endpoint for browsers that still hold a pre-cookie JWT in localStorage. The
+ * Bearer header must be present, so a cookie alone cannot mint a second session. The token
+ * must also be a legacy one, without a `sid` claim: a token from a cookie session belongs to a
+ * refresh family that logout-all, reuse detection and the 90-day cap end, and trading it for a
+ * new family would undo that.
+ * Remove it, with the Bearer fallback in passport.config.js, once legacy tokens have expired.
+ *
+ * @param {Object} req - Express request object with the authenticated user
+ * @param {Object} res - Express response object for sending responses back to client
+ * @returns {Promise<void>} Sends the user and sets the cookies
+ * @throws {UnauthorizedError} If no Bearer token was sent, it is not valid, or it carries a `sid`
+ * @throws {ServerFaultError} If a database operation fails unexpectedly
+ * @example
+ * // Example usage:
+ * POST /api/user/session/upgrade
+ * Authorization: Bearer <legacy token>
+ * This example starts a cookie session from an old token.
+ */
+export const upgradeSession = async (req, res) => {
+	if (!req.headers.authorization?.startsWith("Bearer ") || req.authInfo?.sid)
+		throw new UnauthorizedError("You must be logged in to access this resource.");
+	await issueSession(res, req.user);
+	res.status(200).json({
+		user: {
+			id: req.user._id,
+			name: req.user.name,
+			email: req.user.email,
+			role: req.user.role,
+			favorites: req.user.favorites,
+		},
+	});
 };
 
 /**

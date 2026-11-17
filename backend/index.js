@@ -8,6 +8,7 @@
 import { config } from "dotenv";
 import { connect } from "./config/db.js";
 import compression from "compression";
+import cookieParser from "cookie-parser";
 import express from "express";
 import apiRouter from "./routes/index.js";
 import cors from "cors";
@@ -17,8 +18,12 @@ import { MulterError } from "multer";
 import fs from "fs";
 import helmet from "helmet";
 import morgan from "morgan";
+import mongoose from "mongoose";
 import path from "path";
 import { wrapAsync } from "./utils/error.util.js";
+import { apiRateLimiter, audioRateLimiter } from "./middlewares/rate-limit.middleware.js";
+import { csrfProtection } from "./middlewares/csrf.middleware.js";
+import { getAllowedOrigins, isAllowedOrigin, normalizeOrigin } from "./utils/origin.util.js";
 
 if (process.env.NODE_ENV !== "production") {
 	const configError = config().error;
@@ -27,6 +32,13 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 const app = express();
+
+// Behind a reverse proxy, set TRUST_PROXY to the number of proxy hops so rate
+// limits key on the real client address instead of the proxy.
+if (process.env.TRUST_PROXY) {
+	const hops = Number(process.env.TRUST_PROXY);
+	app.set("trust proxy", Number.isInteger(hops) && hops > 0 ? hops : process.env.TRUST_PROXY);
+}
 
 export default app;
 
@@ -101,6 +113,15 @@ export const shouldCompress = (req, res) => {
  * // 5. Response sent with status code and JSON body
  */
 app.use(helmet());
+
+// Liveness/readiness probe for Docker and the deploy pipeline. Mounted before the
+// request logger, CORS and rate limiters so probes neither spam logs nor count
+// against a client limit. 503 until the database connection is up.
+app.get("/healthz", (_req, res) => {
+	const dbUp = mongoose.connection.readyState === 1;
+	res.status(dbUp ? 200 : 503).json({ status: dbUp ? "ok" : "unavailable" });
+});
+
 app.use(
 	morgan(
 		":method :url :status :res[content-length] - :response-time ms :error :fileerror"
@@ -126,9 +147,24 @@ app.use(
  *   })
  * );
  */
+// With credentials on, "allow every origin" must not exist in production: fail at boot.
+if (process.env.NODE_ENV === "production" && getAllowedOrigins().length === 0)
+	throw new Error("ALLOWED_ORIGINS must be set in production.");
+
 app.use(
 	cors({
-		origin: process.env.ALLOWED_ORIGINS.split(","),
+		origin: (origin, cb) => {
+			const allowed = getAllowedOrigins();
+			// No Origin header = same-origin or non-browser request; allow.
+			if (!origin) return cb(null, true);
+			// An empty list allows every origin outside production (local development).
+			if (allowed.length === 0) return cb(null, true);
+			if (isAllowedOrigin(origin, allowed)) return cb(null, true);
+			console.warn(`CORS rejected origin: ${origin}`);
+			return cb(new Error(`Not allowed by CORS: ${origin}`));
+		},
+		// The session and device cookies need credentialed cross-origin requests.
+		credentials: true,
 	})
 );
 app.use(
@@ -173,10 +209,20 @@ app.use(
 app.use(
 	"/static/albums/images",
 	wrapAsync(async (req, res, next) => {
-		res.header(
-			"Access-Control-Allow-Origin",
-			process.env.ALLOWED_ORIGINS.split(",")
-		);
+		const origin = req.headers.origin;
+		const allowed = getAllowedOrigins();
+		if (origin) {
+			// Null (over-long) is never echoed.
+			const normalized = normalizeOrigin(origin);
+			if (normalized !== null && (allowed.length === 0 || allowed.includes(normalized))) {
+				res.header("Access-Control-Allow-Origin", normalized);
+			}
+		} else if (allowed.length > 0) {
+			// No Origin header (same-origin or script request): echo the first
+			// configured origin so the header is present for clients that
+			// check it unconditionally.
+			res.header("Access-Control-Allow-Origin", allowed[0]);
+		}
 		res.header("Cross-Origin-Resource-Policy", "cross-origin");
 		next();
 	}),
@@ -200,10 +246,11 @@ app.use(
  * app.use(express.json());
  */
 app.use(express.json());
+app.use(cookieParser());
 
 /**
  * API routes middleware.
- * Mounts the apiRouter at the /api prefix, routing all API requests
+ * Mounts the per-address rate limiters (generic, and a higher one for audio) and the apiRouter at the /api prefix, routing all API requests
  * to the appropriate sub-routers defined in routes/index.js.
  *
  * @example
@@ -215,7 +262,7 @@ app.use(express.json());
  * // DELETE /api/playlist - Handled by playlistRouter
  * app.use("/api", apiRouter);
  */
-app.use("/api", apiRouter);
+app.use("/api", apiRateLimiter, audioRateLimiter, csrfProtection, apiRouter);
 
 /**
  * Global error handling middleware.
@@ -229,7 +276,7 @@ app.use("/api", apiRouter);
  *
  * Error handling flow:
  * 1. If request has uploaded file, attempt to delete it (errors logged to req.fileDeleteError)
- * 2. Extract error message and status code from error object
+ * 2. Extract error message, status code and optional `errorCode` from error object
  * 3. Map Multer file size limit errors to 400 status
  * 4. For server errors (500), log internal error and send generic message
  * 5. For client errors (4xx), send specific error message
@@ -262,7 +309,7 @@ app.use(async (err, req, res, _next) => {
 		fs.unlink(req.file.path, (err) => {
 			if (err) req.fileDeleteError = err;
 		});
-	let { message, statusCode = 500 } = err;
+	let { message, statusCode = 500, errorCode } = err;
 	if (err instanceof MulterError && err.code === "LIMIT_FILE_SIZE")
 		statusCode = 400;
 	if (statusCode === 500) {
@@ -270,7 +317,9 @@ app.use(async (err, req, res, _next) => {
 		else req.error = err;
 		message = "An unexpected error occurred.";
 	}
-	res.status(statusCode).json({ message });
+	res.status(statusCode).json(
+		errorCode ? { message, code: errorCode } : { message }
+	);
 });
 
 /**

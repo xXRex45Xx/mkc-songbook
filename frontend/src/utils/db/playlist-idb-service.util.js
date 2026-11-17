@@ -103,6 +103,8 @@ export const playlistIdbService = {
       name: name ?? existing.name,
       songs: songs ?? existing.songs,
       updatedAt: new Date(),
+      // An edit after an upload must reach the server copy too.
+      synced: false,
     };
     await db.put(STORE_NAME, updated);
   },
@@ -128,6 +130,8 @@ export const playlistIdbService = {
    *
    * @param {string} id - Local playlist ID
    * @param {string} remoteId - Server playlist MongoDB _id
+   * @param {Date} [uploadedUpdatedAt] - `updatedAt` of the version that was uploaded; if the playlist
+   *   was edited since, it stays unsynced so the newer version uploads on the next sync
    * @returns {Promise<void>}
    * @throws {Error} If playlist not found or database operation fails
    * @example
@@ -135,15 +139,18 @@ export const playlistIdbService = {
    * await playlistIdbService.markSynced('local_123', '507f1f77bcf86cd799439011');
    * ```
    */
-  async markSynced(id, remoteId) {
+  async markSynced(id, remoteId, uploadedUpdatedAt) {
     const db = await getDB();
     const existing = await db.get(STORE_NAME, id);
     if (!existing) throw new Error("Playlist not found");
+    const editedSinceUpload =
+      uploadedUpdatedAt !== undefined &&
+      new Date(existing.updatedAt).getTime() !== new Date(uploadedUpdatedAt).getTime();
     const updated = {
       ...existing,
-      synced: true,
+      synced: !editedSinceUpload,
       remoteId,
-      updatedAt: new Date(),
+      updatedAt: editedSinceUpload ? existing.updatedAt : new Date(),
     };
     await db.put(STORE_NAME, updated);
   },

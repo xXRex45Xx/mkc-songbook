@@ -9,7 +9,7 @@ This is the backend server for the MKC Choir Song Book, built with Node.js, Expr
 - **MongoDB** - Database
 - **Mongoose** - MongoDB ODM
 - **Passport.js** - Authentication middleware (JWT and Local strategies)
-- **JWT** - JSON Web Tokens for authentication
+- **JWT** - Short-lived access token in an HttpOnly cookie, renewed with a rotating refresh token
 - **Joi** - Data validation
 - **Multer** - File upload handling
 - **Nodemailer** - Email notifications
@@ -44,14 +44,25 @@ backend/
 
 - `POST /api/user/login` - Email/password login
   - Requires: `email`, `password`
+  - Sets the `mkc_at` (access, 15 min) and `mkc_rt` (refresh, 30 days) HttpOnly cookies; the body holds only the user
 - `POST /api/user/google/callback` - Google OAuth login
   - Requires: Google access token
+  - Sets the session cookies
+- `POST /api/user/session/refresh` - Rotate the refresh token and renew the access cookie
+  - Requires: the `mkc_rt` cookie
+- `POST /api/user/session/logout` - Delete this browser's session and clear the cookies
+- `POST /api/user/session/logout-all` - Delete every session of the user
+  - Requires: JWT authentication
+- `POST /api/user/session/upgrade` - Trade a legacy Bearer token for cookies (transition only)
+  - Requires: `Authorization: Bearer <old token>`
+
+State-changing requests that carry a session cookie must also send `X-Requested-With: mkc`.
 - `POST /api/user/otp` - Request OTP for registration or password reset
   - Requires: `email`
   - Query params: `forgotPassword` (optional boolean)
 - `POST /api/user/verify-otp` - Verify OTP code
   - Requires: `email`, `otp`
-- `PUT /api/user/reset-password` - Reset password with OTP
+- `PUT /api/user/reset-password` - Reset password with OTP; deletes every session of the account
   - Requires: `email`, `password`, `otp`
 
 ### User Management
@@ -141,36 +152,8 @@ Note: the service logbook request body uses `location` and `timestamp`, while th
 
 ## Environment Variables
 
-Create a `.env` file in the backend directory with the following variables:
-
-```env
-# Server Configuration
-PORT=5000
-DB_URI=your_mongodb_uri
-JWT_SECRET=your_jwt_secret
-
-# Google OAuth
-GOOGLE_CLIENT_ID=your_google_client_id
-
-# SMTP Configuration
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=your_email@gmail.com
-SMTP_PASS=your_app_specific_password
-SMTP_FROM=your_email@gmail.com
-
-# Client URLs (for CORS)
-ALLOWED_ORIGINS=http://localhost:5173,https://your-production-domain.com
-
-# Media Storage
-IMAGE_STORAGE=path_to_image_storage
-AUDIO_STORAGE=path_to_audio_storage
-
-# Default Admin User
-DEFAULT_ADMIN_EMAIL=admin@example.com
-DEFAULT_ADMIN_NAME=Admin
-DEFAULT_ADMIN_PHOTO_LINK=https://example.com/photo.jpg
-```
+Copy [.env.example](.env.example) to `.env` and fill in the values. Every variable is listed
+there with a comment.
 
 ### SMTP Configuration
 
@@ -179,6 +162,15 @@ The application uses SMTP for sending emails such as verification and password r
 1. Enable 2-factor authentication
 2. Generate an App Password
 3. Use the App Password in `SMTP_PASS`
+
+### Login protection
+
+Password login asks for a Cloudflare Turnstile captcha from scripted clients and after five
+failed attempts. Create a Turnstile widget in the Cloudflare dashboard, put its secret key in
+`TURNSTILE_SECRET_KEY` and its site key in the frontend's `VITE_TURNSTILE_SITE_KEY`. In production
+the secret key is required. Browsers that signed in before are remembered with an HttpOnly
+`mkc_did` cookie, which is sent cross-site (`SameSite=None; Secure`), so the API must be served
+over HTTPS and `ALLOWED_ORIGINS` must list the frontend origin.
 
 ### Client URLs
 

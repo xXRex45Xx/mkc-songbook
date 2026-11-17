@@ -7,6 +7,8 @@
 
 import { Router } from "express";
 import passport from "passport";
+import { checkBaseVersion } from "../middlewares/base-version.middleware.js";
+import PlaylistModel from "../models/playlist.model.js";
 import { wrapAsync } from "../utils/error.util.js";
 import {
 	createPlaylist,
@@ -21,6 +23,7 @@ import {
 	validateCreatePlaylist,
 	validateGetAllPlaylists,
 	validateGetPlaylist,
+	checkPlaylistWriteAccess,
 	validateUpdatePlaylist,
 	validatePatchPlaylist,
 } from "../middlewares/playlist-validation.middleware.js";
@@ -145,6 +148,8 @@ playlistRouter
 	.put(
 		passport.authenticate("jwt", { session: false }),
 		wrapAsync(validateGetPlaylist),
+		wrapAsync(checkPlaylistWriteAccess("update")),
+		wrapAsync(checkBaseVersion(PlaylistModel)),
 		wrapAsync(validateUpdatePlaylist),
 		wrapAsync(checkSongExists),
 		wrapAsync(updatePlaylist)
@@ -176,6 +181,8 @@ playlistRouter
 	.patch(
 		passport.authenticate("jwt", { session: false }),
 		wrapAsync(validateGetPlaylist),
+		wrapAsync(checkPlaylistWriteAccess("update")),
+		wrapAsync(checkBaseVersion(PlaylistModel)),
 		wrapAsync(validatePatchPlaylist),
 		wrapAsync(patchPlaylist)
 	)
@@ -199,6 +206,8 @@ playlistRouter
 	.delete(
 		passport.authenticate("jwt", { session: false }),
 		wrapAsync(validateGetPlaylist),
+		wrapAsync(checkPlaylistWriteAccess("delete")),
+		wrapAsync(checkBaseVersion(PlaylistModel)),
 		wrapAsync(deletePlaylist)
 	);
 

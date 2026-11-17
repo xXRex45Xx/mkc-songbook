@@ -14,8 +14,7 @@ import {
 import OptionsSvg from "../assets/options.svg?react";
 import HeartSvg from "../assets/heart.svg?react";
 import PlaySmallSvg from "../assets/play-small.svg?react";
-// import DownloadSvg from "../assets/download.svg?react";
-// import videoSmallIcon from "../assets/video-small.svg";
+import DownloadAudio from "./download-audio.component.jsx";
 import queueSmallIcon from "../assets/queue-small.svg";
 import nextSmallIcon from "../assets/next-small.svg";
 import playlistIcon from "../assets/playlist.png";
@@ -32,13 +31,11 @@ import PlaylistCard from "./playlist-card.component";
 import { getAllPlaylists, patchPlaylist } from "../utils/api/playlist-api.util";
 import {
 	getAllLocalPlaylists,
-	createLocalPlaylist,
 	addSongToLocalPlaylist,
 } from "../utils/api/local-playlist-api.util";
 import { updateFavoriteSongs } from "../utils/api/user-api.util";
 import { setUserFavorites } from "../store/slices/user.slice";
 import { addSongToQueue, playNext } from "../store/slices/playlist.slice";
-import { addLocalPlaylist } from "../store/slices/local-playlists.slice";
 
 /**
  * Song Tools Component
@@ -80,6 +77,7 @@ const SongTools = ({
 	const revalidator = useRevalidator();
 	// const windowWidth = useSelector((state) => state.configs.windowWidth);
 	const user = useSelector((state) => state.user.currentUser);
+	const isInstalled = useSelector((state) => state.pwa.isInstalled);
 	const [openDeleteModal, setOpenDeleteModal] = useState(false);
 	const [isDeleting, setIsDeleting] = useState(false);
 	const [deleteError, setDeleteError] = useState("");
@@ -190,12 +188,12 @@ const SongTools = ({
 			style += "first:stroke-basewhite first:fill-primary";
 		else style += "first:stroke-baseblack first:fill-basewhite";
 		return style;
-	}, [user]);
+	}, [user, song._id]);
 
 	return (
 		<div
 			onClick={(e) => e.stopPropagation()}
-			className="flex gap-7 items-center w-fit"
+			className="flex gap-5 md:gap-7 items-center w-fit"
 		>
 			{!["admin", "super-admin"].includes(user?.role) && (
 				<>
@@ -203,6 +201,12 @@ const SongTools = ({
 						<button className="cursor-pointer" onClick={onPlay}>
 							<PlaySmallSvg className="hover:first:fill-secondary-600 active:first:fill-secondary-700" />
 						</button>
+					)}
+					{isInstalled && (
+						<DownloadAudio
+							songId={song._id}
+							hasAudio={song.hasAudio}
+						/>
 					)}
 					{isAddingToFavorite ? (
 						<CustomTailSpin xs />
@@ -214,10 +218,6 @@ const SongTools = ({
 							<HeartSvg className={favoriteIconStyle} />
 						</button>
 					)}
-
-					{/* <div>
-							<DownloadSvg className="hover:first:fill-success-200 active:first:fill-success-300 cursor-pointer" />
-						</div> */}
 				</>
 			)}
 			{["admin", "super-admin"].includes(user?.role) ? (
@@ -247,7 +247,7 @@ const SongTools = ({
 					>
 						<Modal.Header>Delete Song?</Modal.Header>
 						<Modal.Body>
-							<p className="text-baseblack">This can't be undone!</p>
+							<p className="text-baseblack">This can&apos;t be undone!</p>
 							{deleteError && (
 								<p className="text-secondary mt-2">{deleteError}</p>
 							)}

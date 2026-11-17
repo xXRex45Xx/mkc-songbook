@@ -21,7 +21,7 @@
 export const selectTheme = {
 	field: {
 		select: {
-			base: "border-none focus:ring-0 bg-basewhite",
+			base: "border-none focus:ring-0 bg-basewhite max-md:w-32 max-md:text-ellipsis",
 			colors: {
 				gray: "text-baseblack bg-neutrals-100 focus:outline-none",
 			},
@@ -29,7 +29,7 @@ export const selectTheme = {
 				off: "rounded-l-lg",
 			},
 			sizes: {
-				md: "py-2.5 px-5",
+				md: "py-2.5 px-5 max-md:pl-3 max-md:pr-8",
 			},
 		},
 	},
@@ -62,7 +62,7 @@ export const searchInputTheme = {
 				off: "rounded-none",
 			},
 			sizes: {
-				md: "py-2.5 text-sm w-64 min-w-28",
+				md: "py-2.5 text-sm w-64 min-w-28 max-md:w-full max-md:min-w-0",
 			},
 		},
 	},
@@ -102,9 +102,9 @@ export const rangeSliderTheme = {
  */
 export const numberInputTheme = {
 	field: {
-		base: "relative",
+		base: "relative min-w-0 flex-1 max-w-11",
 		input: {
-			base: "inline text-center w-11 text-base font-bold border disabled:cursor-not-allowed disabled:opacity-50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
+			base: "inline text-center w-full text-base font-bold border disabled:cursor-not-allowed disabled:opacity-50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
 		},
 	},
 };

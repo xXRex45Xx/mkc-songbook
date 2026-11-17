@@ -1,0 +1,26 @@
+# Backend stack for home-server-1. The deploy job copies this file to /opt/mkc
+# and runs it there. See deploy/README.md for one-time server setup.
+services:
+  backend:
+    image: ghcr.io/xxrex45xx/mkc-songbook-backend:${IMAGE_TAG:-latest}
+    container_name: mkc-backend
+    restart: unless-stopped
+    # App secrets live on the server only, never in git or GitHub.
+    env_file: ./backend.env
+    environment:
+      PORT: "8080"
+      NODE_ENV: production
+    # Loopback only: cloudflared on the host reaches it at http://localhost:8080.
+    ports:
+      - "127.0.0.1:8080:8080"
+    volumes:
+      # Host folders come from /opt/mkc/.env (AUDIO_DIR, IMAGES_DIR). The container
+      # runs as uid 1000 (node), so both must be owned by 1000:1000.
+      - ${AUDIO_DIR:?set AUDIO_DIR in /opt/mkc/.env}:/app/uploads/audio
+      - ${IMAGES_DIR:?set IMAGES_DIR in /opt/mkc/.env}:/app/uploads/images
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 30s

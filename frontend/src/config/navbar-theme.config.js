@@ -38,18 +38,18 @@ export const navbarTheme = {
         base: "pb-6 flex items-center",
     },
     collapse: {
-        base: "w-full max-w-[400px]  md:w-auto md:max-w-none md:block",
-        list: "mt-0 flex flex-row justify-between md:space-x-8",
+        base: "w-full md:w-auto md:block",
+        list: "mt-0 flex flex-row justify-between gap-6 min-w-max md:gap-0 md:space-x-8",
         hidden: {
-            on: "overflow-auto",
+            on: "overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
             off: "",
         },
     },
     link: {
-        base: "block pb-2 font-semibold text-sm md:text-lg md:pb-4",
+        base: "block pb-2 font-semibold text-sm whitespace-nowrap md:text-lg md:pb-4",
         active: {
             on: "text-secondary border-b-2 border-b-secondary mb-2 md:mb-0",
-            off: "text-neutrals-700 border-0 hover:text-baseblack",
+            off: "text-neutrals-800 border-0 hover:text-baseblack",
         },
     },
 };

@@ -11,10 +11,56 @@
  */
 
 import AlbumModel from "../models/album.model.js";
+import LogBookModel from "../models/service-logbook.model.js";
+import PlaylistModel from "../models/playlist.model.js";
 import SongModel from "../models/song.model.js";
+import UserModel from "../models/user.model.js";
 import { regexBuilder } from "../utils/amharic-map.util.js";
-import { NotFoundError, ServerFaultError } from "../utils/error.util.js";
+import { ClientFaultError, NotFoundError, ServerFaultError } from "../utils/error.util.js";
 import fs from "fs";
+
+/**
+ * Server-side time limit, in milliseconds, for each song search query. Bounds the work a
+ * search can force on MongoDB, since title and lyrics are scanned with a regular expression.
+ * @constant {number}
+ */
+const SEARCH_MAX_TIME_MS = 5000;
+
+/**
+ * Remove a song id from every album, playlist, user favorites list and service logbook.
+ * Albums, playlists and logbooks get a new `updatedAt` so delta sync sees the change.
+ *
+ * @param {string} songId - Id of the song being deleted
+ * @returns {Promise<void>} Resolves when all four collections are updated
+ */
+const removeSongFromReferences = async (songId) => {
+	const now = new Date();
+	await Promise.all([
+		AlbumModel.updateMany({ songs: songId }, { $pull: { songs: songId }, $set: { updatedAt: now } }),
+		PlaylistModel.updateMany({ songs: songId }, { $pull: { songs: songId }, $set: { updatedAt: now } }),
+		LogBookModel.updateMany({ songList: songId }, { $pull: { songList: songId }, $set: { updatedAt: now } }),
+		UserModel.updateMany({ favorites: songId }, { $pull: { favorites: songId } }),
+	]);
+};
+
+/**
+ * Point every album, playlist, user favorites list and service logbook at a song's new id.
+ * Albums, playlists and logbooks get a new `updatedAt` so delta sync sees the change.
+ *
+ * @param {string} oldId - Id the song had
+ * @param {string} newId - Id the song has now
+ * @returns {Promise<void>} Resolves when all four collections are updated
+ */
+const replaceSongIdInReferences = async (oldId, newId) => {
+	const now = new Date();
+	const arrayFilters = [{ e: oldId }];
+	await Promise.all([
+		AlbumModel.updateMany({ songs: oldId }, { $set: { "songs.$[e]": newId, updatedAt: now } }, { arrayFilters }),
+		PlaylistModel.updateMany({ songs: oldId }, { $set: { "songs.$[e]": newId, updatedAt: now } }, { arrayFilters }),
+		LogBookModel.updateMany({ songList: oldId }, { $set: { "songList.$[e]": newId, updatedAt: now } }, { arrayFilters }),
+		UserModel.updateMany({ favorites: oldId }, { $set: { "favorites.$[e]": newId } }, { arrayFilters }),
+	]);
+};
 
 /**
  * Get all songs or search songs with pagination
@@ -36,10 +82,27 @@ import fs from "fs";
  * @throws {ServerFaultError} If database query fails due to server-side issues or database errors with detailed context
  */
 export const getAllOrSearchSongs = async (req, res) => {
-	const { q, page = 1, all, type, sortBy } = req.query;
+	const { q, page = 1, all, type, sortBy, syncSince, idsOnly } = req.query;
 	let songs, totalPages;
 	const projection = "title songFilePath";
-	if (all) songs = await SongModel.find();
+	let filter = {};
+	if (syncSince) {
+		const parsedDate = new Date(syncSince);
+		if (isNaN(parsedDate.getTime()))
+			throw new ClientFaultError(
+				"Invalid syncSince date. Expected ISO 8601 date string."
+			);
+		filter.updatedAt = { $gte: parsedDate };
+	}
+	// ID-only response used by clients to reconcile local deletions, which a
+	// delta sync cannot detect on its own.
+	if (all && idsOnly) {
+		const songsWithIds = await SongModel.find(filter, "_id").lean();
+		return res.status(200).json({
+			songIds: songsWithIds.map((song) => song._id),
+		});
+	}
+	if (all) songs = await SongModel.find(filter).populate("albums", "name");
 	else if (!q) {
 		songs = await SongModel.find({}, projection)
 			.sort(sortBy)
@@ -48,7 +111,7 @@ export const getAllOrSearchSongs = async (req, res) => {
 			.skip((page - 1) * 100)
 			.limit(100);
 		const totalDocuments = await SongModel.find({}).countDocuments();
-		totalPages = Math.floor(totalDocuments / 100) + 1;
+		totalPages = Math.max(1, Math.ceil(totalDocuments / 100));
 	} else {
 		const regex = new RegExp(regexBuilder(q), "i");
 		let query = {};
@@ -59,6 +122,7 @@ export const getAllOrSearchSongs = async (req, res) => {
 		else {
 			const queryPromises = [
 				SongModel.find({ title: regex }, projection)
+					.maxTimeMS(SEARCH_MAX_TIME_MS)
 					.sort(sortBy)
 					.collation({
 						locale: "en_US",
@@ -67,8 +131,11 @@ export const getAllOrSearchSongs = async (req, res) => {
 					.populate("albums", "name")
 					.skip((page - 1) * 100)
 					.limit(100),
-				SongModel.find({ title: regex }).countDocuments(),
+				SongModel.find({ title: regex })
+					.maxTimeMS(SEARCH_MAX_TIME_MS)
+					.countDocuments(),
 				SongModel.find({ lyrics: regex }, projection)
+					.maxTimeMS(SEARCH_MAX_TIME_MS)
 					.sort(sortBy)
 					.collation({
 						locale: "en_US",
@@ -77,7 +144,9 @@ export const getAllOrSearchSongs = async (req, res) => {
 					.populate("albums", "name")
 					.skip((page - 1) * 100)
 					.limit(100),
-				SongModel.find({ lyrics: regex }).countDocuments(),
+				SongModel.find({ lyrics: regex })
+					.maxTimeMS(SEARCH_MAX_TIME_MS)
+					.countDocuments(),
 			];
 			const [
 				titleMatch,
@@ -85,12 +154,14 @@ export const getAllOrSearchSongs = async (req, res) => {
 				lyricsMatch,
 				lyricsTotalDocuments,
 			] = await Promise.all(queryPromises);
-			totalPages =
-				Math.floor(
+			totalPages = Math.max(
+				1,
+				Math.ceil(
 					titleTotalDocuments > lyricsTotalDocuments
 						? titleTotalDocuments / 100
 						: lyricsTotalDocuments / 100
-				) + 1;
+				)
+			);
 			songs = {
 				titleMatch: titleMatch.map((song) => ({
 					...song._doc,
@@ -109,6 +180,7 @@ export const getAllOrSearchSongs = async (req, res) => {
 
 		const queryPromises = [
 			SongModel.find(query, projection)
+				.maxTimeMS(SEARCH_MAX_TIME_MS)
 				.sort(sortBy)
 				.collation({
 					locale: "en_US",
@@ -117,10 +189,10 @@ export const getAllOrSearchSongs = async (req, res) => {
 				.populate("albums", "name")
 				.skip((page - 1) * 100)
 				.limit(100),
-			SongModel.find(query).countDocuments(),
+			SongModel.find(query).maxTimeMS(SEARCH_MAX_TIME_MS).countDocuments(),
 		];
 		const [songsFromDb, totalDocuments] = await Promise.all(queryPromises);
-		totalPages = Math.floor(totalDocuments / 100) + 1;
+		totalPages = Math.max(1, Math.ceil(totalDocuments / 100));
 		songs = songsFromDb;
 	}
 	songs = songs.map((song) => ({
@@ -172,6 +244,7 @@ export const addSong = async (req, res) => {
 	if (song.albums) {
 		for (const album of song.albums) {
 			album.songs.push(insertedSong);
+			album.updatedAt = new Date();
 			await album.save();
 		}
 	}
@@ -246,31 +319,38 @@ export const updateSong = async (req, res) => {
 		tempo: song.tempo,
 		rythm: song.rythm,
 	};
+	songInDb.updatedAt = new Date();
 
 	if (song.albums) {
 		for (const album of songInDb.albums) {
 			album.songs = album.songs.filter((s) => s != id);
+			album.updatedAt = new Date();
 			await album.save();
 		}
 		for (const album of song.albums) {
 			album.songs.push(song.id);
+			album.updatedAt = new Date();
 			await album.save();
 		}
 		songInDb.albums = song.albums;
 	}
 
 	if (song.id != id) {
-		await SongModel.findByIdAndDelete(songInDb._id);
-
+		// _id cannot change in place: create the copy first so a failure loses nothing, then
+		// repoint every reference and drop the old document.
 		await SongModel.create({
 			_id: song.id,
-			albums: song.albums,
+			albums: song.albums ?? songInDb.albums,
 			createdAt: songInDb.createdAt,
+			updatedAt: songInDb.updatedAt,
 			lyrics: songInDb.lyrics,
-			mediaFiles: songInDb.mediaFiles,
 			musicElements: songInDb.musicElements,
+			songFilePath: songInDb.songFilePath,
 			title: songInDb.title,
+			youtubeLink: songInDb.youtubeLink,
 		});
+		await replaceSongIdInReferences(id, song.id);
+		await SongModel.findByIdAndDelete(songInDb._id);
 	} else await songInDb.save();
 
 	res.status(200).json({ updated: true });
@@ -309,6 +389,7 @@ export const patchSong = async (req, res) => {
 		songInDb.songFilePath = req.file.path;
 	}
 	songInDb.youtubeLink = song["video-link"];
+	songInDb.updatedAt = new Date();
 
 	await songInDb.save();
 
@@ -316,10 +397,10 @@ export const patchSong = async (req, res) => {
 };
 
 /**
- * Delete a song and remove it from associated albums
+ * Delete a song and remove it from albums, playlists, favorites and logbooks
  *
- * This function deletes a song from the database and removes references to it
- * from associated albums. It also handles file deletion for audio files.
+ * This function deletes a song from the database and removes every reference to it
+ * (albums, playlists, user favorites, service logbooks). It also deletes the audio file.
  *
  * @param {Object} req - Express request object containing request data
  * @param {Object} req.params - Route parameters with explanation of what they represent
@@ -333,14 +414,13 @@ export const deleteSong = async (req, res) => {
 	const { id } = req.params;
 	const song = await SongModel.findById(id);
 	if (!song) throw new NotFoundError("Song doesn't exist.");
-	for (const albumId of song.albums) {
-		const album = await AlbumModel.findById(albumId);
-		const songIdx = album.songs.indexOf(id);
-		album.songs.splice(songIdx, 1);
-		await album.save();
-	}
-
+	await removeSongFromReferences(id);
 	await SongModel.findByIdAndDelete(id);
+
+	if (song.songFilePath && fs.existsSync(song.songFilePath))
+		fs.unlink(song.songFilePath, (err) => {
+			if (err) console.error(err);
+		});
 
 	res.status(200).json({ deleted: true });
 };
@@ -348,8 +428,9 @@ export const deleteSong = async (req, res) => {
 /**
  * Stream audio file for a song
  *
- * This function streams an audio file for a song. It handles range requests for partial downloads
- * and supports chunked streaming for efficient playback.
+ * Without a Range header the whole file is sent with status 200 (offline save needs every
+ * byte). With a Range header, at most 500 KB is sent with status 206 for chunked streaming.
+ * A Range header with an unreadable start or a non-numeric end gets 416.
  *
  * @param {Object} req - Express request object containing request data
  * @param {Object} req.params - Route parameters with explanation of what they represent
@@ -374,20 +455,16 @@ export const streamSongAudio = async (req, res) => {
 	const range = req.headers.range;
 	const CHUNK_SIZE = 500 * 1e3; // 500KB chunks
 
-	// If no range header, send first chunk with proper headers so browser knows total size
+	// No Range header: the caller wants the whole file (offline save). Send 200 with the full
+	// body. Media elements always send a Range header, so streaming playback is unchanged.
 	if (!range) {
-		const start = 0;
-		const end = Math.min(CHUNK_SIZE - 1, audioSize - 1);
-		const contentLength = end - start + 1;
-
-		res.writeHead(206, {
-			"Content-Range": `bytes ${start}-${end}/${audioSize}`,
+		res.writeHead(200, {
 			"Accept-Ranges": "bytes",
-			"Content-Length": contentLength,
+			"Content-Length": audioSize,
 			"Content-Type": "audio/mpeg",
+			"Cache-Control": "no-store",
 		});
-		const stream = fs.createReadStream(song.songFilePath, { start, end });
-		stream.pipe(res);
+		fs.createReadStream(song.songFilePath).pipe(res);
 		return;
 	}
 
@@ -396,8 +473,15 @@ export const streamSongAudio = async (req, res) => {
 	const start = parseInt(parts[0], 10);
 	const requestedEnd = parts[1] ? parseInt(parts[1], 10) : audioSize - 1;
 
-	// Validate range start
-	if (isNaN(start) || start >= audioSize || start < 0) {
+	// Validate range start and end. A non-numeric end must be turned away before the 206
+	// headers are sent: fs.createReadStream throws on a NaN end, which would leave the
+	// response half-written.
+	if (
+		isNaN(start) ||
+		isNaN(requestedEnd) ||
+		start >= audioSize ||
+		start < 0
+	) {
 		res.writeHead(416, {
 			"Content-Range": `bytes */${audioSize}`,
 		});
@@ -424,6 +508,7 @@ export const streamSongAudio = async (req, res) => {
 		"Accept-Ranges": "bytes",
 		"Content-Length": contentLength,
 		"Content-Type": "audio/mpeg",
+		"Cache-Control": "no-store",
 	});
 
 	const stream = fs.createReadStream(song.songFilePath, { start, end });

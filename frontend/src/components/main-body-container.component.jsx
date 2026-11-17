@@ -18,7 +18,7 @@
 const MainBodyContainer = ({ children, title, titleHelper }) => (
     <main className="p-5 md:p-10 lg:py-10 lg:px-20 flex flex-col flex-1 items-start gap-2.5 md:gap-5 lg:gap-7 overflow-auto">
         {title && (
-            <div className="flex justify-between items-center self-stretch">
+            <div className="flex flex-wrap items-center self-stretch gap-x-3 gap-y-3 md:justify-between max-md:[&>div]:contents max-md:[&>div>*]:order-3 max-md:[&>div>*:last-child]:order-2 max-md:[&>div>*:last-child]:ml-auto max-md:[&>h1]:order-1 max-md:[&>div>button]:h-auto">
                 <h1 className="text-baseblack text-lg md:text-3xl font-bold">
                     {title}
                 </h1>

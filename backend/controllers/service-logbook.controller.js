@@ -1,6 +1,9 @@
 import LogBookModel from "../models/service-logbook.model.js";
 import { regexBuilder } from "../utils/amharic-map.util.js";
 
+/** Server-side time limit, in milliseconds, for location search queries. */
+const LOCATION_SEARCH_MAX_TIME_MS = 5000;
+
 /**
  * Get all log entries or search log entries with pagination
  *
@@ -29,13 +32,20 @@ export const getAllOrSearchLogBook = async (req, res) => {
 			query = { churchName: { $regex: new RegExp(regexBuilder(q), "i") } };
 		else if (type === "date") query = { serviceDate: q };
 
+		const limitSearchTime = (mongooseQuery) =>
+			type === "location"
+				? mongooseQuery.maxTimeMS(LOCATION_SEARCH_MAX_TIME_MS)
+				: mongooseQuery;
+
 		queryPromises = [
-			LogBookModel.find(query, {
-				songList: false,
-			})
+			limitSearchTime(
+				LogBookModel.find(query, {
+					songList: false,
+				})
+			)
 				.skip((page - 1) * 100)
 				.limit(100),
-			LogBookModel.find(query).countDocuments(),
+			limitSearchTime(LogBookModel.find(query)).countDocuments(),
 		];
 	} else {
 		queryPromises = [

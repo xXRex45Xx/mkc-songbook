@@ -1,0 +1,52 @@
+# MKC Songbook System Map — how to walk it
+
+## Use
+
+1. Read [AGENTS.md](AGENTS.md). Pick the cluster your change touches.
+2. Open that cluster's `_index.md`. Open only the cards you need, never the whole folder.
+3. On each card, follow **See** to the source. Code beats the card; if they disagree, fix the card.
+4. Before a change, start at [effects/CONTEXT.md](effects/CONTEXT.md), then read each listed
+   card's **If you change this**.
+5. For a flow (sign-in, sync, offline, upload), start in `processes/`; each card links its nouns.
+
+## Which card type
+
+- **Task, any size:** [effects/CONTEXT.md](effects/CONTEXT.md) "Route a task to files", then the area cards it names.
+- **Area cards** (`areas/`): which files, what each does, what calls it. Use them to find where to edit.
+- **Object cards** (`objects/`): what the data is. **Process cards** (`processes/`): how it moves.
+
+## Universes
+
+| Universe | Meaning |
+|---|---|
+| `live` | In force. Build and cite against it. |
+| `leftover` | Still present, off the main path. Touch only if that path is in scope. |
+| `ghost` | Named but not wired. Never build against it. |
+
+Ghost cards on the shelves: [SearchHistory](objects/data-model/search-history.md),
+[settings store](objects/local-db/settings-store.md).
+
+Ghosts with no card:
+
+- Announcements: `/announcements` route renders "Under Construction"; no backend.
+- Backend E2E tests: `npm run test:e2e` exists; `backend/__tests__/e2e/` is empty.
+- `@/` import alias: named in old docs, configured nowhere.
+
+## Card status
+
+`stub` (frontmatter + title only) → `verified` (needs a date, a commit, and `path:line`
+citations) → `stale` (source changed since verification). A wrong `verified` date is worse
+than `stale`.
+
+## Maintain
+
+From `map/`, after adding or changing cards:
+
+- `python3 -I _tools/index.py objects/data-model objects/local-db objects/app-state processes`
+- `python3 -I _tools/links.py`
+
+Never hand-edit `_index.md`.
+
+## Outside consumers
+
+Listed in [effects/CONTEXT.md](effects/CONTEXT.md#outside-consumers).
