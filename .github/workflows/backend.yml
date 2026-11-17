@@ -1,6 +1,8 @@
 name: Backend CI/CD
 
 # Frontend is built and deployed by Cloudflare Pages; this workflow is backend only.
+# It tests and publishes the image. Watchtower on home-server-1 pulls it (deploy/README.md).
+# No self-hosted runner: the repo is public, and a fork PR could run code on one.
 on:
   push:
     branches: [main]
@@ -62,58 +64,3 @@ jobs:
             ${{ env.IMAGE }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
-  deploy:
-    needs: build
-    # Runs on the self-hosted runner installed on home-server-1 (outbound-only,
-    # so no inbound port or SSH through the tunnel). Never trigger it from pull_request.
-    runs-on: [self-hosted, home-server-1]
-    environment: production
-    concurrency:
-      group: deploy-backend
-      cancel-in-progress: false
-    permissions:
-      contents: read
-      packages: read
-    env:
-      APP_DIR: /opt/mkc
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          sparse-checkout: deploy
-
-      - name: Log in to GHCR
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
-
-      - name: Install compose file
-        run: |
-          cp deploy/docker-compose.yml "$APP_DIR/docker-compose.yml"
-
-      - name: Deploy new image
-        working-directory: /opt/mkc
-        env:
-          NEW_TAG: ${{ github.sha }}
-        run: |
-          set -euo pipefail
-          # .env also holds AUDIO_DIR and IMAGES_DIR: rewrite only the IMAGE_TAG line.
-          set_tag() { { grep -v '^IMAGE_TAG=' .env || true; echo "IMAGE_TAG=$1"; } > .env.tmp && mv .env.tmp .env; }
-          touch .env
-          prev_tag="$(sed -n 's/^IMAGE_TAG=//p' .env)"
-          set_tag "$NEW_TAG"
-          docker compose pull backend
-          if docker compose up -d --wait --wait-timeout 90 backend; then
-            echo "Deployed $NEW_TAG"
-          else
-            echo "::error::Health check failed for $NEW_TAG"
-            docker compose logs --tail 80 backend || true
-            if [ -n "$prev_tag" ]; then
-              echo "Rolling back to $prev_tag"
-              set_tag "$prev_tag"
-              docker compose up -d --wait --wait-timeout 90 backend
-            fi
-            exit 1
-          fi
-
-      - name: Prune old images
-        if: success()
-        run: docker image prune -af --filter "until=168h"

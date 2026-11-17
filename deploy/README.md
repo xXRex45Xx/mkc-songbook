@@ -1,10 +1,16 @@
 # Backend deploy (home-server-1)
 
 Pipeline: `.github/workflows/backend.yml`. On push to `main` touching `backend/**` or `deploy/**`:
-test, build and push to GHCR (`:sha` and `:latest`), then a self-hosted runner on
-home-server-1 pulls the `:sha` image and runs `docker compose up -d --wait`. If the
-`/healthz` check fails, the job restores the previous tag and fails. The frontend is
-deployed by Cloudflare Pages and is not part of this pipeline.
+test, then build and push the image to GHCR (`:sha` and `:latest`). Watchtower, running on
+home-server-1, polls GHCR every 5 minutes and restarts the backend when `:latest` changes.
+The frontend is deployed by Cloudflare Pages and is not part of this pipeline.
+
+There is no self-hosted runner. The repo is public, and a fork pull request could otherwise
+run its own code on the server. Nothing in GitHub can reach the server; the server only pulls.
+
+Trade-offs: an update lands within about 5 minutes of the image being published, and Watchtower
+does not wait for the health check or roll back. A bad image restarts the container and the
+Docker healthcheck marks it unhealthy. Roll back by hand (see Operations).
 
 ## One-time server setup
 
@@ -16,11 +22,10 @@ deployed by Cloudflare Pages and is not part of this pipeline.
    sudo chown -R 1000:1000 <path-to-host-upload-audio> <path-to-host-upload-images>
    ```
 
-   Then tell compose where they are in `/opt/mkc/.env`. The deploy job edits only the
-   `IMAGE_TAG` line and keeps these:
+2. Tell compose where the folders are, in `/opt/mkc/.env`:
 
    ```bash
-   cat >> /opt/mkc/.env <<'EOF'
+   sudo tee /opt/mkc/.env <<'EOF'
    AUDIO_DIR=<path-to-host-upload-audio>
    IMAGES_DIR=<path-to-host-upload-images>
    EOF
@@ -29,32 +34,33 @@ deployed by Cloudflare Pages and is not part of this pipeline.
    These map to `/app/uploads/audio` and `/app/uploads/images`. `AUDIO_STORAGE` and
    `IMAGE_STORAGE` in `backend.env` must stay `/uploads/audio` and `/uploads/images`.
 
-2. Create `/opt/mkc/backend.env` from `backend/.env.example`. Set `NODE_ENV=production`,
+3. Create `/opt/mkc/backend.env` from `backend/.env.example`. Set `NODE_ENV=production`,
    `DB_URI`, `JWT_SECRET`, `TURNSTILE_SECRET_KEY`, `GOOGLE_CLIENT_ID`, the `SMTP_*` values,
    `ALLOWED_ORIGINS` (exact Pages origin, no wildcard), `TRUST_PROXY=1` (cloudflared is one hop)
    and `IMAGE_STORAGE` / `AUDIO_STORAGE`. Then `chmod 600 /opt/mkc/backend.env`.
    The compose file forces `PORT=8080`, so leave `PORT` out.
 
-3. Create a dedicated user, add it to the `docker` group, and install the GitHub Actions
-   self-hosted runner as a service. Repo, Settings, Actions, Runners, New self-hosted runner.
-   Give it the label `home-server-1`.
+4. Make the image pullable. Either set the GHCR package to **Public** (your profile, Packages,
+   `mkc-songbook-backend`, Package settings, Change visibility). The image holds no secrets: env
+   files are excluded from it and read from the server at run time. Or keep it private, run
+   `docker login ghcr.io` on the server with a read-only token, and enable the commented
+   `config.json` mount for Watchtower in the compose file.
+
+5. Fetch the compose file and start the stack:
 
    ```bash
-   sudo adduser --disabled-password --gecos "" ghrunner
-   sudo usermod -aG docker ghrunner
-   sudo chown ghrunner /opt/mkc
+   cd /opt/mkc
+   curl -fsSL https://raw.githubusercontent.com/xXRex45Xx/mkc-songbook/main/deploy/docker-compose.yml -o docker-compose.yml
+   docker compose up -d --wait backend
+   docker compose up -d
    ```
 
-   The `docker` group is root-equivalent on that host. Use the runner only for this private
-   repo, and never run it for `pull_request` events (the workflow already gates deploy to `main`).
+   Stop any old container that uses port 8080 first (`docker stop <old-name>`).
 
-4. In GitHub: Settings, Environments, create `production`. Optionally add a required reviewer
-   for manual approval before each deploy.
-
-5. Point the Cloudflare Tunnel public hostname at `http://localhost:8080`. If cloudflared runs
+6. Point the Cloudflare Tunnel public hostname at `http://localhost:8080`. If cloudflared runs
    as a container, put it on a shared Docker network instead and target `http://mkc-backend:8080`.
 
-6. Optional branch protection on `main`: require the `test` check.
+7. Optional branch protection on `main`: require the `test` check.
 
 ## Operations
 
@@ -62,7 +68,19 @@ deployed by Cloudflare Pages and is not part of this pipeline.
 cd /opt/mkc
 docker compose ps                  # health state
 docker compose logs -f backend
-cat .env                           # IMAGE_TAG currently deployed
+docker compose logs -f watchtower  # what it pulled and when
 ```
 
-Manual rollback: set `IMAGE_TAG=<older sha>` in `/opt/mkc/.env`, then `docker compose up -d --wait backend`.
+Update the compose file itself (Watchtower only updates images, not this file):
+
+```bash
+cd /opt/mkc
+curl -fsSL https://raw.githubusercontent.com/xXRex45Xx/mkc-songbook/main/deploy/docker-compose.yml -o docker-compose.yml
+docker compose up -d
+```
+
+Update now instead of waiting for the poll: `docker compose pull backend && docker compose up -d backend`.
+
+Manual rollback: pin an older commit image. Set `IMAGE_TAG=<older sha>` in `/opt/mkc/.env`, then
+`docker compose up -d backend`. Watchtower will not move a container off a pinned sha tag. Remove
+the `IMAGE_TAG` line to go back to `:latest`.

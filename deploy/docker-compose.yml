@@ -1,5 +1,6 @@
-# Backend stack for home-server-1. The deploy job copies this file to /opt/mkc
-# and runs it there. See deploy/README.md for one-time server setup.
+# Backend stack for home-server-1. Copy this file to /opt/mkc and run it there.
+# See deploy/README.md for the one-time server setup. Watchtower pulls new images
+# from GHCR after each push to main, so there is no deploy job and no runner.
 services:
   backend:
     image: ghcr.io/xxrex45xx/mkc-songbook-backend:${IMAGE_TAG:-latest}
@@ -18,9 +19,27 @@ services:
       # runs as uid 1000 (node), so both must be owned by 1000:1000.
       - ${AUDIO_DIR:?set AUDIO_DIR in /opt/mkc/.env}:/app/uploads/audio
       - ${IMAGES_DIR:?set IMAGES_DIR in /opt/mkc/.env}:/app/uploads/images
+    labels:
+      # Watchtower updates only containers that carry this label.
+      - "com.centurylinklabs.watchtower.enable=true"
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/healthz"]
       interval: 10s
       timeout: 5s
       retries: 6
       start_period: 30s
+
+  watchtower:
+    image: nickfedor/watchtower:latest
+    container_name: mkc-watchtower
+    restart: unless-stopped
+    environment:
+      WATCHTOWER_LABEL_ENABLE: "true"
+      # Check GHCR every 5 minutes; a new :latest is pulled and the container restarted.
+      WATCHTOWER_POLL_INTERVAL: "300"
+      WATCHTOWER_CLEANUP: "true"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Only if the GHCR package is private: log in with `docker login ghcr.io` and mount
+      # the credentials so Watchtower can pull.
+      # - /root/.docker/config.json:/config.json:ro
