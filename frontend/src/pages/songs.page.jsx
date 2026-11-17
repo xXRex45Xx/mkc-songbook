@@ -14,7 +14,10 @@ import CustomTailSpin from "../components/custom-tail-spin.component";
 import AdminHelper from "../components/admin-helper.component";
 import { songIdbService } from "../utils/db/song-idb-service.util";
 import { syncSongs } from "../utils/pwa/sync-service.util";
-import { searchLocalSongs } from "../utils/offline-search.util";
+import {
+	searchLocalSongs,
+	searchLocalSongMatches,
+} from "../utils/offline-search.util";
 
 /**
  * Songs Page Component
@@ -57,16 +60,43 @@ const SongsPage = () => {
 export default SongsPage;
 
 /**
+ * Removes the server file path from a song, as the songs API does
+ *
+ * @param {Object} song - Song from IndexedDB
+ * @returns {Object} Song without `songFilePath`
+ */
+const toPageSong = (song) => ({ ...song, songFilePath: undefined });
+
+/**
  * Searches and sorts the locally cached songs
  * Mirrors the response shape of the songs API so the page component is unaware
- * of where the data came from.
+ * of where the data came from: a combined ("All Categories") search returns
+ * `{ titleMatch, lyricsMatch }` as `songs`, every other search a flat list.
  *
  * @param {Object} searchQuery - Search parameters
  * @param {number} [page=1] - Page number for pagination
- * @returns {Promise<{songs: Array<Object>, totalPages: number}>} Matching songs
+ * @returns {Promise<{songs: (Array<Object>|{titleMatch: Array<Object>, lyricsMatch: Array<Object>}), totalPages: number}>} Matching songs
  */
 const searchLocalSongsForPage = async (searchQuery, page = 1) => {
 	const localSongs = await songIdbService.getAll();
+
+	if (searchQuery.type === "all" && searchQuery.q) {
+		const { titleMatch, lyricsMatch } = searchLocalSongMatches(
+			localSongs,
+			searchQuery
+		);
+		const start = (page - 1) * 100;
+		return {
+			songs: {
+				titleMatch: titleMatch.slice(start, start + 100).map(toPageSong),
+				lyricsMatch: lyricsMatch.slice(start, start + 100).map(toPageSong),
+			},
+			totalPages: Math.max(
+				1,
+				Math.ceil(Math.max(titleMatch.length, lyricsMatch.length) / 100)
+			),
+		};
+	}
 
 	const sorted = searchLocalSongs(localSongs, searchQuery);
 	const perPage = 100;

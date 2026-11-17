@@ -24,7 +24,7 @@ One util per backend resource. Song, album and playlist writes, and `updateFavor
 | `frontend/src/utils/api/logbook-api.util.js` | `getAllOrSearchLogBook` :16 (page only) | GET `/api/logbook` |
 | `frontend/src/utils/api/local-playlist-api.util.js` | Device-only playlists in IndexedDB; `syncPlaylistToServer` :183 uploads through `addOrEditPlaylist` | none direct |
 | `frontend/src/utils/api/audio-download.util.js` | Offline audio with Range resume | GET `/api/song/:id/audio` (:90) |
-| `frontend/src/utils/offline-search.util.js` | Client-side filter and sort when offline; text matching uses the server's Amharic variant classes (`buildSearchPattern` :44, from `similarRegexMap`), sorting only approximates the server | none |
+| `frontend/src/utils/offline-search.util.js` | Client-side filter and sort when offline; text matching uses the server's Amharic variant classes (`buildSearchPattern` :44, from `similarRegexMap`; `searchLocalSongMatches` splits a combined search into title and lyrics matches), sorting only approximates the server | none |
 | `frontend/src/utils/amharic-map.util.js` | Amharic-aware highlight regex (`regexBuilder` :98, does not escape: `lyric-viewer.component.jsx:81` relies on that) and `similarRegexMap`, also used by offline search; backend has its own equal copy | none |
 | `frontend/src/utils/regex.util.js` | `emailRegex` for `user-api.util.js` | none |
 

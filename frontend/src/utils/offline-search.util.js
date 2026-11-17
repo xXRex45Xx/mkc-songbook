@@ -132,6 +132,24 @@ export const searchLocalSongs = (songs, searchQuery = {}) =>
 	sortLocalSongs(filterLocalSongs(songs, searchQuery), searchQuery.sortBy);
 
 /**
+ * Splits locally cached songs into title matches and lyrics matches
+ *
+ * Mirrors the server's combined ("All Categories") search, which returns the
+ * songs whose title matches and, separately, the songs whose lyrics match.
+ * The song number is not searched, as on the server.
+ *
+ * @param {Array<Object>} songs - Songs from IndexedDB
+ * @param {Object} [searchQuery] - Search parameters
+ * @param {string} [searchQuery.q] - Search text
+ * @param {string} [searchQuery.sortBy] - Sort option
+ * @returns {{titleMatch: Array<Object>, lyricsMatch: Array<Object>}} Both match lists in the requested order, unpaginated
+ */
+export const searchLocalSongMatches = (songs, { q, sortBy } = {}) => ({
+	titleMatch: sortLocalSongs(filterLocalSongs(songs, { q, type: "title" }), sortBy),
+	lyricsMatch: sortLocalSongs(filterLocalSongs(songs, { q, type: "lyrics" }), sortBy),
+});
+
+/**
  * Filters locally cached albums by name, with the same variant matching as the server
  *
  * @param {Array<Object>} albums - Albums from IndexedDB
