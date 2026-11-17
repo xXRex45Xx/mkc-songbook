@@ -5,7 +5,7 @@ universe: live
 status: verified
 owns: [frontend/src/assets/lyrics-link.svg, frontend/src/components/audio-controls.component.jsx, frontend/src/components/audio-player-toolbox.component.jsx, frontend/src/components/audio-player.component.jsx, frontend/src/components/audio-player.styles.css, frontend/src/components/custom-slider.component.jsx, frontend/src/components/download-audio.component.jsx, frontend/src/components/lyric-viewer.component.jsx, frontend/src/components/music-element.component.jsx, frontend/src/components/song-collection-tools.component.jsx, frontend/src/components/song-tools.component.jsx, frontend/src/components/song-form.component.jsx, frontend/src/components/songs-table.component.jsx, frontend/src/components/sort-dropdown.component.jsx, frontend/src/components/search-bar.component.jsx, frontend/src/components/no-results.component.jsx, frontend/src/components/new-album-song.component.jsx, frontend/src/components/custom-table.component.jsx, frontend/src/components/custom-row.component.jsx, frontend/src/components/first-droppable-row.component.jsx]
 description: "Audio player, lyric viewer, song forms, song tables, search and sort components."
-verified: 2026-11-16 @ 9ab0d65
+verified: 2026-11-17 @ 0f10b53
 ---
 
 # Components: player and songs
@@ -16,7 +16,7 @@ Run the `impeccable` skill for visual changes. This card routes by behavior.
 
 | File | Role | Uses |
 |---|---|---|
-| `audio-player.component.jsx` | Persistent `<audio>` mounted once in `App.jsx:50`; prefers the IndexedDB blob, falls back to the stream. Below 768px (`matchMedia`, local state `expandedRequested`) a tap on empty space expands the bar; chevron or swipe down (48px) collapses; lyrics link to `/songs/:id` | slices `playlist`, `user`; `audio-download.util`, `user-api.util`; `audio-player.styles.css` |
+| `audio-player.component.jsx` | Persistent `<audio>` mounted once in `App.jsx:50`; prefers the IndexedDB blob, falls back to the stream. A source set because the queue changed (a row's play icon, auto-advance, or a saved copy replacing a failed stream) starts playing on its first `canplay` (`autoPlayPendingRef`, `onSrcLoaded`); the element has no `autoPlay` attribute. Below 768px (`matchMedia`, local state `expandedRequested`) a tap on empty space expands the bar; chevron or swipe down (48px) collapses; lyrics link to `/songs/:id` | slices `playlist`, `user`; `audio-download.util`, `user-api.util`; `audio-player.styles.css` |
 | `audio-controls.component.jsx` | Play, prev, next, repeat, favorite buttons; prev and repeat show on mobile only when the `expanded` prop is true | `button-theme.config` |
 | `audio-player-toolbox.component.jsx` | Queue modal: reorder, remove, jump; `mobileMenu` prop renders the phone three-dot menu (Queue, Save offline) | `playlist` slice; renders `SongsTable`, `DownloadAudio` |
 | `lyrics-link.svg` (asset) | Lucide clapperboard icon (ISC) for the expanded player's lyrics link | imported `?react` by `audio-player.component.jsx` |

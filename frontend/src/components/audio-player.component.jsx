@@ -83,6 +83,11 @@ const AudioPlayer = () => {
 	// Blob URL from the previous track, kept alive until the new source has
 	// loaded so the element never loses its active URL mid-swap.
 	const pendingBlobUrlRef = useRef("");
+	// Set when a new source is assigned because the queue changed (or a saved
+	// copy replaced a failed stream); the element's first `canplay` then starts
+	// playback. Cleared on use, so later `canplay` events (after a seek or a
+	// buffering pause) never restart a track the user paused.
+	const autoPlayPendingRef = useRef(false);
 
 	/**
 	 * Resolve the audio source for the current track.
@@ -132,6 +137,7 @@ const AudioPlayer = () => {
 				// <audio> element never loses its active URL mid-swap.
 				pendingBlobUrlRef.current = blobUrlRef.current;
 				blobUrlRef.current = url;
+				autoPlayPendingRef.current = true;
 				setAudioSrc(url);
 			} else {
 				setAudioUnavailable(true);
@@ -159,6 +165,14 @@ const AudioPlayer = () => {
 		if (pendingBlobUrlRef.current) {
 			URL.revokeObjectURL(pendingBlobUrlRef.current);
 			pendingBlobUrlRef.current = "";
+		}
+		// Start the track the user just chose (or the next one in the queue).
+		// `play()` is called from `canplay` rather than with the `autoPlay`
+		// attribute because the source is assigned after an async IndexedDB
+		// lookup, which can lose the click's user activation on some browsers.
+		if (autoPlayPendingRef.current) {
+			autoPlayPendingRef.current = false;
+			safePlay();
 		}
 	};
 
@@ -192,6 +206,7 @@ const AudioPlayer = () => {
 			// never loses its active URL mid-swap.
 			pendingBlobUrlRef.current = blobUrlRef.current;
 			blobUrlRef.current = url;
+			autoPlayPendingRef.current = true;
 			setAudioSrc(url);
 		};
 		loadAudioSrc();
