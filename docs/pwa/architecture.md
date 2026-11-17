@@ -15,7 +15,7 @@ The PWA layer is built around four decisions stated in the plan and reflected th
 1. **`updatedAt` delta sync** — Instead of re-fetching the full catalog on every sync, the client tracks the most recent `updatedAt` it has seen and asks the server only for records changed since then. Song `createdAt` is a String (a year like `"2024"`), so it is unsuitable for delta sync; `updatedAt` (a real Date) is used instead.
 2. **IndexedDB-first page loading** — Route loaders return data from the local IndexedDB store immediately so the UI renders instantly, then trigger a background sync to refresh.
 3. **Audio is NOT cached by the service worker** — Streaming endpoints stay network-only. Offline audio is an explicit, user-initiated action that stores the decoded `Blob` in IndexedDB.
-4. **`registerType: "autoUpdate"`** — New service-worker versions activate automatically on the next navigation; no refresh prompt is shown.
+4. **`registerType: "autoUpdate"`** — A new service-worker version installs, takes over every open tab at once (`skipWaiting` and `clientsClaim`) and the page reloads itself; no refresh prompt is shown. §5.4 describes the whole flow and §5.5 what protects a tab that fails to load a chunk after a deploy.
 
 ---
 
@@ -149,16 +149,53 @@ This is a belt-and-suspenders layer: the *primary* offline data source is Indexe
 
 ### 5.3 Registration (`pwa-register.util.js`)
 
-`frontend/src/main.jsx` imports and calls `registerPwa()` at startup (before `createRoot`). `registerPwa` wraps `registerSW` from `virtual:pwa-register` and wires its callbacks into the Redux store:
+`frontend/src/main.jsx` calls `registerPwa()` at startup (before `createRoot`). `registerPwa` wraps `registerSW` from `virtual:pwa-register` and wires its callbacks into the Redux store:
 
 | Callback | Behavior |
 |----------|----------|
-| `onOfflineReady` | Dispatch `setSyncing(true)`; if no `lastSongSync` in syncMeta → `initializePwaData()` (first run), else → `syncAll()`; on success dispatch `setSyncComplete(...)`, on error `setSyncError(...)`; finally `setOfflineReady(true)`. |
-| `onNeedRefresh` | `setNeedRefresh(true)` → UI shows the "Update available" prompt. |
-| `onRegisteredSW` | `setInterval(() => registration.update(), 3600000)` — polls for a new SW every hour. |
-| `onRegisterError` | Log + `setSyncError(...)`. |
+| `onOfflineReady` | First install only: `setOfflineReady(true)` and `runSync()` (first data load, or delta sync when the cursors exist). |
+| `onRegisteredSW` | Keeps the registration and starts `setInterval(checkForUpdate, 3600000)`, an hourly `registration.update()` while online and the tab is visible. |
+| `onRegisterError` | Log, and `setSwError(...)`. |
 
-`updateSW()` (exported) calls the captured `updateSwCallback(true)` to activate a waiting SW and reload — invoked by the "Reload" button in the status UI.
+`onNeedRefresh` is not used: in `autoUpdate` mode the plugin never calls it, and there is no update banner or Reload button.
+
+Besides the hourly poll, a new `sw.js` is looked for when the tab returns to the foreground (at most once every five minutes, together with a data sync) and when the `online` event fires.
+
+### 5.4 How an update reaches users
+
+1. `vite build` writes `sw.js` with a precache list: every JS and CSS file, `index.html`, `404.html`, icons. The JS and CSS names carry a content hash, so a changed file is a new name; the list holds each name and, for unhashed files, a revision.
+2. The browser downloads `sw.js` on a page load, the hourly poll, a foreground return and a reconnect. If its bytes changed, the new worker installs and precaches the files it does not already have.
+3. `skipWaiting` activates it at once, `clientsClaim` makes it control all open tabs, and `cleanupOutdatedCaches()` deletes the previous release's precache entries.
+4. The plugin's `autoUpdate` code reloads each tab when the update activates (`window.location.reload()`), so a tab never keeps running old code against the new files. The reload can happen during playback or editing.
+
+What can go wrong, and what covers it:
+
+| Risk | Cover |
+|------|-------|
+| A tab still running the old build asks for a lazy chunk the deploy deleted | `vite:preloadError` recovery (§5.5) and, from the hosting rules (§5.6), a 404 instead of an HTML page |
+| `sw.js` itself kept by the browser or CDN, so the update is not seen for hours | `_headers`: `Cache-Control: public, max-age=0, must-revalidate` on `/sw.js` |
+| A missing file answered with the app's HTML and stored by Workbox as that file (it checks only HTTP 200, not the content type) | the 404 rule (§5.6) and the cache clearing step in §5.5 |
+| IndexedDB schema bumped by a new build while an old tab holds the database | `blocking()` in `getDB` releases the old connection; the old tab reloads on activation |
+
+### 5.5 Chunk load recovery (`chunk-error-recovery.util.js`)
+
+Vite emits `vite:preloadError` when a lazy import fails (a deleted chunk, a network error, or a cached HTML page where JS was expected). `setupChunkErrorRecovery()`, called from `main.jsx`, handles it with a loop guard kept in `sessionStorage` (60-second window):
+
+1. First failure: `preventDefault()` and reload the page once.
+2. Second failure inside the window, online only: delete the `*precache*` caches, unregister the service worker, reload. The new service worker precaches the current release again. IndexedDB and the other caches (album covers, API responses) are not touched.
+3. Third failure: do nothing, so the router's `ErrorPage` shows.
+
+`ErrorPage` has a "Reload the app" button that runs the step-2 clear-and-reload (a plain reload when offline, because the precache is then the only copy of the app shell).
+
+### 5.6 Hosting rules (Cloudflare Pages)
+
+Three files in `frontend/public` are copied to `dist` and read by Cloudflare Pages:
+
+- `_headers`: `/sw.js` and `/manifest.webmanifest` are revalidated on every request; `/assets/*` and `/workbox-*.js` (hashed names) are `immutable` for a year. HTML already comes with `max-age=0, must-revalidate`.
+- `404.html`: without it Pages assumes a single-page app and answers any unknown path with the app's HTML and status 200. With it, a missing file is a real 404.
+- `_redirects`: with `404.html` present, each client-side route needs a `200` rewrite to `/`: `/songs`, `/songs/*`, `/albums`, `/albums/*`, `/playlists`, `/playlists/*`, `/local-playlists`, `/schedule`, `/schedule/*`, `/users`, `/announcements`, `/auth`, `/auth/*`. Pages cannot rewrite to a 404, and a redirect rule applies even when a file matches, so a catch-all `/*` is not possible. **A new top-level route in `src/main.jsx` needs a line here**, or a refresh on it shows the 404 page.
+
+If these rules ever misbehave, deleting `404.html` and `_redirects` restores the single-page-app fallback.
 
 ---
 
@@ -201,8 +238,8 @@ Runs both entity syncs concurrently.
 
 ### 6.4 Redux state (`pwa.slice.js`)
 
-State: `{ offlineReady, needRefresh, lastSyncTime, isSyncing, syncError }`.
-Reducers: `setOfflineReady`, `setNeedRefresh`, `setSyncing`, `setSyncComplete` (clears `isSyncing`, stamps `lastSyncTime = now`, clears error), `setSyncError`. Registered in `store.js` as `pwa`.
+State: `{ offlineReady, isOnline, lastSyncTime, isSyncing, syncError, lastSyncCounts, pendingWrites, failedWrites, isInstallable, isInstalled, swError, audioDownloads }` (there is no `needRefresh`: updates reload the page by themselves, §5.4).
+Reducers include `setOfflineReady`, `setSyncing`, `setSyncComplete` (clears `isSyncing`, stamps `lastSyncTime = now`, clears error), `setSyncError`. Registered in `store.js` as `pwa`.
 
 A subtlety: `setSyncComplete` ignores its payload and always sets `lastSyncTime` to "now". The counts returned by `syncAll` are therefore not surfaced through Redux (the `onOfflineReady` path even dispatches `setSyncComplete({ songsSynced: 0, albumsSynced: 0 })` regardless of actual counts). The counts are only meaningful as the resolved return value of `syncAll()`.
 
@@ -338,10 +375,12 @@ Click DownloadAudio ─► saveAudioOffline(songId, onProgress)
 | `frontend/src/utils/db/sync-meta-idb-service.util.js` | Key-value store for sync cursors |
 | `frontend/src/utils/db/audio-idb-service.util.js` | Audio Blob storage |
 | `frontend/src/utils/pwa/sync-service.util.js` | `initializePwaData` / `syncSongs` / `syncAlbums` / `syncAll` |
-| `frontend/src/utils/pwa/pwa-register.util.js` | `registerSW` wrapper → Redux + `updateSW` |
+| `frontend/src/utils/pwa/pwa-register.util.js` | `registerSW` wrapper → Redux; update polling |
+| `frontend/src/utils/pwa/chunk-error-recovery.util.js` | Reload on a failed chunk load; `reloadApp` (§5.5) |
+| `frontend/public/_headers`, `404.html`, `_redirects` | Cloudflare Pages caching and 404 rules (§5.6) |
 | `frontend/src/utils/api/audio-download.util.js` | `saveAudioOffline` / `getOfflineAudioBlob` |
 | `frontend/src/store/slices/pwa.slice.js` | PWA Redux slice |
-| `frontend/src/components/pwa-status.component.jsx` | Offline-ready / update / sync-status UI |
+| `frontend/src/components/pwa-status.component.jsx` | Offline-ready and failed-writes banners |
 | `frontend/src/components/download-audio.component.jsx` | Download button |
 
 ### Modified files

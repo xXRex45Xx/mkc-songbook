@@ -5,7 +5,7 @@ universe: live
 status: verified
 owns: [frontend/src/main.jsx, frontend/src/App.jsx, frontend/src/App.css, frontend/src/index.css, frontend/src/pages/**]
 description: "URL to page table, route guards, loaders and actions, root layout."
-verified: 2026-11-17 @ 94c53c6
+verified: 2026-11-17 @ d99b6dc
 ---
 
 # Routes and pages
@@ -45,7 +45,7 @@ Where a URL lands. Routes are wired in `frontend/src/main.jsx`; each page is a l
 | `/announcements` | inline "Under Construction" in `main.jsx:196` | none | public (ghost) |
 | `/auth`, `/auth/signup`, `/auth/verify`, `/auth/create-password`, `/auth/forgot-password`, `/auth/reset-password` | `auth.page.jsx` layout plus form components | `auth.page.jsx:45` redirects signed-in users to `/`; forms export their own `action` | public |
 
-Error boundaries: `error.page.jsx` at `main.jsx:96` and the auth layout `:208`. Guard component: `protected-route.component.jsx` (no user: `/auth?redirect=<path>`; wrong role: throws 403). Role checks here are UI only; the server enforces.
+Error boundaries: `error.page.jsx` at `main.jsx:98` and the auth layout `:210`; `ErrorPage` has a "Reload the app" button (`reloadApp`, clears the precache when online). `frontend/public/_redirects` lists the route prefixes below: a new top-level route needs a line there. Guard component: `protected-route.component.jsx` (no user: `/auth?redirect=<path>`; wrong role: throws 403). Role checks here are UI only; the server enforces.
 
 ## Connected to
 

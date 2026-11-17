@@ -5,13 +5,15 @@
 
 import { useRouteError } from "react-router-dom";
 import { Link } from "react-router-dom";
+import { reloadApp } from "../utils/pwa/chunk-error-recovery.util";
 
 /**
  * Error Page Component
  *
  * Displays error information from React Router
  * Shows appropriate message based on error status code
- * Provides navigation back to home page
+ * Provides navigation back to home page and a button that reloads the app
+ * (and, online, discards a possibly broken cached copy of it first)
  *
  * @component
  * @returns {JSX.Element} Error display component
@@ -33,6 +35,13 @@ const ErrorPage = () => {
                     ? "Error loading data. Please check your internet connection or try again later."
                     : error.message}
             </p>
+            <button
+                type="button"
+                className="text-sm text-secondary underline"
+                onClick={() => reloadApp({ clearCaches: true })}
+            >
+                Reload the app
+            </button>
             <Link to="/" className="text-sm text-secondary">
                 Go back to the home page
             </Link>

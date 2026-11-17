@@ -1,0 +1,18 @@
+# Cloudflare Pages: with a 404.html present, Pages no longer serves the app for
+# every unknown path, so a missing /assets file answers 404 instead of HTML.
+# These 200 rewrites hand each client-side route to the app. Keep this list in
+# step with the routes in src/main.jsx: a route missing here shows the 404 page
+# on a refresh or a shared link.
+/songs / 200
+/songs/* / 200
+/albums / 200
+/albums/* / 200
+/playlists / 200
+/playlists/* / 200
+/local-playlists / 200
+/schedule / 200
+/schedule/* / 200
+/users / 200
+/announcements / 200
+/auth / 200
+/auth/* / 200

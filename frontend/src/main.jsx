@@ -16,8 +16,10 @@ import ProtectedRoute from "./components/protected-route.component.jsx";
 import ErrorPage from "./pages/error.page.jsx";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { registerPwa } from "./utils/pwa/pwa-register.util";
+import { setupChunkErrorRecovery } from "./utils/pwa/chunk-error-recovery.util";
 
 registerPwa();
+setupChunkErrorRecovery();
 
 /**
  * Lazily resolves a route module and maps its exports to a route object.

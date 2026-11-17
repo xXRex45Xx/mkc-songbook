@@ -5,7 +5,7 @@ universe: live
 status: verified
 owns: [frontend/vite.config.js, frontend/tailwind.config.js, frontend/postcss.config.js, frontend/eslint.config.js, frontend/index.html, frontend/package.json, frontend/src/config/*.js]
 description: "Vite and PWA build config, service worker caching rules, Tailwind palette, Flowbite theme files, env vars."
-verified: 2026-11-15 @ b2fce7d
+verified: 2026-11-17 @ d99b6dc
 ---
 
 # Build and config
@@ -29,6 +29,8 @@ Build, PWA manifest, service worker routes, and the theme files that style Flowb
 Frontend env vars: `VITE_BACKEND_URL`, `VITE_CLIENT_URL`, `VITE_GOOGLE_CLIENT_ID`, `VITE_TURNSTILE_SITE_KEY` (see `frontend/.env.example`).
 
 ## Entry points
+
+Cloudflare Pages files in `frontend/public` (copied to `dist`): `_headers` (`/sw.js` and the manifest revalidated; `/assets/*` and `/workbox-*.js` immutable), `404.html` (turns off the single-page-app fallback, so a missing asset is a 404) and `_redirects` (200 rewrites to `/` for each client route prefix of `main.jsx`; a new top-level route needs a line). Detail in `docs/pwa/architecture.md` §5.6. An update reloads each open tab on activation (`autoUpdate`); a failed lazy chunk is recovered by `chunk-error-recovery.util.js` ([pwa and storage](pwa-and-storage.md)).
 
 Service worker caching (`frontend/vite.config.js`):
 
