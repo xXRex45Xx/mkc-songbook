@@ -87,7 +87,6 @@ jobs:
 
       - name: Install compose file
         run: |
-          mkdir -p "$APP_DIR/uploads"
           cp deploy/docker-compose.yml "$APP_DIR/docker-compose.yml"
 
       - name: Deploy new image
@@ -96,9 +95,11 @@ jobs:
           NEW_TAG: ${{ github.sha }}
         run: |
           set -euo pipefail
-          prev_tag=""
-          if [ -f .env ]; then prev_tag="$(sed -n 's/^IMAGE_TAG=//p' .env)"; fi
-          echo "IMAGE_TAG=$NEW_TAG" > .env
+          # .env also holds AUDIO_DIR and IMAGES_DIR: rewrite only the IMAGE_TAG line.
+          set_tag() { { grep -v '^IMAGE_TAG=' .env || true; echo "IMAGE_TAG=$1"; } > .env.tmp && mv .env.tmp .env; }
+          touch .env
+          prev_tag="$(sed -n 's/^IMAGE_TAG=//p' .env)"
+          set_tag "$NEW_TAG"
           docker compose pull backend
           if docker compose up -d --wait --wait-timeout 90 backend; then
             echo "Deployed $NEW_TAG"
@@ -107,7 +108,7 @@ jobs:
             docker compose logs --tail 80 backend || true
             if [ -n "$prev_tag" ]; then
               echo "Rolling back to $prev_tag"
-              echo "IMAGE_TAG=$prev_tag" > .env
+              set_tag "$prev_tag"
               docker compose up -d --wait --wait-timeout 90 backend
             fi
             exit 1

@@ -8,12 +8,26 @@ deployed by Cloudflare Pages and is not part of this pipeline.
 
 ## One-time server setup
 
-1. Create the app dir and give uploads to the container user (uid 1000):
+1. Create the app dir. Uploads stay in your existing host folders (audio and images are
+   separate mounts). Give both to the container user (uid 1000), existing files included:
 
    ```bash
-   sudo mkdir -p /opt/mkc/uploads
-   sudo chown -R 1000:1000 /opt/mkc/uploads
+   sudo mkdir -p /opt/mkc
+   sudo chown -R 1000:1000 <path-to-host-upload-audio> <path-to-host-upload-images>
    ```
+
+   Then tell compose where they are in `/opt/mkc/.env`. The deploy job edits only the
+   `IMAGE_TAG` line and keeps these:
+
+   ```bash
+   cat >> /opt/mkc/.env <<'EOF'
+   AUDIO_DIR=<path-to-host-upload-audio>
+   IMAGES_DIR=<path-to-host-upload-images>
+   EOF
+   ```
+
+   These map to `/app/uploads/audio` and `/app/uploads/images`. `AUDIO_STORAGE` and
+   `IMAGE_STORAGE` in `backend.env` must stay `/uploads/audio` and `/uploads/images`.
 
 2. Create `/opt/mkc/backend.env` from `backend/.env.example`. Set `NODE_ENV=production`,
    `DB_URI`, `JWT_SECRET`, `TURNSTILE_SECRET_KEY`, `GOOGLE_CLIENT_ID`, the `SMTP_*` values,

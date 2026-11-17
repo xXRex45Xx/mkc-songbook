@@ -14,8 +14,10 @@ services:
     ports:
       - "127.0.0.1:8080:8080"
     volumes:
-      # Container runs as uid 1000 (node): `chown 1000:1000 /opt/mkc/uploads`.
-      - ./uploads:/app/uploads
+      # Host folders come from /opt/mkc/.env (AUDIO_DIR, IMAGES_DIR). The container
+      # runs as uid 1000 (node), so both must be owned by 1000:1000.
+      - ${AUDIO_DIR:?set AUDIO_DIR in /opt/mkc/.env}:/app/uploads/audio
+      - ${IMAGES_DIR:?set IMAGES_DIR in /opt/mkc/.env}:/app/uploads/images
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/healthz"]
       interval: 10s
