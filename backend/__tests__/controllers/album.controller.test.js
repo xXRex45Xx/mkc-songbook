@@ -221,6 +221,171 @@ describe("album controller", () => {
     });
   });
 
+  describe("getAllOrSearchAlbums with all", () => {
+    /**
+     * Builds a thenable query: awaited as-is it resolves to `plain`, and
+     * `.populate()` resolves to `populated`.
+     *
+     * @param {Array<Object>} plain - Result when the query is awaited without populate
+     * @param {Array<Object>} populated - Result of the populate call
+     * @returns {Promise<Array<Object>>} Query double with populate and maxTimeMS spies
+     */
+    const buildQuery = (plain, populated) => {
+      const query = Promise.resolve(plain);
+      query.populate = jest.fn().mockResolvedValue(populated);
+      query.maxTimeMS = jest.fn().mockReturnValue(query);
+      return query;
+    };
+
+    const populatedAlbum = {
+      _doc: {
+        _id: "a1",
+        name: "Album 1",
+        photoLink: "/static/albums/images/a1.jpg",
+        photoPath: "/srv/images/a1.jpg",
+        updatedAt: "2025-02-01T00:00:00.000Z",
+        songs: ["s1", "s2"],
+      },
+      songs: [
+        {
+          _doc: {
+            _id: "s1",
+            title: "Song 1",
+            youtubeLink: null,
+            albums: [{ _id: "a1", name: "Album 1" }],
+          },
+          songFilePath: "/audio/s1.mp3",
+        },
+        {
+          _doc: {
+            _id: "s2",
+            title: "Song 2",
+            youtubeLink: null,
+            albums: [{ _id: "a1", name: "Album 1" }],
+          },
+          songFilePath: null,
+        },
+      ],
+    };
+
+    it("should return every album in the detail shape with populated songs", async () => {
+      const query = buildQuery([], [populatedAlbum]);
+      AlbumModel.find = jest.fn().mockReturnValue(query);
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+
+      await getAllOrSearchAlbums({ query: { all: true } }, res);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      const [body] = res.json.mock.calls[0];
+      expect(body).toHaveLength(1);
+      expect(body[0]).toEqual({
+        _id: "a1",
+        name: "Album 1",
+        photoLink: "/static/albums/images/a1.jpg",
+        updatedAt: "2025-02-01T00:00:00.000Z",
+        numOfSongs: 2,
+        songs: [
+          {
+            _id: "s1",
+            title: "Song 1",
+            youtubeLink: null,
+            albums: [{ _id: "a1", name: "Album 1" }],
+            hasAudio: true,
+          },
+          {
+            _id: "s2",
+            title: "Song 2",
+            youtubeLink: null,
+            albums: [{ _id: "a1", name: "Album 1" }],
+            hasAudio: false,
+          },
+        ],
+      });
+      expect(body[0].photoPath).toBeUndefined();
+      expect(body[0].songs[0].songFilePath).toBeUndefined();
+    });
+
+    it("should filter by syncSince when all is combined with syncSince", async () => {
+      const query = buildQuery([], []);
+      AlbumModel.find = jest.fn().mockReturnValue(query);
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+
+      await getAllOrSearchAlbums(
+        { query: { all: true, syncSince: "2025-01-01T00:00:00.000Z" } },
+        res
+      );
+
+      expect(AlbumModel.find.mock.calls[0][0]).toEqual({
+        updatedAt: { $gte: expect.any(Date) },
+      });
+    });
+
+    it("should ignore q and names when all is set", async () => {
+      const query = buildQuery([], [populatedAlbum]);
+      AlbumModel.find = jest.fn().mockReturnValue(query);
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+
+      await getAllOrSearchAlbums(
+        { query: { all: true, q: "Grace", names: true } },
+        res
+      );
+
+      expect(AlbumModel.find.mock.calls[0][0]).toEqual({});
+      expect(AlbumModel.find.mock.calls[0][1]).not.toEqual({ name: true });
+      expect(res.json.mock.calls[0][0][0].songs).toHaveLength(2);
+    });
+
+    it("should return only ids when idsOnly is combined with all", async () => {
+      const lean = jest.fn().mockResolvedValue([{ _id: "a1" }]);
+      const query = buildQuery([], [populatedAlbum]);
+      query.lean = lean;
+      AlbumModel.find = jest.fn().mockReturnValue(query);
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+
+      await getAllOrSearchAlbums({ query: { all: true, idsOnly: true } }, res);
+
+      expect(res.json).toHaveBeenCalledWith({ albumIds: ["a1"] });
+      expect(query.populate).not.toHaveBeenCalled();
+    });
+
+    it("should return an empty array with 200 when there are no albums", async () => {
+      const query = buildQuery([], []);
+      AlbumModel.find = jest.fn().mockReturnValue(query);
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+
+      await getAllOrSearchAlbums({ query: { all: true } }, res);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith([]);
+    });
+
+    it("should not limit the all query with maxTimeMS", async () => {
+      const query = buildQuery([], []);
+      AlbumModel.find = jest.fn().mockReturnValue(query);
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+
+      await getAllOrSearchAlbums({ query: { all: true } }, res);
+
+      expect(query.maxTimeMS).not.toHaveBeenCalled();
+    });
+
+    it("should keep the stripped list without populate when all is absent", async () => {
+      const query = buildQuery(
+        [{ _doc: { _id: "a1", name: "Album 1", songs: ["s1"], photoPath: "/p" }, songs: ["s1"] }],
+        []
+      );
+      AlbumModel.find = jest.fn().mockReturnValue(query);
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+
+      await getAllOrSearchAlbums({ query: {} }, res);
+
+      expect(query.populate).not.toHaveBeenCalled();
+      const [body] = res.json.mock.calls[0];
+      expect(body[0].numOfSongs).toBe(1);
+      expect(body[0].songs).toBeUndefined();
+    });
+  });
+
   describe("getAllOrSearchAlbums search time limit", () => {
     // A query that accepts any chain order and resolves to `result` when awaited.
     const chainable = (result, limits) => {

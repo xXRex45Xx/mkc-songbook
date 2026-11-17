@@ -50,6 +50,7 @@ albumRouter
 	 * @param {Object} req - Express request object containing request data
 	 * @param {string} [req.query.q] - Album name search term (optional) used for case-insensitive matching
 	 * @param {boolean} [req.query.names] - Flag that limits the response to album names only when truthy
+	 * @param {boolean} [req.query.all] - Flag that returns every album with its songs populated (detail shape plus `numOfSongs`) when truthy
 	 * @param {Object} res - Express response object for sending responses back to client
 	 * @returns {Promise<void>} Sends JSON response with album results
 	 * @throws {ClientFaultError} If query parameters fail album query validation

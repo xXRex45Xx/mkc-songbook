@@ -19,6 +19,35 @@ import fs from "fs";
 const SEARCH_MAX_TIME_MS = 5000;
 
 /**
+ * Populate options that load an album's songs with the fields the album detail needs.
+ * Shared by the single-album route and the `all` list so both return the same song shape.
+ */
+const ALBUM_SONGS_POPULATE = {
+	path: "songs",
+	select: "title youtubeLink songFilePath",
+	populate: { path: "albums", select: "name" },
+};
+
+/**
+ * Builds the detail representation of an album whose songs are populated
+ *
+ * Adds `hasAudio` to each song and removes the server-side file paths
+ * (`songFilePath`, `photoPath`) so they never reach the client.
+ *
+ * @param {Object} album - Album document with `songs` populated using `ALBUM_SONGS_POPULATE`
+ * @returns {Object} Album fields with `songs` as plain objects carrying `hasAudio`
+ */
+const toAlbumDetail = (album) => ({
+	...album._doc,
+	songs: album.songs.map((song) => ({
+		...song._doc,
+		hasAudio: song.songFilePath ? true : false,
+		songFilePath: undefined,
+	})),
+	photoPath: undefined,
+});
+
+/**
  * Get all albums or search albums with pagination
  *
  * This function retrieves all albums from the database or searches for albums by name.
@@ -29,6 +58,9 @@ const SEARCH_MAX_TIME_MS = 5000;
  * @param {Object} req.query - Query parameters with detailed explanation of each option
  * @param {string} [req.query.q] - Search query (album name) with description of search scope and matching rules
  * @param {boolean} [req.query.names] - Whether to return only album names with explanation of when to use this option
+ * @param {boolean} [req.query.all] - Whether to return every album in the detail shape (songs populated, `numOfSongs` set); ignores `q` and `names`
+ * @param {string} [req.query.syncSince] - ISO 8601 date; only albums with `updatedAt` at or after it are returned
+ * @param {boolean} [req.query.idsOnly] - Whether to return only the matching album ids; wins over `all`
  * @param {number} [req.query.page=1] - Page number for pagination with explanation of how pages are calculated and limits
  * @param {Object} res - Express response object for sending responses back to client
  * @returns {Promise<void>} Sends JSON response with albums and totalPages count explaining pagination details and result structure
@@ -40,7 +72,7 @@ const SEARCH_MAX_TIME_MS = 5000;
  * This example retrieves album names matching "Amazing" with pagination.
  */
 export const getAllOrSearchAlbums = async (req, res) => {
-	const { names, q, syncSince, idsOnly } = req.query;
+	const { names, q, all, syncSince, idsOnly } = req.query;
 	let regex;
 	if (q) regex = new RegExp(regexBuilder(q), "i");
 	const filter = {};
@@ -62,6 +94,20 @@ export const getAllOrSearchAlbums = async (req, res) => {
 		return res.status(200).json({
 			albumIds: albumsWithIds.map((album) => album._id),
 		});
+	}
+	// Full detail for every album, used by the first app start to store complete
+	// albums on the device. Like the song `all` list it ignores `q` and `names`.
+	if (all) {
+		const detailFilter = filter.updatedAt ? { updatedAt: filter.updatedAt } : {};
+		const detailedAlbums = await AlbumModel.find(detailFilter).populate(
+			ALBUM_SONGS_POPULATE
+		);
+		return res.status(200).json(
+			detailedAlbums.map((album) => ({
+				...toAlbumDetail(album),
+				numOfSongs: album.songs.length,
+			}))
+		);
 	}
 	let albumsQuery = AlbumModel.find(
 		filter,
@@ -151,23 +197,11 @@ export const addAlbum = async (req, res) => {
  */
 export const getAlbum = async (req, res) => {
 	const { id } = req.params;
-	const album = await AlbumModel.findById(id).populate({
-		path: "songs",
-		select: "title youtubeLink songFilePath",
-		populate: { path: "albums", select: "name" },
-	});
+	const album = await AlbumModel.findById(id).populate(ALBUM_SONGS_POPULATE);
 
 	if (!album) throw new NotFoundError("Album not found");
 
-	res.status(200).json({
-		...album._doc,
-		songs: album.songs.map((song) => ({
-			...song._doc,
-			hasAudio: song.songFilePath ? true : false,
-			songFilePath: undefined,
-		})),
-		photoPath: undefined,
-	});
+	res.status(200).json(toAlbumDetail(album));
 };
 
 /**
