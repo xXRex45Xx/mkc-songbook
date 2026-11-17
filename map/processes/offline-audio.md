@@ -1,7 +1,7 @@
 ---
 type: process
 status: verified
-verified: 2026-11-15 @ c52152d
+verified: 2026-11-17 @ 387d8f8
 description: Save a recording to IndexedDB on request; the player prefers the saved copy over the stream.
 consumes: [../objects/data-model/song.md, ../objects/local-db/songs-store.md]
 produces: [../objects/local-db/audio-files-store.md]
@@ -34,7 +34,7 @@ Save (`saveAudioOffline`, `frontend/src/utils/api/audio-download.util.js:137`):
    fetches the remaining ranges from `Content-Range` and fails if the total size is not reached
    (`collectRemainingParts`, `:33`).
 2. Read the song's `updatedAt` from the [songs store](../objects/local-db/songs-store.md) (`:111`).
-3. `audioIdbService.store` with `{ _id, songId, blob, updatedAt, size, mimeType }` (`:141`).
+3. `audioIdbService.store` with `{ _id, songId, blob, updatedAt, size, mimeType }` as its only argument (`:141`); `store(songId, blob)` is a different form that wraps its second argument as the Blob. Copies saved before 2026-11-17 were stored wrapped; `audioIdbService` unwraps them on read.
 
 While the fetch runs, `download-audio.component.jsx` writes whole-percent progress into the
 [pwa slice](../objects/app-state/pwa-slice.md) (`audioDownloads`). The song table row
@@ -54,7 +54,7 @@ Play (`frontend/src/components/audio-player.component.jsx:76`):
    (`backend/controllers/song.controller.js:443`); a request without one gets the whole file
    with `200` (`:460`). A `Range` with an unreadable start or a non-numeric end gets `416`
    (`:479`), before any `206` header is sent.
-3. Stream error → fall back to a saved blob, or show "unavailable" (`audio-player.component.jsx:105`).
+3. Stream error → fall back to a saved blob, or show "unavailable" (`audio-player.component.jsx:105`): "Audio not saved for offline playback. Save it by clicking the download button to listen when offline."
 
 Stale means the songs store has a newer `updatedAt` than the saved copy
 (`frontend/src/utils/api/audio-download.util.js:180`).

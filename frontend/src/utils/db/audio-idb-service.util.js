@@ -9,6 +9,32 @@ import { getDB } from "./indexed-db.util";
 const STORE_NAME = "audioFiles";
 
 /**
+ * Returns a stored audio entry in its intended shape
+ *
+ * Records saved by older versions hold the whole record where the Blob should
+ * be (`entry.blob` is `{ _id, songId, blob, updatedAt, size, mimeType }`). When
+ * `entry.blob` is not a Blob but holds one, the inner record's fields are used,
+ * so audio saved that way still plays and keeps its original `updatedAt`.
+ *
+ * @param {Object|undefined} entry - Record read from the audioFiles store
+ * @returns {Object|undefined} The entry with `blob` as a Blob where one can be found, otherwise unchanged
+ * @private
+ */
+const normalizeEntry = (entry) => {
+  const inner = entry?.blob;
+  if (!entry || inner instanceof Blob || !(inner?.blob instanceof Blob)) {
+    return entry;
+  }
+  return {
+    ...entry,
+    blob: inner.blob,
+    updatedAt: inner.updatedAt ?? entry.updatedAt,
+    size: inner.size ?? entry.size,
+    mimeType: inner.mimeType ?? entry.mimeType,
+  };
+};
+
+/**
  * Audio IndexedDB service
  * Handles storage and retrieval of audio Blobs for offline playback
  *
@@ -57,7 +83,7 @@ export const audioIdbService = {
    */
   async get(songId) {
     const db = await getDB();
-    const entry = await db.get(STORE_NAME, songId);
+    const entry = normalizeEntry(await db.get(STORE_NAME, songId));
     return entry ? entry.blob : null;
   },
 
@@ -95,7 +121,7 @@ export const audioIdbService = {
    */
   async getWithMeta(songId) {
     const db = await getDB();
-    const entry = await db.get(STORE_NAME, songId);
+    const entry = normalizeEntry(await db.get(STORE_NAME, songId));
     if (!entry) return null;
     return {
       _id: entry._id,
@@ -116,7 +142,7 @@ export const audioIdbService = {
   async getAllMeta() {
     const db = await getDB();
     const entries = await db.getAll(STORE_NAME);
-    return entries.map((entry) => ({
+    return entries.map(normalizeEntry).map((entry) => ({
       _id: entry._id,
       songId: entry.songId || entry._id,
       blob: entry.blob,
