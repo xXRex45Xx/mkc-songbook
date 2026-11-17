@@ -26,11 +26,11 @@ Where a URL lands. Routes are wired in `frontend/src/main.jsx`; each page is a l
 | URL | Page | Loader / action | Access |
 |---|---|---|---|
 | `/` | `home.page.jsx` | root loader; redirects to `/songs` | public |
-| `/songs` | `songs.page.jsx` | loader :126; IndexedDB first with background `syncSongs` when there is no `q` or `sortby`; with them it goes to the network first and falls back to IndexedDB (offline: IndexedDB only; a combined `type=all` search returns `{ titleMatch, lyricsMatch }` from either source, as `songs-table.component.jsx` expects) | public |
+| `/songs` | `songs.page.jsx` | loader :132; IndexedDB first with background `syncSongs` when there is no `q` or `sortby`; with them it also answers from IndexedDB at once and, when `navigator.onLine`, returns the server search as `freshSongData`, which `useFreshResult` swaps in if it succeeds (an empty store before the first sync goes to the network first, with IndexedDB as the fallback; a combined `type=all` search returns `{ titleMatch, lyricsMatch }` from either source, as `songs-table.component.jsx` expects) | public |
 | `/songs/:songId` | `lyrics.page.jsx` | loader :49 | public |
 | `/songs/new` | `upload-song.page.jsx` | loader :55, action :68 | admin, super-admin |
 | `/songs/:songId/edit` | `edit-song.page.jsx` | loader :61, action :78 | admin, super-admin |
-| `/albums` | `albums.page.jsx` | loader :89 | public |
+| `/albums` | `albums.page.jsx` | loader :98; a search answers from IndexedDB at once and `freshAlbumData` (the server search, when `navigator.onLine`) replaces it through `useFreshResult` if it succeeds | public |
 | `/albums/new` | `upload-album.page.jsx` | action :40 | admin, super-admin |
 | `/albums/:albumId` | `album.page.jsx` | loader :48 | public |
 | `/albums/:albumId/edit` | `edit-album.page.jsx` | loader :61, action :78 | admin, super-admin |

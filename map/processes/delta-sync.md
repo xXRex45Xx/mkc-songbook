@@ -1,7 +1,7 @@
 ---
 type: process
 status: verified
-verified: 2026-11-17 @ aa5e440
+verified: 2026-11-17 @ 94c53c6
 description: Pull songs and albums into IndexedDB, then only records changed since the last marker.
 consumes: [../objects/data-model/song.md, ../objects/data-model/album.md, ../objects/local-db/sync-meta-store.md]
 produces: [../objects/local-db/songs-store.md, ../objects/local-db/albums-store.md, ../objects/local-db/sync-meta-store.md, ../objects/app-state/pwa-slice.md]
@@ -21,8 +21,10 @@ Status is reported into the [pwa slice](../objects/app-state/pwa-slice.md).
 
 ## Why this shape
 
-Page loaders read IndexedDB first and render at once (`frontend/src/pages/songs.page.jsx:69`,
-`frontend/src/pages/albums.page.jsx:75`); the network only tops the stores up. `?syncSince`
+Page loaders read IndexedDB first and render at once (`frontend/src/pages/songs.page.jsx:132`,
+`frontend/src/pages/albums.page.jsx:98`); the network only tops the stores up. A search does the same:
+it shows the local result at once, and the server's answer replaces it only if it arrives
+(`frontend/src/hooks/use-fresh-result.hook.js`), so an unreachable backend never holds the page back. `?syncSince`
 cannot see deletions, so a separate pass compares id lists.
 
 ## Steps
