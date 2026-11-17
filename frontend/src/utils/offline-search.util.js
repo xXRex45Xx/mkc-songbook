@@ -2,9 +2,13 @@
  * @fileoverview Offline search helpers
  * Filters and sorts locally cached records so listing pages keep working
  * without a connection, where server-side regex and collation are unavailable.
- * The matching is a deliberately simple substring search: it approximates the
- * server's behaviour instead of trying to reproduce it exactly.
+ * Text matching follows the server's rule: each Amharic letter also matches its
+ * look-alike and sound-alike variants (`similarRegexMap`), so the same query
+ * finds the same records online and offline. Sorting only approximates the
+ * server's collation.
  */
+
+import { similarRegexMap } from "./amharic-map.util";
 
 /**
  * Maps the user-facing sort options to the fields the backend sorts by
@@ -25,15 +29,36 @@ const SONG_SORT_FIELDS = {
 const normalize = (value) => (value == null ? "" : String(value)).toLowerCase();
 
 /**
- * Checks whether any of the given fields contains the query
+ * Builds the case-insensitive pattern the server searches with
+ *
+ * Mirrors the backend's `regexBuilder` (`backend/utils/amharic-map.util.js`):
+ * a character listed in `similarRegexMap` becomes the class of its variants,
+ * and every other character is escaped so typed punctuation such as `.` or `(`
+ * matches itself.
+ *
+ * @param {string} query - Text typed in the search box
+ * @returns {RegExp} Pattern that matches text containing the query or a variant spelling of it
+ * @example
+ * buildSearchPattern("ፀጋሕ").test("ጸጋህ"); // true
+ */
+export const buildSearchPattern = (query) => {
+	let source = "";
+	for (const char of String(query)) {
+		source += similarRegexMap[char] ?? char.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+	}
+	return new RegExp(source, "i");
+};
+
+/**
+ * Checks whether any of the given fields matches the pattern
  *
  * @param {Object} record - Record to inspect
- * @param {string} query - Already normalized query
+ * @param {RegExp} pattern - Pattern from `buildSearchPattern`
  * @param {string[]} fields - Field names to search
  * @returns {boolean} True when at least one field matches
  */
-const matchesAnyField = (record, query, fields) =>
-	fields.some((field) => normalize(record?.[field]).includes(query));
+const matchesAnyField = (record, pattern, fields) =>
+	fields.some((field) => pattern.test(record?.[field] == null ? "" : String(record[field])));
 
 /**
  * Compares two song ids the way the backend's numeric collation does,
@@ -64,12 +89,13 @@ const compareNumericId = (a, b) => {
 export const filterLocalSongs = (songs, { q, type } = {}) => {
 	const query = normalize(q);
 	if (!query) return songs;
+	const pattern = buildSearchPattern(q);
 
 	return songs.filter((song) => {
-		if (type === "title") return matchesAnyField(song, query, ["title"]);
-		if (type === "lyrics") return matchesAnyField(song, query, ["lyrics"]);
+		if (type === "title") return matchesAnyField(song, pattern, ["title"]);
+		if (type === "lyrics") return matchesAnyField(song, pattern, ["lyrics"]);
 		if (type === "id") return normalize(song?._id) === query;
-		return matchesAnyField(song, query, ["title", "lyrics", "_id"]);
+		return matchesAnyField(song, pattern, ["title", "lyrics", "_id"]);
 	});
 };
 
@@ -106,7 +132,25 @@ export const searchLocalSongs = (songs, searchQuery = {}) =>
 	sortLocalSongs(filterLocalSongs(songs, searchQuery), searchQuery.sortBy);
 
 /**
- * Filters locally cached albums by name
+ * Splits locally cached songs into title matches and lyrics matches
+ *
+ * Mirrors the server's combined ("All Categories") search, which returns the
+ * songs whose title matches and, separately, the songs whose lyrics match.
+ * The song number is not searched, as on the server.
+ *
+ * @param {Array<Object>} songs - Songs from IndexedDB
+ * @param {Object} [searchQuery] - Search parameters
+ * @param {string} [searchQuery.q] - Search text
+ * @param {string} [searchQuery.sortBy] - Sort option
+ * @returns {{titleMatch: Array<Object>, lyricsMatch: Array<Object>}} Both match lists in the requested order, unpaginated
+ */
+export const searchLocalSongMatches = (songs, { q, sortBy } = {}) => ({
+	titleMatch: sortLocalSongs(filterLocalSongs(songs, { q, type: "title" }), sortBy),
+	lyricsMatch: sortLocalSongs(filterLocalSongs(songs, { q, type: "lyrics" }), sortBy),
+});
+
+/**
+ * Filters locally cached albums by name, with the same variant matching as the server
  *
  * @param {Array<Object>} albums - Albums from IndexedDB
  * @param {Object} [searchQuery] - Search parameters
@@ -114,8 +158,8 @@ export const searchLocalSongs = (songs, searchQuery = {}) =>
  * @returns {Array<Object>} Matching albums
  */
 export const filterLocalAlbums = (albums, { q } = {}) => {
-	const query = normalize(q);
-	if (!query) return albums;
+	if (!normalize(q)) return albums;
+	const pattern = buildSearchPattern(q);
 
-	return albums.filter((album) => normalize(album?.name).includes(query));
+	return albums.filter((album) => matchesAnyField(album, pattern, ["name"]));
 };

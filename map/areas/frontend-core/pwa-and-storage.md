@@ -5,7 +5,7 @@ universe: live
 status: verified
 owns: [frontend/src/utils/db/*.js, frontend/src/utils/pwa/*.js, frontend/src/utils/session.util.js, frontend/src/store/store.js, frontend/src/store/slices/*.js, frontend/src/hooks/*.js]
 description: "IndexedDB services, PWA runtime (sync, write queue, install), session state, Redux store."
-verified: 2026-11-17 @ aa5e440
+verified: 2026-11-17 @ 94c53c6
 ---
 
 # PWA and storage
@@ -28,6 +28,7 @@ Offline machinery and client state. The nouns are cards in [local-db](../../obje
 | `frontend/src/store/store.js` | `configureStore` with `configs`, `user`, `playlist`, `localPlaylists`, `pwa` | default store |
 | `frontend/src/store/slices/*.slice.js` | One slice per card in [app-state](../../objects/app-state/_index.md) | actions |
 | `frontend/src/hooks/useWindowSize.hook.js` | Writes window width to `configs` | default hook |
+| `frontend/src/hooks/use-fresh-result.hook.js` | Shows the local search result and swaps in the server's answer for the same request when it resolves; ignores a late answer to an earlier search | `useFreshResult` :24 |
 
 Service worker caching rules live in `frontend/vite.config.js` ([build and config](build-and-config.md)).
 

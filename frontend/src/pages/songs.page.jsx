@@ -8,13 +8,17 @@ import MainBodyContainer from "../components/main-body-container.component";
 import { getAllOrSearchSongs } from "../utils/api/songs-api.util";
 import SortDropdown from "../components/sort-dropdown.component";
 import { Await, defer, useLoaderData } from "react-router-dom";
+import { useFreshResult } from "../hooks/use-fresh-result.hook";
 import { Suspense } from "react";
 import SongsTable from "../components/songs-table.component";
 import CustomTailSpin from "../components/custom-tail-spin.component";
 import AdminHelper from "../components/admin-helper.component";
 import { songIdbService } from "../utils/db/song-idb-service.util";
 import { syncSongs } from "../utils/pwa/sync-service.util";
-import { searchLocalSongs } from "../utils/offline-search.util";
+import {
+	searchLocalSongs,
+	searchLocalSongMatches,
+} from "../utils/offline-search.util";
 
 /**
  * Songs Page Component
@@ -27,6 +31,7 @@ import { searchLocalSongs } from "../utils/offline-search.util";
  */
 const SongsPage = () => {
 	const loaderData = useLoaderData();
+	const songData = useFreshResult(loaderData.songData, loaderData.freshSongData);
 	return (
 		<MainBodyContainer
 			title={"Songs"}
@@ -38,7 +43,7 @@ const SongsPage = () => {
 			}
 		>
 			<Suspense fallback={<CustomTailSpin />}>
-				<Await resolve={loaderData.songData}>
+				<Await resolve={songData}>
 					{({ songs, totalPages }) => (
 						<SongsTable
 							songs={songs}
@@ -57,16 +62,44 @@ const SongsPage = () => {
 export default SongsPage;
 
 /**
+ * Removes the server file path from a song, as the songs API does
+ *
+ * @param {Object} song - Song from IndexedDB
+ * @returns {Object} Song without `songFilePath`
+ */
+const toPageSong = (song) => ({ ...song, songFilePath: undefined });
+
+/**
  * Searches and sorts the locally cached songs
  * Mirrors the response shape of the songs API so the page component is unaware
- * of where the data came from.
+ * of where the data came from: a combined ("All Categories") search returns
+ * `{ titleMatch, lyricsMatch }` as `songs`, every other search a flat list.
  *
  * @param {Object} searchQuery - Search parameters
  * @param {number} [page=1] - Page number for pagination
- * @returns {Promise<{songs: Array<Object>, totalPages: number}>} Matching songs
+ * @param {Array<Object>} [cachedSongs] - Songs already read from IndexedDB; read here when omitted
+ * @returns {Promise<{songs: (Array<Object>|{titleMatch: Array<Object>, lyricsMatch: Array<Object>}), totalPages: number}>} Matching songs
  */
-const searchLocalSongsForPage = async (searchQuery, page = 1) => {
-	const localSongs = await songIdbService.getAll();
+const searchLocalSongsForPage = async (searchQuery, page = 1, cachedSongs) => {
+	const localSongs = cachedSongs ?? (await songIdbService.getAll());
+
+	if (searchQuery.type === "all" && searchQuery.q) {
+		const { titleMatch, lyricsMatch } = searchLocalSongMatches(
+			localSongs,
+			searchQuery
+		);
+		const start = (page - 1) * 100;
+		return {
+			songs: {
+				titleMatch: titleMatch.slice(start, start + 100).map(toPageSong),
+				lyricsMatch: lyricsMatch.slice(start, start + 100).map(toPageSong),
+			},
+			totalPages: Math.max(
+				1,
+				Math.ceil(Math.max(titleMatch.length, lyricsMatch.length) / 100)
+			),
+		};
+	}
 
 	const sorted = searchLocalSongs(localSongs, searchQuery);
 	const perPage = 100;
@@ -86,12 +119,15 @@ const searchLocalSongsForPage = async (searchQuery, page = 1) => {
 /**
  * Route loader for songs listing page
  * Uses IndexedDB-first approach: returns local data immediately, syncs in background.
- * Search and sort query the local cache when offline, and fall back to it when an
- * online search fails.
+ * A search or sort is answered from IndexedDB at once; when the browser reports a
+ * connection the server's answer is returned as `freshSongData` and replaces the
+ * local one if it succeeds, so an unreachable backend never holds the page back.
+ * Before the first sync (empty IndexedDB) the search goes to the network, with the
+ * local cache as the fallback.
  *
  * @param {Object} params - Route parameters
  * @param {Request} params.request - HTTP request
- * @returns {Promise<{songData: Object}>} Resolves to songs and pagination data
+ * @returns {Promise<{songData: Object, freshSongData?: (Promise<Object>|null)}>} Resolves to songs and pagination data
  */
 export const loader = async ({ request }) => {
 	const searchParams = new URL(request.url).searchParams;
@@ -106,6 +142,26 @@ export const loader = async ({ request }) => {
 	const hasSearchParams = searchQuery.q || searchQuery.sortBy;
 
 	if (hasSearchParams) {
+		let cachedSongs = [];
+		try {
+			cachedSongs = await songIdbService.getAll();
+		} catch (e) {
+			console.error("Failed to load songs from IndexedDB:", e);
+		}
+
+		if (cachedSongs.length > 0) {
+			return defer({
+				songData: await searchLocalSongsForPage(
+					searchQuery,
+					page,
+					cachedSongs
+				),
+				freshSongData: navigator.onLine
+					? getAllOrSearchSongs(searchQuery, page)
+					: null,
+			});
+		}
+
 		if (navigator.onLine) {
 			return defer({
 				songData: getAllOrSearchSongs(searchQuery, page).catch(() =>
