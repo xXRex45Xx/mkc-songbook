@@ -5,7 +5,7 @@ universe: live
 status: verified
 owns: [frontend/src/utils/api/*.js, frontend/src/utils/regex.util.js, frontend/src/utils/amharic-map.util.js, frontend/src/utils/offline-search.util.js]
 description: "Frontend API clients: which function calls which endpoint, and who imports it."
-verified: 2026-11-17 @ aa5e440
+verified: 2026-11-17 @ 94c53c6
 ---
 
 # API clients
@@ -24,8 +24,8 @@ One util per backend resource. Song, album and playlist writes, and `updateFavor
 | `frontend/src/utils/api/logbook-api.util.js` | `getAllOrSearchLogBook` :16 (page only) | GET `/api/logbook` |
 | `frontend/src/utils/api/local-playlist-api.util.js` | Device-only playlists in IndexedDB; `syncPlaylistToServer` :183 uploads through `addOrEditPlaylist` | none direct |
 | `frontend/src/utils/api/audio-download.util.js` | Offline audio with Range resume | GET `/api/song/:id/audio` (:90) |
-| `frontend/src/utils/offline-search.util.js` | Client-side filter and sort when offline | none |
-| `frontend/src/utils/amharic-map.util.js` | Amharic-aware highlight regex (`regexBuilder` :98); backend has its own copy | none |
+| `frontend/src/utils/offline-search.util.js` | Client-side filter and sort when offline; text matching uses the server's Amharic variant classes (`buildSearchPattern` :44, from `similarRegexMap`), sorting only approximates the server | none |
+| `frontend/src/utils/amharic-map.util.js` | Amharic-aware highlight regex (`regexBuilder` :98, does not escape: `lyric-viewer.component.jsx:81` relies on that) and `similarRegexMap`, also used by offline search; backend has its own equal copy | none |
 | `frontend/src/utils/regex.util.js` | `emailRegex` for `user-api.util.js` | none |
 
 Importers: pages call the resource utils from loaders and actions ([routes and pages](../frontend-ui/routes-and-pages.md)); components call them from handlers ([player and songs](../frontend-ui/components-player-and-songs.md), [collections, auth, shell](../frontend-ui/components-collections-auth-shell.md)). The API origin comes from `frontend/src/config/backend-url.config.js`.
