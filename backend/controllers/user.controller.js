@@ -137,6 +137,9 @@ export const registerUser = async (req, res) => {
 	});
 
 	await issueSession(res, user);
+	// Spend the code before answering: after the response a failed delete would leave
+	// a used OTP valid, and its error would have no request left to report to.
+	await OTPModel.deleteOne({ email });
 	res.status(201).json({
 		user: {
 			id: user._id,
@@ -146,7 +149,6 @@ export const registerUser = async (req, res) => {
 			favorites: user.favorites,
 		},
 	});
-	await OTPModel.deleteOne({ email });
 };
 
 /**
@@ -298,8 +300,9 @@ export const resetPassword = async (req, res) => {
 	// A reset must end every session, including one an attacker may hold. Tokens issued
 	// before it, even legacy Bearer ones, stop passing the JWT strategy.
 	if (user) await revokeAllSessions(user._id);
-	res.status(200).json({ success: true });
+	// Spend the code before answering (see registerUser).
 	await OTPModel.deleteOne({ email });
+	res.status(200).json({ success: true });
 };
 
 /**

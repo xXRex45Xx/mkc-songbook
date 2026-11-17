@@ -5,6 +5,7 @@ import {
   getAllOrSearchUsers,
   googleOAuthLogin,
   registerOTP,
+  resetPassword,
   updateFavorites,
   verifyOTP,
 } from "../../controllers/user.controller.js";
@@ -286,5 +287,27 @@ describe("user controller", () => {
     expect(req.user.favorites).toEqual([]);
     expect(save).toHaveBeenCalledTimes(1);
     expect(res.json).toHaveBeenCalledWith({ updated: true });
+  });
+
+  it("should spend the OTP before answering a password reset", async () => {
+    const order = [];
+    const findSpy = jest.spyOn(UserModel, "findOneAndUpdate").mockResolvedValue(null);
+    const deleteSpy = jest.spyOn(OTPModel, "deleteOne").mockImplementation(async () => {
+      order.push("deleteOTP");
+    });
+    const req = { body: { email: "member@mkc.com", password: "newpassword123" } };
+    const res = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(() => order.push("respond")),
+    };
+
+    try {
+      await resetPassword(req, res);
+    } finally {
+      findSpy.mockRestore();
+      deleteSpy.mockRestore();
+    }
+
+    expect(order).toEqual(["deleteOTP", "respond"]);
   });
 });

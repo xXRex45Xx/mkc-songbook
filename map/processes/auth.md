@@ -40,8 +40,8 @@ Sign-up:
    (`backend/controllers/user.controller.js:95`).
 3. `POST /api/user` — checks the code again (`backend/middlewares/validate-otp.middleware.js:26`),
    hashes the password with bcrypt cost 10, creates the [User](../objects/data-model/user.md)
-   with role `public`, starts a session (cookies), returns the user, deletes the OTP
-   (`backend/controllers/user.controller.js:129`).
+   with role `public`, starts a session (cookies), deletes the OTP, then returns the user
+   (`backend/controllers/user.controller.js:142`).
 
 Password login: `POST /api/user/login` — risk check (below), then Passport local strategy; a user with no password
 (Google-only) always fails (`backend/config/passport.config.js:49`); the session starts in
